@@ -1,7 +1,25 @@
--- ============================================================================
+#!/usr/bin/env python3
+"""
+EHR Database Schema Generator for MySQL
+InTAM Health Inc - Electronic Medical Record System
+
+This script generates a comprehensive MySQL database schema for an
+Electronic Health Record (EHR) system.
+
+Usage:
+    python generate_ehr_schema.py > ehr_schema.sql
+"""
+
+from datetime import datetime
+
+
+def generate_schema():
+    """Generate the complete EHR database schema SQL script"""
+
+    sql_script = f"""-- ============================================================================
 -- EHR Database Schema for MySQL
 -- InTAM Health Inc - Electronic Medical Record System
--- Generated: 2025-11-06 22:23:26
+-- Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 -- ============================================================================
 
 -- Drop database if exists and create new
@@ -1019,4 +1037,15 @@ SELECT CONCAT('Total Tables: ', COUNT(*)) AS ''
 FROM information_schema.tables
 WHERE table_schema = 'ehr_database' AND table_type = 'BASE TABLE';
 SELECT '========================================' AS '';
+"""
 
+    return sql_script
+
+
+def main():
+    """Main function to generate and output the schema"""
+    print(generate_schema())
+
+
+if __name__ == "__main__":
+    main()
