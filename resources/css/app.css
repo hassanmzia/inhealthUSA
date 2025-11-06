@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for InHealth EHR */
+body {
+    font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.medical-alert {
+    @apply bg-red-50 border-l-4 border-red-400 p-4;
+}
+
+.medical-success {
+    @apply bg-green-50 border-l-4 border-green-400 p-4;
+}
+
+.medical-info {
+    @apply bg-blue-50 border-l-4 border-blue-400 p-4;
+}
