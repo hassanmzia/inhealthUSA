@@ -1,13 +1,70 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Q
 from django.utils import timezone
 from .models import (
     Patient, Provider, Encounter, VitalSign, Diagnosis,
     Prescription, Department, Allergy, MedicalHistory, SocialHistory
 )
+from .forms import UserRegistrationForm
 
 
+# Authentication Views
+def user_login(request):
+    """User login view"""
+    if request.user.is_authenticated:
+        return redirect('index')
+
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, f'Welcome back, {username}!')
+                next_url = request.GET.get('next', 'index')
+                return redirect(next_url)
+            else:
+                messages.error(request, 'Invalid username or password.')
+        else:
+            messages.error(request, 'Invalid username or password.')
+    else:
+        form = AuthenticationForm()
+
+    return render(request, 'healthcare/auth/login.html', {'form': form})
+
+
+def user_logout(request):
+    """User logout view"""
+    logout(request)
+    messages.success(request, 'You have been logged out successfully.')
+    return redirect('login')
+
+
+def user_register(request):
+    """User registration view"""
+    if request.user.is_authenticated:
+        return redirect('index')
+
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Account created successfully for {username}! You can now log in.')
+            return redirect('login')
+    else:
+        form = UserRegistrationForm()
+
+    return render(request, 'healthcare/auth/register.html', {'form': form})
+
+
+@login_required
 def index(request):
     """Dashboard/Home view"""
     context = {
@@ -22,6 +79,7 @@ def index(request):
 
 
 # Patient Views
+@login_required
 def patient_list(request):
     """List all patients"""
     search = request.GET.get('search', '')
@@ -39,6 +97,7 @@ def patient_list(request):
     return render(request, 'healthcare/patients/index.html', {'patients': patients, 'search': search})
 
 
+@login_required
 def patient_detail(request, patient_id):
     """View patient details"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
@@ -55,6 +114,7 @@ def patient_detail(request, patient_id):
     return render(request, 'healthcare/patients/show.html', context)
 
 
+@login_required
 def patient_create(request):
     """Create new patient"""
     if request.method == 'POST':
@@ -82,6 +142,7 @@ def patient_create(request):
     return render(request, 'healthcare/patients/create.html')
 
 
+@login_required
 def patient_edit(request, patient_id):
     """Edit patient"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
@@ -112,6 +173,7 @@ def patient_edit(request, patient_id):
 
 
 # Physician (Provider) Views
+@login_required
 def physician_list(request):
     """List all physicians"""
     search = request.GET.get('search', '')
@@ -129,6 +191,7 @@ def physician_list(request):
     return render(request, 'healthcare/physicians/index.html', {'physicians': physicians, 'search': search})
 
 
+@login_required
 def physician_detail(request, provider_id):
     """View physician details"""
     physician = get_object_or_404(Provider, provider_id=provider_id)
@@ -142,6 +205,7 @@ def physician_detail(request, provider_id):
 
 
 # Appointment (Encounter) Views
+@login_required
 def appointment_list(request):
     """List all appointments"""
     status = request.GET.get('status', '')
@@ -154,6 +218,7 @@ def appointment_list(request):
     return render(request, 'healthcare/appointments/index.html', {'appointments': appointments, 'status': status})
 
 
+@login_required
 def appointment_detail(request, encounter_id):
     """View appointment details"""
     appointment = get_object_or_404(Encounter, encounter_id=encounter_id)
@@ -170,6 +235,7 @@ def appointment_detail(request, encounter_id):
     return render(request, 'healthcare/appointments/show.html', context)
 
 
+@login_required
 def appointment_create(request):
     """Create new appointment"""
     if request.method == 'POST':
@@ -197,6 +263,7 @@ def appointment_create(request):
     return render(request, 'healthcare/appointments/create.html', context)
 
 
+@login_required
 def appointment_edit(request, encounter_id):
     """Edit appointment"""
     appointment = get_object_or_404(Encounter, encounter_id=encounter_id)
@@ -228,6 +295,7 @@ def appointment_edit(request, encounter_id):
 
 
 # Vital Signs Views
+@login_required
 def vital_sign_create(request, encounter_id):
     """Create vital signs for an appointment"""
     appointment = get_object_or_404(Encounter, encounter_id=encounter_id)
@@ -258,6 +326,7 @@ def vital_sign_create(request, encounter_id):
 
 
 # Diagnosis Views
+@login_required
 def diagnosis_create(request, encounter_id):
     """Create diagnosis for an appointment"""
     appointment = get_object_or_404(Encounter, encounter_id=encounter_id)
@@ -287,6 +356,7 @@ def diagnosis_create(request, encounter_id):
 
 
 # Prescription Views
+@login_required
 def prescription_list(request):
     """List all prescriptions"""
     status = request.GET.get('status', '')
@@ -299,12 +369,14 @@ def prescription_list(request):
     return render(request, 'healthcare/prescriptions/index.html', {'prescriptions': prescriptions, 'status': status})
 
 
+@login_required
 def prescription_detail(request, prescription_id):
     """View prescription details"""
     prescription = get_object_or_404(Prescription, prescription_id=prescription_id)
     return render(request, 'healthcare/prescriptions/show.html', {'prescription': prescription})
 
 
+@login_required
 def prescription_create(request):
     """Create new prescription"""
     if request.method == 'POST':
