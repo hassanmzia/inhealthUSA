@@ -44,7 +44,7 @@ class VitalSignController extends Controller
         VitalSign::create($validated);
 
         return redirect()
-            ->route('encounters.show', $encounter->encounter_id)
+            ->route('appointments.show', $encounter->encounter_id)
             ->with('success', 'Vital signs recorded successfully.');
     }
 
@@ -79,7 +79,7 @@ class VitalSignController extends Controller
         $vitalSign->update($validated);
 
         return redirect()
-            ->route('encounters.show', $vitalSign->encounter_id)
+            ->route('appointments.show', $vitalSign->encounter_id)
             ->with('success', 'Vital signs updated successfully.');
     }
 }

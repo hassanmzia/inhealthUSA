@@ -42,7 +42,7 @@ class DiagnosisController extends Controller
         Diagnosis::create($validated);
 
         return redirect()
-            ->route('encounters.show', $encounter->encounter_id)
+            ->route('appointments.show', $encounter->encounter_id)
             ->with('success', 'Diagnosis added successfully.');
     }
 
@@ -75,7 +75,7 @@ class DiagnosisController extends Controller
         $diagnosis->update($validated);
 
         return redirect()
-            ->route('encounters.show', $diagnosis->encounter_id)
+            ->route('appointments.show', $diagnosis->encounter_id)
             ->with('success', 'Diagnosis updated successfully.');
     }
 
@@ -88,7 +88,7 @@ class DiagnosisController extends Controller
         $diagnosis->delete();
 
         return redirect()
-            ->route('encounters.show', $encounterId)
+            ->route('appointments.show', $encounterId)
             ->with('success', 'Diagnosis removed successfully.');
     }
 }
