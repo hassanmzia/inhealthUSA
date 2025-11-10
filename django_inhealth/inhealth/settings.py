@@ -107,3 +107,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Date and time formats
 DATE_FORMAT = 'Y-m-d'
 DATETIME_FORMAT = 'Y-m-d H:i:s'
+
+# Authentication settings
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'index'
+LOGOUT_REDIRECT_URL = 'login'
