@@ -167,13 +167,20 @@ if [ ! -f "./composer.json" ]; then
     exit 1
 fi
 
-print_status "Installing Laravel dependencies..."
-composer install --no-interaction
+# Create required directories
+print_status "Creating Laravel directory structure..."
+mkdir -p storage/{app,framework,logs}
+mkdir -p storage/framework/{cache,sessions,testing,views}
+mkdir -p storage/app/public
+mkdir -p bootstrap/cache
 
-# Set proper permissions
+# Set proper permissions before composer install
 print_status "Setting file permissions..."
 sudo chown -R $USER:nginx .
 sudo chmod -R 775 storage bootstrap/cache
+
+print_status "Installing Laravel dependencies..."
+composer install --no-interaction
 
 # Set SELinux contexts
 print_status "Setting SELinux contexts..."

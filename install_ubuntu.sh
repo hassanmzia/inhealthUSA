@@ -144,6 +144,18 @@ else
     print_warning "ehr_schema.sql not found. Please import it manually later."
 fi
 
+# Create required directories
+print_status "Creating Laravel directory structure..."
+mkdir -p storage/{app,framework,logs}
+mkdir -p storage/framework/{cache,sessions,testing,views}
+mkdir -p storage/app/public
+mkdir -p bootstrap/cache
+
+# Set proper permissions before composer install
+print_status "Setting file permissions..."
+sudo chown -R $USER:www-data .
+sudo chmod -R 775 storage bootstrap/cache
+
 # Install Laravel (if not already in the directory)
 if [ ! -f "./composer.json" ]; then
     print_status "Installing Laravel..."
@@ -152,11 +164,6 @@ else
     print_status "Laravel already exists. Running composer install..."
     composer install
 fi
-
-# Set proper permissions
-print_status "Setting file permissions..."
-sudo chown -R $USER:www-data .
-sudo chmod -R 775 storage bootstrap/cache
 
 # Create .env file
 print_status "Configuring .env file..."

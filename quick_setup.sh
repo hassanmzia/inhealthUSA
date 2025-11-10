@@ -20,6 +20,16 @@ command -v php >/dev/null 2>&1 || { echo "PHP is required but not installed. Abo
 command -v composer >/dev/null 2>&1 || { echo "Composer is required but not installed. Aborting." >&2; exit 1; }
 command -v mysql >/dev/null 2>&1 || { echo "MySQL is required but not installed. Aborting." >&2; exit 1; }
 
+# Create required directories
+echo -e "${GREEN}Creating Laravel directory structure...${NC}"
+mkdir -p storage/{app,framework,logs}
+mkdir -p storage/framework/{cache,sessions,testing,views}
+mkdir -p storage/app/public
+mkdir -p bootstrap/cache
+
+# Set permissions
+chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+
 # Install Laravel dependencies
 if [ ! -d "vendor" ]; then
     echo -e "${GREEN}Installing Composer dependencies...${NC}"
