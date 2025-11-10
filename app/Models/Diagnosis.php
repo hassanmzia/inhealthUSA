@@ -12,6 +12,7 @@ class Diagnosis extends Model
 
     protected $table = 'diagnoses';
     protected $primaryKey = 'diagnosis_id';
+    public $timestamps = false;
 
     protected $fillable = [
         'encounter_id',

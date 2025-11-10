@@ -127,7 +127,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ route('encounters.show', $encounter->encounter_id) }}"
+                            <a href="{{ route('appointments.show', $encounter->encounter_id) }}"
                                class="text-medical-blue hover:underline">View</a>
                         </td>
                     </tr>
@@ -151,7 +151,7 @@
                class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700">
                 New Patient
             </a>
-            <a href="{{ route('encounters.create') }}"
+            <a href="{{ route('appointments.create') }}"
                class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-green hover:bg-green-600">
                 New Encounter
             </a>

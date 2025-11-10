@@ -10,7 +10,7 @@
     </div>
 
     <div class="bg-white shadow sm:rounded-lg">
-        <form method="POST" action="{{ route('encounters.store') }}" class="space-y-6 p-6">
+        <form method="POST" action="{{ route('appointments.store') }}" class="space-y-6 p-6">
             @csrf
 
             <!-- Patient Selection ---->
@@ -134,7 +134,7 @@
 
             <!-- Actions ---->
             <div class="flex justify-end space-x-3 border-t border-gray-200 pt-6">
-                <a href="{{ route('encounters.index') }}"
+                <a href="{{ route('appointments.index') }}"
                    class="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-medical-blue focus:ring-offset-2">
                     Cancel
                 </a>

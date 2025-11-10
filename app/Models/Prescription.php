@@ -12,6 +12,7 @@ class Prescription extends Model
 
     protected $table = 'prescriptions';
     protected $primaryKey = 'prescription_id';
+    public $timestamps = false;
 
     protected $fillable = [
         'encounter_id',

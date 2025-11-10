@@ -10,7 +10,7 @@
     </div>
 
     <div class="bg-white shadow sm:rounded-lg">
-        <form method="POST" action="{{ route('providers.update', $provider->provider_id) }}" class="space-y-6 p-6">
+        <form method="POST" action="{{ route('physicians.update', $provider->provider_id) }}" class="space-y-6 p-6">
             @csrf
             @method('PUT')
 
@@ -105,7 +105,7 @@
             <div class="flex justify-between border-t border-gray-200 pt-6">
                 <div>
                     @if($provider->is_active)
-                        <form method="POST" action="{{ route('providers.destroy', $provider->provider_id) }}" onsubmit="return confirm('Are you sure you want to deactivate this provider?');">
+                        <form method="POST" action="{{ route('physicians.destroy', $provider->provider_id) }}" onsubmit="return confirm('Are you sure you want to deactivate this provider?');">
                             @csrf
                             @method('DELETE')
                             <button type="submit"
@@ -114,7 +114,7 @@
                             </button>
                         </form>
                     @else
-                        <form method="POST" action="{{ route('providers.activate', $provider->provider_id) }}">
+                        <form method="POST" action="{{ route('physicians.activate', $provider->provider_id) }}">
                             @csrf
                             @method('PUT')
                             <button type="submit"
@@ -126,7 +126,7 @@
                 </div>
 
                 <div class="flex space-x-3">
-                    <a href="{{ route('providers.show', $provider->provider_id) }}"
+                    <a href="{{ route('physicians.show', $provider->provider_id) }}"
                        class="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-medical-blue focus:ring-offset-2">
                         Cancel
                     </a>

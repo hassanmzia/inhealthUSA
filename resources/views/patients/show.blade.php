@@ -17,7 +17,7 @@
                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                 Edit Patient
             </a>
-            <a href="{{ route('encounters.create', ['patient_id' => $patient->patient_id]) }}"
+            <a href="{{ route('appointments.create', ['patient_id' => $patient->patient_id]) }}"
                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700">
                 New Encounter
             </a>
@@ -80,7 +80,7 @@
                                         {{ $encounter->status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                                         {{ $encounter->status }}
                                     </span>
-                                    <a href="{{ route('encounters.show', $encounter->encounter_id) }}"
+                                    <a href="{{ route('appointments.show', $encounter->encounter_id) }}"
                                        class="text-medical-blue hover:underline text-sm">View</a>
                                 </div>
                             </div>

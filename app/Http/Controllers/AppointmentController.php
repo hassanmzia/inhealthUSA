@@ -10,10 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
-class EncounterController extends Controller
+class AppointmentController extends Controller
 {
     /**
-     * Display a listing of encounters
+     * Display a listing of appointments
      */
     public function index(Request $request): View
     {
@@ -31,11 +31,11 @@ class EncounterController extends Controller
 
         $encounters = $query->orderBy('encounter_date', 'desc')->paginate(20);
 
-        return view('encounters.index', compact('encounters'));
+        return view('appointments.index', compact('encounters'));
     }
 
     /**
-     * Show the form for creating a new encounter
+     * Show the form for creating a new appointment
      */
     public function create(Request $request): View
     {
@@ -43,11 +43,11 @@ class EncounterController extends Controller
         $providers = Provider::active()->orderBy('last_name')->get();
         $departments = Department::active()->orderBy('department_name')->get();
 
-        return view('encounters.create', compact('patients', 'providers', 'departments'));
+        return view('appointments.create', compact('patients', 'providers', 'departments'));
     }
 
     /**
-     * Store a newly created encounter
+     * Store a newly created appointment
      */
     public function store(Request $request): RedirectResponse
     {
@@ -65,12 +65,12 @@ class EncounterController extends Controller
         $encounter = Encounter::create($validated);
 
         return redirect()
-            ->route('encounters.show', $encounter->encounter_id)
-            ->with('success', 'Encounter created successfully.');
+            ->route('appointments.show', $encounter->encounter_id)
+            ->with('success', 'Appointment created successfully.');
     }
 
     /**
-     * Display the specified encounter
+     * Display the specified appointment
      */
     public function show(Encounter $encounter): View
     {
@@ -87,22 +87,22 @@ class EncounterController extends Controller
             'treatmentPlan'
         ]);
 
-        return view('encounters.show', compact('encounter'));
+        return view('appointments.show', compact('encounter'));
     }
 
     /**
-     * Show the form for editing the specified encounter
+     * Show the form for editing the specified appointment
      */
     public function edit(Encounter $encounter): View
     {
         $providers = Provider::active()->orderBy('last_name')->get();
         $departments = Department::active()->orderBy('department_name')->get();
 
-        return view('encounters.edit', compact('encounter', 'providers', 'departments'));
+        return view('appointments.edit', compact('encounter', 'providers', 'departments'));
     }
 
     /**
-     * Update the specified encounter
+     * Update the specified appointment
      */
     public function update(Request $request, Encounter $encounter): RedirectResponse
     {
@@ -117,19 +117,19 @@ class EncounterController extends Controller
         $encounter->update($validated);
 
         return redirect()
-            ->route('encounters.show', $encounter->encounter_id)
-            ->with('success', 'Encounter updated successfully.');
+            ->route('appointments.show', $encounter->encounter_id)
+            ->with('success', 'Appointment updated successfully.');
     }
 
     /**
-     * Complete an encounter
+     * Complete an appointment
      */
     public function complete(Encounter $encounter): RedirectResponse
     {
         $encounter->update(['status' => 'Completed']);
 
         return redirect()
-            ->route('encounters.show', $encounter->encounter_id)
-            ->with('success', 'Encounter completed successfully.');
+            ->route('appointments.show', $encounter->encounter_id)
+            ->with('success', 'Appointment completed successfully.');
     }
 }

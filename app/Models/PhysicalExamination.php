@@ -12,6 +12,7 @@ class PhysicalExamination extends Model
 
     protected $table = 'physical_examinations';
     protected $primaryKey = 'exam_id';
+    public $timestamps = false;
 
     protected $fillable = [
         'encounter_id',
@@ -31,7 +32,6 @@ class PhysicalExamination extends Model
 
     protected $casts = [
         'performed_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
     /**
