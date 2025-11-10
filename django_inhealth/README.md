@@ -15,10 +15,10 @@ A comprehensive Electronic Health Records (EHR) system built with Django and Pos
 
 ## Technology Stack
 
-- **Backend**: Django 5.0.1
+- **Backend**: Django 4.2.16 LTS
 - **Database**: PostgreSQL 15+
 - **Frontend**: Django Templates with Tailwind CSS
-- **Python**: 3.10+
+- **Python**: 3.9+
 
 ## Installation
 
@@ -247,3 +247,4 @@ Contact your development team for contribution guidelines.
 - Diagnosis management
 - PostgreSQL database support
 - Ubuntu 24 and Rocky Linux 9 support
+- Django 4.2 LTS for Python 3.9+ compatibility
