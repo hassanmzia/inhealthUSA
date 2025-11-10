@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Prescription;
 use App\Models\Encounter;
+use App\Models\Patient;
+use App\Models\Provider;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -35,17 +37,24 @@ class PrescriptionController extends Controller
     /**
      * Show the form for creating a new prescription
      */
-    public function create(Encounter $encounter): View
+    public function create(Request $request): View
     {
-        return view('prescriptions.create', compact('encounter'));
+        $patients = Patient::orderBy('last_name')->orderBy('first_name')->get();
+        $providers = Provider::active()->orderBy('last_name')->get();
+        $encounters = Encounter::with('patient')->orderBy('encounter_date', 'desc')->limit(100)->get();
+
+        return view('prescriptions.create', compact('patients', 'providers', 'encounters'));
     }
 
     /**
      * Store a newly created prescription
      */
-    public function store(Request $request, Encounter $encounter): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'patient_id' => 'required|exists:patients,patient_id',
+            'provider_id' => 'required|exists:providers,provider_id',
+            'encounter_id' => 'nullable|exists:encounters,encounter_id',
             'medication_name' => 'required|string|max:300',
             'dosage' => 'required|string|max:200',
             'frequency' => 'required|string|max:200',
@@ -59,20 +68,17 @@ class PrescriptionController extends Controller
             'pharmacy_phone' => 'nullable|string|max:20',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
+            'status' => 'required|in:Active,Pending,Completed,Discontinued',
             'notes' => 'nullable|string',
         ]);
 
-        $validated['encounter_id'] = $encounter->encounter_id;
-        $validated['patient_id'] = $encounter->patient_id;
-        $validated['provider_id'] = $encounter->provider_id;
         $validated['prescribed_date'] = now();
-        $validated['status'] = 'Active';
 
-        Prescription::create($validated);
+        $prescription = Prescription::create($validated);
 
         return redirect()
-            ->route('encounters.show', $encounter->encounter_id)
-            ->with('success', 'Prescription added successfully.');
+            ->route('prescriptions.show', $prescription->prescription_id)
+            ->with('success', 'Prescription created successfully.');
     }
 
     /**

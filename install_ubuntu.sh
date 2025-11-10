@@ -101,6 +101,16 @@ print_status "Starting Nginx service..."
 sudo systemctl start nginx
 sudo systemctl enable nginx
 
+# Configure firewall
+print_status "Configuring firewall (UFW)..."
+sudo ufw --force enable
+sudo ufw allow 22/tcp comment 'SSH'
+sudo ufw allow 80/tcp comment 'HTTP'
+sudo ufw allow 443/tcp comment 'HTTPS'
+sudo ufw allow 8000/tcp comment 'Laravel Development Server'
+sudo ufw reload
+print_status "Firewall rules configured."
+
 # Install Node.js and npm (for frontend assets)
 print_status "Installing Node.js and npm..."
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
