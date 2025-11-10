@@ -146,16 +146,28 @@
                         @foreach($encounter->vitalSigns as $vital)
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $vital->recorded_at ? $vital->recorded_at->format('g:i A') : 'N/A' }}
+                                @if($vital->recorded_at)
+                                    {{ $vital->recorded_at->format('g:i A') }}
+                                @else
+                                    N/A
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $vital->blood_pressure_systolic }}/{{ $vital->blood_pressure_diastolic }} mmHg
+                                @if($vital->blood_pressure_systolic && $vital->blood_pressure_diastolic)
+                                    {{ $vital->blood_pressure_systolic }}/{{ $vital->blood_pressure_diastolic }} mmHg
+                                @else
+                                    N/A
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $vital->heart_rate }} bpm
+                                {{ $vital->heart_rate ?? 'N/A' }} @if($vital->heart_rate)bpm@endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $vital->temperature }}°F
+                                @if($vital->temperature_value)
+                                    {{ $vital->temperature_value }}°{{ $vital->temperature_unit ?? 'F' }}
+                                @else
+                                    N/A
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ $vital->respiratory_rate ?? 'N/A' }}
