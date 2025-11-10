@@ -90,7 +90,7 @@ class Patient extends Model
      */
     public function socialHistory(): HasOne
     {
-        return $this->hasOne(SocialHistory::class, 'patient_id', 'patient_id')->latestOfMany();
+        return $this->hasOne(SocialHistory::class, 'patient_id', 'patient_id')->latestOfMany('social_history_id');
     }
 
     /**

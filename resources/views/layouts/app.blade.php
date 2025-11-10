@@ -28,6 +28,10 @@
                            class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">
                             Patients
                         </a>
+                        <a href="{{ route('providers.index') }}"
+                           class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">
+                            Providers
+                        </a>
                         <a href="{{ route('encounters.index') }}"
                            class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">
                             Encounters
