@@ -28,13 +28,13 @@
                            class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">
                             Patients
                         </a>
-                        <a href="{{ route('providers.index') }}"
+                        <a href="{{ route('physicians.index') }}"
                            class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">
-                            Providers
+                            Physicians
                         </a>
-                        <a href="{{ route('encounters.index') }}"
+                        <a href="{{ route('appointments.index') }}"
                            class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">
-                            Encounters
+                            Appointments
                         </a>
                         <a href="{{ route('prescriptions.index') }}"
                            class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">

@@ -23,11 +23,11 @@
             </div>
         </div>
         <div class="mt-4 sm:mt-0 flex space-x-3">
-            <a href="{{ route('providers.edit', $provider->provider_id) }}"
+            <a href="{{ route('physicians.edit', $provider->provider_id) }}"
                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                 Edit Provider
             </a>
-            <a href="{{ route('providers.index') }}"
+            <a href="{{ route('physicians.index') }}"
                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                 Back to List
             </a>
@@ -144,7 +144,7 @@
     <div class="bg-white shadow overflow-hidden sm:rounded-lg">
         <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
             <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Encounters</h3>
-            <a href="{{ route('encounters.create') }}?provider_id={{ $provider->provider_id }}"
+            <a href="{{ route('appointments.create') }}?provider_id={{ $provider->provider_id }}"
                class="text-sm text-medical-blue hover:underline">
                 New Encounter
             </a>
@@ -190,7 +190,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ route('encounters.show', $encounter->encounter_id) }}"
+                            <a href="{{ route('appointments.show', $encounter->encounter_id) }}"
                                class="text-medical-blue hover:underline">View</a>
                         </td>
                     </tr>

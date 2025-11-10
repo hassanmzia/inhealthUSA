@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
-class ProviderController extends Controller
+class PhysicianController extends Controller
 {
     /**
      * Display a listing of providers
@@ -44,7 +44,7 @@ class ProviderController extends Controller
             ->orderBy('specialty')
             ->pluck('specialty');
 
-        return view('providers.index', compact('providers', 'specialties'));
+        return view('physicians.index', compact('providers', 'specialties'));
     }
 
     /**
@@ -52,7 +52,7 @@ class ProviderController extends Controller
      */
     public function create(): View
     {
-        return view('providers.create');
+        return view('physicians.create');
     }
 
     /**
@@ -75,7 +75,7 @@ class ProviderController extends Controller
         $provider = Provider::create($validated);
 
         return redirect()
-            ->route('providers.show', $provider->provider_id)
+            ->route('physicians.show', $provider->provider_id)
             ->with('success', 'Provider created successfully.');
     }
 
@@ -103,7 +103,7 @@ class ProviderController extends Controller
                 ->count('patient_id'),
         ];
 
-        return view('providers.show', compact('provider', 'stats'));
+        return view('physicians.show', compact('provider', 'stats'));
     }
 
     /**
@@ -111,7 +111,7 @@ class ProviderController extends Controller
      */
     public function edit(Provider $provider): View
     {
-        return view('providers.edit', compact('provider'));
+        return view('physicians.edit', compact('provider'));
     }
 
     /**
@@ -132,7 +132,7 @@ class ProviderController extends Controller
         $provider->update($validated);
 
         return redirect()
-            ->route('providers.show', $provider->provider_id)
+            ->route('physicians.show', $provider->provider_id)
             ->with('success', 'Provider updated successfully.');
     }
 
@@ -144,7 +144,7 @@ class ProviderController extends Controller
         $provider->update(['is_active' => false]);
 
         return redirect()
-            ->route('providers.index')
+            ->route('physicians.index')
             ->with('success', 'Provider deactivated successfully.');
     }
 
@@ -156,7 +156,7 @@ class ProviderController extends Controller
         $provider->update(['is_active' => true]);
 
         return redirect()
-            ->route('providers.show', $provider->provider_id)
+            ->route('physicians.show', $provider->provider_id)
             ->with('success', 'Provider activated successfully.');
     }
 }

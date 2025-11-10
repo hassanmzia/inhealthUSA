@@ -10,7 +10,7 @@
             <p class="mt-2 text-sm text-gray-700">Manage doctors, nurses, and medical staff.</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <a href="{{ route('providers.create') }}"
+            <a href="{{ route('physicians.create') }}"
                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700">
                 New Provider
             </a>
@@ -19,7 +19,7 @@
 
     <!-- Search and Filters -->
     <div class="mb-4 flex flex-col sm:flex-row gap-4">
-        <form method="GET" action="{{ route('providers.index') }}" class="flex-1 flex gap-4">
+        <form method="GET" action="{{ route('physicians.index') }}" class="flex-1 flex gap-4">
             <input type="text" name="search" value="{{ request('search') }}"
                    placeholder="Search by name, specialty, email, or NPI..."
                    class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-medical-blue focus:ring-medical-blue text-sm">
@@ -38,7 +38,7 @@
             </button>
 
             @if(request('search') || request('specialty'))
-                <a href="{{ route('providers.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <a href="{{ route('physicians.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                     Clear
                 </a>
             @endif
@@ -98,9 +98,9 @@
                         {{ $provider->encounters->count() }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a href="{{ route('providers.show', $provider->provider_id) }}"
+                        <a href="{{ route('physicians.show', $provider->provider_id) }}"
                            class="text-medical-blue hover:underline mr-3">View</a>
-                        <a href="{{ route('providers.edit', $provider->provider_id) }}"
+                        <a href="{{ route('physicians.edit', $provider->provider_id) }}"
                            class="text-gray-600 hover:underline">Edit</a>
                     </td>
                 </tr>

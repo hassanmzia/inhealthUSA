@@ -10,7 +10,7 @@
             <p class="mt-2 text-sm text-gray-700">Patient visits and appointments.</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <a href="{{ route('encounters.create') }}"
+            <a href="{{ route('appointments.create') }}"
                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700">
                 New Encounter
             </a>
@@ -19,7 +19,7 @@
 
     <!-- Filters -->
     <div class="mb-4 flex space-x-4">
-        <form method="GET" action="{{ route('encounters.index') }}" class="flex space-x-4">
+        <form method="GET" action="{{ route('appointments.index') }}" class="flex space-x-4">
             <select name="status" class="rounded-md border-gray-300 shadow-sm focus:border-medical-blue focus:ring-medical-blue text-sm" onchange="this.form.submit()">
                 <option value="">All Status</option>
                 <option value="Scheduled" {{ request('status') == 'Scheduled' ? 'selected' : '' }}>Scheduled</option>
@@ -76,9 +76,9 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a href="{{ route('encounters.show', $encounter->encounter_id) }}"
+                        <a href="{{ route('appointments.show', $encounter->encounter_id) }}"
                            class="text-medical-blue hover:underline mr-3">View</a>
-                        <a href="{{ route('encounters.edit', $encounter->encounter_id) }}"
+                        <a href="{{ route('appointments.edit', $encounter->encounter_id) }}"
                            class="text-gray-600 hover:underline">Edit</a>
                     </td>
                 </tr>

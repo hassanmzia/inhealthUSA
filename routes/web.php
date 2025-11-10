@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PatientController;
-use App\Http\Controllers\ProviderController;
-use App\Http\Controllers\EncounterController;
+use App\Http\Controllers\PhysicianController;
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\VitalSignController;
 use App\Http\Controllers\DiagnosisController;
 use App\Http\Controllers\PrescriptionController;
@@ -28,24 +28,24 @@ Route::resource('patients', PatientController::class)->parameters([
     'patients' => 'patient:patient_id'
 ]);
 
-// Providers
-Route::resource('providers', ProviderController::class)->parameters([
-    'providers' => 'provider:provider_id'
+// Physicians
+Route::resource('physicians', PhysicianController::class)->parameters([
+    'physicians' => 'provider:provider_id'
 ]);
-Route::put('providers/{provider}/activate', [ProviderController::class, 'activate'])
-    ->name('providers.activate');
+Route::put('physicians/{provider}/activate', [PhysicianController::class, 'activate'])
+    ->name('physicians.activate');
 
-// Encounters
-Route::resource('encounters', EncounterController::class)->parameters([
-    'encounters' => 'encounter:encounter_id'
+// Appointments
+Route::resource('appointments', AppointmentController::class)->parameters([
+    'appointments' => 'encounter:encounter_id'
 ]);
-Route::post('encounters/{encounter}/complete', [EncounterController::class, 'complete'])
-    ->name('encounters.complete');
+Route::post('appointments/{encounter}/complete', [AppointmentController::class, 'complete'])
+    ->name('appointments.complete');
 
 // Vital Signs
-Route::get('encounters/{encounter}/vital-signs/create', [VitalSignController::class, 'create'])
+Route::get('appointments/{encounter}/vital-signs/create', [VitalSignController::class, 'create'])
     ->name('vital-signs.create');
-Route::post('encounters/{encounter}/vital-signs', [VitalSignController::class, 'store'])
+Route::post('appointments/{encounter}/vital-signs', [VitalSignController::class, 'store'])
     ->name('vital-signs.store');
 Route::get('vital-signs/{vitalSign}/edit', [VitalSignController::class, 'edit'])
     ->name('vital-signs.edit');
@@ -53,9 +53,9 @@ Route::put('vital-signs/{vitalSign}', [VitalSignController::class, 'update'])
     ->name('vital-signs.update');
 
 // Diagnoses
-Route::get('encounters/{encounter}/diagnoses/create', [DiagnosisController::class, 'create'])
+Route::get('appointments/{encounter}/diagnoses/create', [DiagnosisController::class, 'create'])
     ->name('diagnoses.create');
-Route::post('encounters/{encounter}/diagnoses', [DiagnosisController::class, 'store'])
+Route::post('appointments/{encounter}/diagnoses', [DiagnosisController::class, 'store'])
     ->name('diagnoses.store');
 Route::get('diagnoses/{diagnosis}/edit', [DiagnosisController::class, 'edit'])
     ->name('diagnoses.edit');
@@ -68,10 +68,10 @@ Route::delete('diagnoses/{diagnosis}', [DiagnosisController::class, 'destroy'])
 Route::resource('prescriptions', PrescriptionController::class)->parameters([
     'prescriptions' => 'prescription:prescription_id'
 ]);
-Route::get('encounters/{encounter}/prescriptions/create', [PrescriptionController::class, 'create'])
-    ->name('prescriptions.create.encounter');
-Route::post('encounters/{encounter}/prescriptions', [PrescriptionController::class, 'store'])
-    ->name('prescriptions.store.encounter');
+Route::get('appointments/{encounter}/prescriptions/create', [PrescriptionController::class, 'create'])
+    ->name('prescriptions.create.appointment');
+Route::post('appointments/{encounter}/prescriptions', [PrescriptionController::class, 'store'])
+    ->name('prescriptions.store.appointment');
 Route::post('prescriptions/{prescription}/discontinue', [PrescriptionController::class, 'discontinue'])
     ->name('prescriptions.discontinue');
 
