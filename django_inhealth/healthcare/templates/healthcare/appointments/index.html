@@ -1,0 +1,101 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Appointments - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <div class="mb-8 sm:flex sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Appointments</h1>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <a href="{% url 'appointment_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700">
+                Schedule New Appointment
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-4">
+        <div class="px-4 py-5 sm:px-6">
+            <form method="get" action="{% url 'appointment_list' %}">
+                <div class="flex gap-4">
+                    <select name="status" class="rounded-md border-gray-300 shadow-sm focus:border-medical-blue focus:ring-medical-blue">
+                        <option value="">All Statuses</option>
+                        <option value="Scheduled" {% if status == 'Scheduled' %}selected{% endif %}>Scheduled</option>
+                        <option value="Checked In" {% if status == 'Checked In' %}selected{% endif %}>Checked In</option>
+                        <option value="In Progress" {% if status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                        <option value="Completed" {% if status == 'Completed' %}selected{% endif %}>Completed</option>
+                        <option value="Cancelled" {% if status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                        <option value="No Show" {% if status == 'No Show' %}selected{% endif %}>No Show</option>
+                    </select>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700">
+                        Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Appointment List -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Physician</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for appointment in appointments %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ appointment.encounter_date|date:"Y-m-d H:i" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <a href="{% url 'patient_detail' appointment.patient.patient_id %}" class="text-medical-blue hover:underline">
+                                {{ appointment.patient.full_name }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {% if appointment.provider %}
+                                Dr. {{ appointment.provider.full_name }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ appointment.encounter_type }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {% if appointment.status == 'Completed' %}bg-green-100 text-green-800
+                                {% elif appointment.status == 'In Progress' %}bg-yellow-100 text-yellow-800
+                                {% elif appointment.status == 'Scheduled' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ appointment.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="{% url 'appointment_detail' appointment.encounter_id %}" class="text-medical-blue hover:text-blue-900 mr-3">View</a>
+                            <a href="{% url 'appointment_edit' appointment.encounter_id %}" class="text-medical-blue hover:text-blue-900">Edit</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                            No appointments found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
