@@ -17,6 +17,10 @@ sudo dnf update -y
 echo "Installing EPEL repository..."
 sudo dnf install -y epel-release
 
+# Enable CodeReady Builder (CRB) repository for additional packages
+echo "Enabling CodeReady Builder repository..."
+sudo dnf config-manager --set-enabled crb
+
 # Add PostgreSQL official repository
 echo "Adding PostgreSQL official repository..."
 sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
@@ -25,13 +29,18 @@ sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-
 echo "Disabling built-in PostgreSQL module..."
 sudo dnf -qy module disable postgresql
 
-# Install Perl dependencies required by PostgreSQL
+# Install Perl dependencies required by PostgreSQL devel
 echo "Installing Perl dependencies..."
-sudo dnf install -y perl-IPC-Run
+sudo dnf install -y perl-IPC-Run || echo "Warning: perl-IPC-Run not available, will install PostgreSQL without devel package"
 
-# Install PostgreSQL 15
+# Install PostgreSQL 15 (try with devel, fallback without if it fails)
 echo "Installing PostgreSQL 15..."
-sudo dnf install -y postgresql15-server postgresql15-contrib postgresql15-devel
+if sudo dnf install -y postgresql15-server postgresql15-contrib postgresql15-devel; then
+    echo "PostgreSQL 15 with development packages installed successfully"
+else
+    echo "Installing PostgreSQL 15 without devel package..."
+    sudo dnf install -y postgresql15-server postgresql15-contrib
+fi
 
 # Initialize PostgreSQL database
 echo "Initializing PostgreSQL database..."
