@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\EncounterController;
 use App\Http\Controllers\VitalSignController;
 use App\Http\Controllers\DiagnosisController;
@@ -26,6 +27,13 @@ Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 Route::resource('patients', PatientController::class)->parameters([
     'patients' => 'patient:patient_id'
 ]);
+
+// Providers
+Route::resource('providers', ProviderController::class)->parameters([
+    'providers' => 'provider:provider_id'
+]);
+Route::put('providers/{provider}/activate', [ProviderController::class, 'activate'])
+    ->name('providers.activate');
 
 // Encounters
 Route::resource('encounters', EncounterController::class)->parameters([
