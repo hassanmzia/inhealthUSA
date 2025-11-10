@@ -39,12 +39,11 @@ class EncounterController extends Controller
      */
     public function create(Request $request): View
     {
-        $patientId = $request->input('patient_id');
-        $patient = $patientId ? Patient::findOrFail($patientId) : null;
+        $patients = Patient::orderBy('last_name')->orderBy('first_name')->get();
         $providers = Provider::active()->orderBy('last_name')->get();
         $departments = Department::active()->orderBy('department_name')->get();
 
-        return view('encounters.create', compact('patient', 'providers', 'departments'));
+        return view('encounters.create', compact('patients', 'providers', 'departments'));
     }
 
     /**
