@@ -25,6 +25,10 @@ sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-
 echo "Disabling built-in PostgreSQL module..."
 sudo dnf -qy module disable postgresql
 
+# Install Perl dependencies required by PostgreSQL
+echo "Installing Perl dependencies..."
+sudo dnf install -y perl-IPC-Run
+
 # Install PostgreSQL 15
 echo "Installing PostgreSQL 15..."
 sudo dnf install -y postgresql15-server postgresql15-contrib postgresql15-devel
