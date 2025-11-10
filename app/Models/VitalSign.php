@@ -30,6 +30,7 @@ class VitalSign extends Model
         'bmi',
         'notes',
         'recorded_by',
+        'recorded_at',
     ];
 
     protected $casts = [

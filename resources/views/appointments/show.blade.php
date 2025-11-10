@@ -9,7 +9,7 @@
         <div>
             <h1 class="text-3xl font-bold text-gray-900">Encounter Details</h1>
             <p class="mt-2 text-sm text-gray-700">
-                {{ $encounter->encounter_date->format('F j, Y \a\t g:i A') }} - {{ $encounter->encounter_type }}
+                {{ optional($encounter->encounter_date)->format('F j, Y \a\t g:i A') ?? 'N/A' }} - {{ $encounter->encounter_type }}
             </p>
         </div>
         <div class="mt-4 sm:mt-0 flex space-x-3">
@@ -48,7 +48,7 @@
                             {{ $encounter->patient->full_name }}
                         </a>
                         <span class="text-gray-500 ml-2">
-                            (DOB: {{ $encounter->patient->date_of_birth->format('Y-m-d') }})
+                            (DOB: {{ optional($encounter->patient->date_of_birth)->format('Y-m-d') ?? 'N/A' }})
                         </span>
                     </dd>
                 </div>
@@ -88,7 +88,7 @@
                 <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Date & Time</dt>
                     <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {{ $encounter->encounter_date->format('F j, Y \a\t g:i A') }}
+                        {{ optional($encounter->encounter_date)->format('F j, Y \a\t g:i A') ?? 'N/A' }}
                     </dd>
                 </div>
             </dl>
@@ -105,7 +105,7 @@
                 <div class="mb-4 last:mb-0">
                     <h4 class="text-sm font-medium text-gray-900">{{ $complaint->complaint_text }}</h4>
                     @if($complaint->onset_date)
-                        <p class="text-sm text-gray-500 mt-1">Onset: {{ $complaint->onset_date->format('Y-m-d') }}</p>
+                        <p class="text-sm text-gray-500 mt-1">Onset: {{ optional($complaint->onset_date)->format('Y-m-d') ?? 'N/A' }}</p>
                     @endif
                     @if($complaint->severity)
                         <p class="text-sm text-gray-500">Severity: {{ $complaint->severity }}/10</p>
@@ -146,16 +146,24 @@
                         @foreach($encounter->vitalSigns as $vital)
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $vital->created_at->format('g:i A') }}
+                                {{ optional($vital->recorded_at)->format('g:i A') ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $vital->blood_pressure_systolic }}/{{ $vital->blood_pressure_diastolic }} mmHg
+                                @if($vital->blood_pressure_systolic && $vital->blood_pressure_diastolic)
+                                    {{ $vital->blood_pressure_systolic }}/{{ $vital->blood_pressure_diastolic }} mmHg
+                                @else
+                                    N/A
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $vital->heart_rate }} bpm
+                                {{ $vital->heart_rate ?? 'N/A' }} @if($vital->heart_rate)bpm@endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $vital->temperature }}°F
+                                @if($vital->temperature_value)
+                                    {{ $vital->temperature_value }}°{{ $vital->temperature_unit ?? 'F' }}
+                                @else
+                                    N/A
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ $vital->respiratory_rate ?? 'N/A' }}
@@ -257,7 +265,7 @@
                 <div class="mt-4 pt-4 border-t border-gray-200">
                     <p class="text-sm text-gray-700">
                         <span class="font-medium">Follow-up Date:</span>
-                        {{ $encounter->treatmentPlan->follow_up_date->format('F j, Y') }}
+                        {{ optional($encounter->treatmentPlan->follow_up_date)->format('F j, Y') ?? 'N/A' }}
                     </p>
                 </div>
             @endif
