@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Diagnosis;
 use App\Models\Encounter;
+use App\Models\Provider;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -15,7 +16,8 @@ class DiagnosisController extends Controller
      */
     public function create(Encounter $encounter): View
     {
-        return view('diagnoses.create', compact('encounter'));
+        $providers = Provider::active()->orderBy('last_name')->orderBy('first_name')->get();
+        return view('diagnoses.create', compact('encounter', 'providers'));
     }
 
     /**
@@ -49,7 +51,9 @@ class DiagnosisController extends Controller
      */
     public function edit(Diagnosis $diagnosis): View
     {
-        return view('diagnoses.edit', compact('diagnosis'));
+        $providers = Provider::active()->orderBy('last_name')->orderBy('first_name')->get();
+        $encounter = $diagnosis->encounter;
+        return view('diagnoses.edit', compact('diagnosis', 'providers', 'encounter'));
     }
 
     /**
