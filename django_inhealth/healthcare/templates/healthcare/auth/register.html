@@ -1,158 +1,402 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - InHealth EHR</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'medical-blue': '#0066CC',
-                    }
-                }
-            }
-        }
-    </script>
-</head>
-<body class="bg-gray-100">
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full space-y-8">
-            <div>
-                <h2 class="mt-6 text-center text-4xl font-extrabold text-gray-900">
-                    InHealth EHR
-                </h2>
-                <p class="mt-2 text-center text-sm text-gray-600">
-                    Create your account
-                </p>
-            </div>
-
-            <!-- Messages -->
-            {% if messages %}
-            <div class="rounded-md">
-                {% for message in messages %}
-                <div class="bg-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}blue{% endif %}-100 border border-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}blue{% endif %}-400 text-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}blue{% endif %}-700 px-4 py-3 rounded relative mb-4" role="alert">
-                    <span class="block sm:inline">{{ message }}</span>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            <form class="mt-8 space-y-6 bg-white shadow-md rounded-lg px-8 pt-6 pb-8" method="POST">
-                {% csrf_token %}
-                <div class="space-y-4">
-                    <div>
-                        <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                            Username *
-                        </label>
-                        {{ form.username }}
-                        {% if form.username.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.username.errors.0 }}</p>
-                        {% endif %}
-                        {% if form.username.help_text %}
-                            <p class="mt-1 text-xs text-gray-500">{{ form.username.help_text }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                                First Name *
-                            </label>
-                            {{ form.first_name }}
-                            {% if form.first_name.errors %}
-                                <p class="mt-1 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-                        <div>
-                            <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                                Last Name *
-                            </label>
-                            {{ form.last_name }}
-                            {% if form.last_name.errors %}
-                                <p class="mt-1 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                            Email Address *
-                        </label>
-                        {{ form.email }}
-                        {% if form.email.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div>
-                        <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                            Password *
-                        </label>
-                        {{ form.password1 }}
-                        {% if form.password1.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
-                        {% endif %}
-                        {% if form.password1.help_text %}
-                            <p class="mt-1 text-xs text-gray-500">{{ form.password1.help_text }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div>
-                        <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                            Confirm Password *
-                        </label>
-                        {{ form.password2 }}
-                        {% if form.password2.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-                </div>
-
-                {% if form.non_field_errors %}
-                <div class="text-sm text-red-600">
-                    {{ form.non_field_errors }}
-                </div>
-                {% endif %}
-
-                <div>
-                    <button type="submit"
-                            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-medical-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-medical-blue">
-                        Create Account
-                    </button>
-                </div>
-
-                <div class="text-center">
-                    <p class="text-sm text-gray-600">
-                        Already have an account?
-                        <a href="{% url 'login' %}" class="font-medium text-medical-blue hover:text-blue-500">
-                            Sign in here
-                        </a>
-                    </p>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    <title>InHealth EHR | Register</title>
     <style>
-        input[type="text"], input[type="email"], input[type="password"] {
-            appearance: none;
-            display: block;
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            line-height: 1.25rem;
+        /* Django Admin-inspired styling */
+        :root {
+            --primary: #417690;
+            --primary-dark: #205067;
+            --secondary: #447e9b;
+            --accent: #79aec8;
+            --body-bg: #f8f8f8;
+            --body-fg: #333;
+            --header-color: #ffc;
+            --header-link-color: white;
+            --breadcrumb-fg: #c4dce8;
+            --breadcrumb-link-fg: white;
+            --link-fg: #447e9b;
+            --link-hover-color: #036;
+            --link-selected-fg: #5b80b2;
+            --hairline-color: #e8e8e8;
+            --border-color: #ccc;
+            --error-fg: #ba2121;
+            --message-success-bg: #dfd;
+            --message-warning-bg: #ffc;
+            --message-error-bg: #ffefef;
+            --darkened-bg: #f8f8f8;
+            --selected-bg: #e4e4e4;
+            --selected-row: #ffc;
+            --button-fg: #fff;
+            --button-bg: #417690;
+            --button-hover-bg: #205067;
+            --default-button-bg: #417690;
+            --default-button-hover-bg: #205067;
+            --close-button-bg: #888;
+            --close-button-hover-bg: #747474;
+            --delete-button-bg: #ba2121;
+            --delete-button-hover-bg: #a41515;
         }
-        input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            font-family: "Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+            color: var(--body-fg);
+            background: var(--body-bg);
+        }
+
+        a:link, a:visited {
+            color: var(--link-fg);
+            text-decoration: none;
+        }
+
+        a:focus, a:hover {
+            color: var(--link-hover-color);
+        }
+
+        a:focus {
+            text-decoration: underline;
+        }
+
+        /* Header */
+        #header {
+            width: auto;
+            height: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 40px;
+            background: var(--primary);
+            color: var(--header-link-color);
+            overflow: hidden;
+        }
+
+        #header a:link, #header a:visited {
+            color: var(--header-link-color);
+        }
+
+        #branding {
+            float: left;
+        }
+
+        #branding h1 {
+            padding: 0;
+            margin: 0 20px 0 0;
+            font-weight: 300;
+            font-size: 24px;
+            color: var(--accent);
+        }
+
+        /* Content */
+        #content {
+            padding: 20px 40px;
+        }
+
+        .colM {
+            width: 100%;
+        }
+
+        /* Registration form */
+        .register {
+            background: white;
+            border: 1px solid var(--hairline-color);
+            max-width: 38em;
+            margin: 100px auto;
+        }
+
+        .register #header h1 {
+            padding: 0;
+            margin: 0;
+        }
+
+        .register #header h1 a {
+            font-size: 18px;
+            color: var(--accent);
+            display: block;
+            padding: 15px 20px;
+        }
+
+        .register #content {
+            padding: 20px 20px 0;
+        }
+
+        .register form {
+            margin-top: 1em;
+        }
+
+        .register .form-row {
+            padding: 4px 0;
+            margin-bottom: 12px;
+        }
+
+        .register .form-row.two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .register .form-row label {
+            display: block;
+            line-height: 2em;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .register .form-row input[type=text],
+        .register .form-row input[type=email],
+        .register .form-row input[type=password] {
+            padding: 8px 10px;
+            width: 100%;
+            font-size: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .register .form-row input[type=text]:focus,
+        .register .form-row input[type=email]:focus,
+        .register .form-row input[type=password]:focus {
+            border-color: var(--primary);
             outline: none;
-            border-color: #0066CC;
-            ring: 2px;
-            ring-color: #0066CC;
+        }
+
+        .register .helptext {
+            display: block;
+            margin-top: 5px;
+            font-size: 11px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .register .helptext ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+
+        .register .submit-row {
+            padding: 1em 0 0;
+            margin: 0;
+            text-align: center;
+        }
+
+        .register .submit-row input[type=submit] {
+            width: 100%;
+            padding: 10px 15px;
+            font-size: 13px;
+            font-weight: bold;
+            background: var(--button-bg);
+            border: none;
+            border-radius: 4px;
+            color: var(--button-fg);
+            cursor: pointer;
+        }
+
+        .register .submit-row input[type=submit]:hover,
+        .register .submit-row input[type=submit]:focus {
+            background: var(--button-hover-bg);
+        }
+
+        .register .password-reset-link {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .errornote {
+            font-size: 14px;
+            font-weight: 700;
+            display: block;
+            padding: 10px 12px;
+            margin: 0 0 10px;
+            color: var(--error-fg);
+            border: 1px solid var(--error-fg);
+            border-radius: 4px;
+            background-color: var(--message-error-bg);
+            background-position: 5px 12px;
+        }
+
+        .errorlist {
+            margin: 0 0 4px;
+            padding: 0;
+            color: var(--error-fg);
+            background: var(--message-error-bg);
+            border: 1px solid var(--error-fg);
+            border-radius: 4px;
+            list-style: none;
+        }
+
+        .errorlist li {
+            font-size: 13px;
+            display: block;
+            padding: 4px 5px;
+        }
+
+        .messagelist {
+            padding: 0;
+            margin: 0 0 20px;
+        }
+
+        .messagelist li {
+            display: block;
+            font-weight: 400;
+            font-size: 13px;
+            padding: 10px 10px 10px 65px;
+            margin: 0 0 10px;
+            background: var(--message-success-bg) url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNy41IDEuNWE2IDYgMCAxIDEgMCAxMiA2IDYgMCAwIDEgMC0xMnoiIHN0cm9rZT0iIzJlN2QzMiIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cGF0aCBkPSJNNC41IDcuNWwyIDIgMy0zLjUiIHN0cm9rZT0iIzJlN2QzMiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==) 40px 12px no-repeat;
+            background-size: 15px auto;
+            color: #2e7d32;
+            border-radius: 4px;
+            list-style: none;
+        }
+
+        .messagelist li.warning {
+            background: var(--message-warning-bg) url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNy41IDEuNWE2IDYgMCAxIDEgMCAxMiA2IDYgMCAwIDEgMC0xMnoiIHN0cm9rZT0iI2YyYzA0NyIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cGF0aCBkPSJNNy41IDVWOCIgc3Ryb2tlPSIjZjJjMDQ3IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNy41IiBjeT0iMTAuNSIgcj0iMC43NSIgZmlsbD0iI2YyYzA0NyIvPjwvc3ZnPg==) 40px 12px no-repeat;
+            background-size: 15px auto;
+            color: #856404;
+        }
+
+        .messagelist li.error {
+            background: var(--message-error-bg) url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNy41IDEuNWE2IDYgMCAxIDEgMCAxMiA2IDYgMCAwIDEgMC0xMnoiIHN0cm9rZT0iI2JhMjEyMSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cGF0aCBkPSJNNS41IDUuNWw0IDRtMC00bC00IDQiIHN0cm9rZT0iI2JhMjEyMSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==) 40px 12px no-repeat;
+            background-size: 15px auto;
+            color: var(--error-fg);
         }
     </style>
+</head>
+<body class="register">
+    <div id="container">
+        <div id="header">
+            <div id="branding">
+                <h1 id="site-name"><a href="{% url 'index' %}">InHealth EHR Administration</a></h1>
+            </div>
+        </div>
+
+        <div id="content">
+            <div id="content-main">
+                <!-- Messages -->
+                {% if messages %}
+                <ul class="messagelist">
+                    {% for message in messages %}
+                    <li class="{% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+
+                {% if form.errors %}
+                <p class="errornote">
+                    Please correct the error{{ form.errors|pluralize }} below.
+                </p>
+                {% endif %}
+
+                <form method="POST" id="register-form">
+                    {% csrf_token %}
+
+                    <div class="form-row">
+                        <label for="{{ form.username.id_for_label }}" class="required">Username:</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.username.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        {% if form.username.help_text %}
+                        <span class="helptext">{{ form.username.help_text|safe }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-row two-columns">
+                        <div>
+                            <label for="{{ form.first_name.id_for_label }}" class="required">First name:</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.first_name.errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.last_name.id_for_label }}" class="required">Last name:</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.last_name.errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="{{ form.email.id_for_label }}" class="required">Email:</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.email.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-row">
+                        <label for="{{ form.password1.id_for_label }}" class="required">Password:</label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.password1.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        {% if form.password1.help_text %}
+                        <span class="helptext">{{ form.password1.help_text|safe }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-row">
+                        <label for="{{ form.password2.id_for_label }}" class="required">Password confirmation:</label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.password2.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        {% if form.password2.help_text %}
+                        <span class="helptext">{{ form.password2.help_text|safe }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if form.non_field_errors %}
+                    <ul class="errorlist">
+                        {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    <div class="submit-row">
+                        <input type="submit" value="Create Account">
+                    </div>
+                </form>
+
+                <div class="password-reset-link">
+                    <p>Already have an account? <a href="{% url 'login' %}">Sign in here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
