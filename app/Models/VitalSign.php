@@ -12,6 +12,7 @@ class VitalSign extends Model
 
     protected $table = 'vital_signs';
     protected $primaryKey = 'vital_signs_id';
+    public $timestamps = false;
 
     protected $fillable = [
         'encounter_id',
