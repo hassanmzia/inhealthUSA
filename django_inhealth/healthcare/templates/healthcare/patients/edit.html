@@ -1,0 +1,29 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Edit Patient - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0 max-w-2xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Edit Patient</h1>
+        <p class="mt-2 text-sm text-gray-700">{{ patient.full_name }}</p>
+    </div>
+
+    <div class="bg-white shadow sm:rounded-lg p-6">
+        <form method="POST">
+            {% csrf_token %}
+
+            <p class="text-sm text-gray-500 mb-6">Feature coming soon. Use the Django admin panel at <a href="/admin/" class="text-medical-blue hover:underline">/admin/</a> to edit patient information.</p>
+
+            <div class="flex justify-end space-x-3">
+                <a href="{% url 'patient_detail' patient.patient_id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    Back to Patient
+                </a>
+                <a href="/admin/healthcare/patient/{{ patient.patient_id }}/change/" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700">
+                    Go to Admin Panel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
