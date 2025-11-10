@@ -51,6 +51,10 @@ echo "Starting PostgreSQL service..."
 sudo systemctl start postgresql-15
 sudo systemctl enable postgresql-15
 
+# Wait for PostgreSQL to be ready
+echo "Waiting for PostgreSQL to start..."
+sleep 5
+
 # Install Python 3 and pip
 echo "Installing Python 3 and dependencies..."
 sudo dnf install -y python3 python3-pip python3-devel
@@ -59,20 +63,7 @@ sudo dnf install -y python3 python3-pip python3-devel
 echo "Installing system dependencies..."
 sudo dnf install -y gcc make git curl
 
-# Configure PostgreSQL authentication
-echo "Configuring PostgreSQL authentication..."
-sudo sed -i 's/ident/md5/g' /var/lib/pgsql/15/data/pg_hba.conf
-sudo sed -i 's/peer/md5/g' /var/lib/pgsql/15/data/pg_hba.conf
-
-# Restart PostgreSQL to apply changes
-echo "Restarting PostgreSQL service..."
-sudo systemctl restart postgresql-15
-
-# Wait for PostgreSQL to be ready
-echo "Waiting for PostgreSQL to start..."
-sleep 5
-
-# Configure PostgreSQL database and user
+# Configure PostgreSQL database and user (before changing authentication)
 echo "Configuring PostgreSQL database..."
 sudo -u postgres psql << EOF
 -- Create database
@@ -99,6 +90,19 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO inhealth_use
 EOF
 
 echo "PostgreSQL database 'inhealth_db' and user 'inhealth_user' created successfully."
+
+# Configure PostgreSQL authentication (after creating user)
+echo "Configuring PostgreSQL authentication..."
+sudo sed -i 's/ident/md5/g' /var/lib/pgsql/15/data/pg_hba.conf
+sudo sed -i 's/peer/md5/g' /var/lib/pgsql/15/data/pg_hba.conf
+
+# Restart PostgreSQL to apply authentication changes
+echo "Restarting PostgreSQL service..."
+sudo systemctl restart postgresql-15
+
+# Wait for PostgreSQL to restart
+echo "Waiting for PostgreSQL to restart..."
+sleep 3
 
 # Create Python virtual environment
 echo "Creating Python virtual environment..."
