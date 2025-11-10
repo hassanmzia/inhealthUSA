@@ -108,7 +108,9 @@ npm -v
 print_status "Configuring firewall..."
 sudo firewall-cmd --permanent --add-service=http
 sudo firewall-cmd --permanent --add-service=https
+sudo firewall-cmd --permanent --add-port=8000/tcp
 sudo firewall-cmd --reload
+print_status "Firewall rules configured (HTTP, HTTPS, port 8000)."
 
 # Configure SELinux for web application
 print_status "Configuring SELinux..."
