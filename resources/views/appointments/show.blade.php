@@ -156,7 +156,11 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $vital->heart_rate ?? 'N/A' }} @if($vital->heart_rate)bpm@endif
+                                @if($vital->heart_rate)
+                                    {{ $vital->heart_rate }} bpm
+                                @else
+                                    N/A
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 @if($vital->temperature_value)
