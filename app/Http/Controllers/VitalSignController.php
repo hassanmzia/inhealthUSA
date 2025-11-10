@@ -40,6 +40,7 @@ class VitalSignController extends Controller
 
         $validated['encounter_id'] = $encounter->encounter_id;
         $validated['recorded_by'] = auth()->user()->id ?? 1; // Default to 1 if no auth
+        $validated['recorded_at'] = now();
 
         VitalSign::create($validated);
 

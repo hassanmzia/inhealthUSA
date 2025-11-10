@@ -25,6 +25,7 @@ class Diagnosis extends Model
         'resolved_date',
         'notes',
         'diagnosed_by',
+        'diagnosed_at',
     ];
 
     protected $casts = [

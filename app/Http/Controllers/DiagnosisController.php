@@ -38,6 +38,7 @@ class DiagnosisController extends Controller
         $validated['encounter_id'] = $encounter->encounter_id;
         $validated['diagnosed_by'] = auth()->user()->id ?? 1; // Default to 1 if no auth
         $validated['status'] = $validated['status'] ?? 'Active';
+        $validated['diagnosed_at'] = now();
 
         Diagnosis::create($validated);
 

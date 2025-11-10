@@ -146,7 +146,7 @@
                         @foreach($encounter->vitalSigns as $vital)
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $vital->created_at->format('g:i A') }}
+                                {{ $vital->recorded_at ? $vital->recorded_at->format('g:i A') : 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ $vital->blood_pressure_systolic }}/{{ $vital->blood_pressure_diastolic }} mmHg
