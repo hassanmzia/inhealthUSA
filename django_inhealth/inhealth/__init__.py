@@ -1,0 +1,1 @@
+# InHealth EHR Django Application
