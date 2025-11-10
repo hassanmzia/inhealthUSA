@@ -44,7 +44,11 @@ fi
 
 # Initialize PostgreSQL database
 echo "Initializing PostgreSQL database..."
-sudo /usr/pgsql-15/bin/postgresql-15-setup initdb
+if [ -d "/var/lib/pgsql/15/data/base" ]; then
+    echo "PostgreSQL data directory already exists, skipping initialization..."
+else
+    sudo /usr/pgsql-15/bin/postgresql-15-setup initdb
+fi
 
 # Start and enable PostgreSQL
 echo "Starting PostgreSQL service..."
@@ -65,31 +69,37 @@ sudo dnf install -y gcc make git curl
 
 # Configure PostgreSQL database and user (before changing authentication)
 echo "Configuring PostgreSQL database..."
-sudo -u postgres psql << EOF
--- Create database
-DROP DATABASE IF EXISTS inhealth_db;
-CREATE DATABASE inhealth_db;
+sudo -u postgres psql << 'EOF'
+-- Create user if not exists
+DO
+$$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'inhealth_user') THEN
+    CREATE USER inhealth_user WITH PASSWORD 'inhealth_password';
+    RAISE NOTICE 'User inhealth_user created';
+  ELSE
+    RAISE NOTICE 'User inhealth_user already exists';
+  END IF;
+END
+$$;
 
--- Create user
-DROP USER IF EXISTS inhealth_user;
-CREATE USER inhealth_user WITH PASSWORD 'inhealth_password';
+-- Create database if not exists
+SELECT 'CREATE DATABASE inhealth_db OWNER inhealth_user'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'inhealth_db')\gexec
 
 -- Grant privileges
 GRANT ALL PRIVILEGES ON DATABASE inhealth_db TO inhealth_user;
 
--- Grant schema permissions
+-- Connect to database and grant schema permissions
 \c inhealth_db
 GRANT ALL ON SCHEMA public TO inhealth_user;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO inhealth_user;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO inhealth_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO inhealth_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO inhealth_user;
-
--- Exit
-\q
 EOF
 
-echo "PostgreSQL database 'inhealth_db' and user 'inhealth_user' created successfully."
+echo "PostgreSQL database 'inhealth_db' and user 'inhealth_user' configured successfully."
 
 # Configure PostgreSQL authentication (after creating user)
 echo "Configuring PostgreSQL authentication..."
