@@ -1,0 +1,140 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}{{ hospital.name }} - InHealth EHR{% endblock %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'hospital_list' %}">Hospitals</a>
+&rsaquo; {{ hospital.name }}
+{% endblock %}
+
+{% block content %}
+<h1>{{ hospital.name }}</h1>
+
+<!-- Hospital Information -->
+<div class="module">
+    <h2>Hospital Information</h2>
+    <table style="width: 100%;">
+        <tbody>
+            <tr>
+                <th style="width: 200px; text-align: left; padding: 10px; background: var(--darkened-bg);">Hospital ID:</th>
+                <td style="padding: 10px;">{{ hospital.hospital_id }}</td>
+            </tr>
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">Address:</th>
+                <td style="padding: 10px;">{{ hospital.address }}</td>
+            </tr>
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">City, State ZIP:</th>
+                <td style="padding: 10px;">{{ hospital.city }}, {{ hospital.state }} {{ hospital.zip_code }}</td>
+            </tr>
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">Phone:</th>
+                <td style="padding: 10px;">{{ hospital.phone }}</td>
+            </tr>
+            {% if hospital.email %}
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">Email:</th>
+                <td style="padding: 10px;"><a href="mailto:{{ hospital.email }}">{{ hospital.email }}</a></td>
+            </tr>
+            {% endif %}
+            {% if hospital.website %}
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">Website:</th>
+                <td style="padding: 10px;"><a href="{{ hospital.website }}" target="_blank">{{ hospital.website }}</a></td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Statistics -->
+<div class="module" style="margin-top: 20px;">
+    <h2>Statistics</h2>
+    <table style="width: 100%;">
+        <tbody>
+            <tr>
+                <th style="width: 33%; text-align: center; padding: 20px; border-right: 1px solid var(--hairline-color);">
+                    <div style="font-size: 36px; font-weight: bold; color: var(--primary);">{{ total_departments }}</div>
+                    <div style="font-size: 13px; color: #666;">Departments</div>
+                </th>
+                <th style="width: 33%; text-align: center; padding: 20px; border-right: 1px solid var(--hairline-color);">
+                    <div style="font-size: 36px; font-weight: bold; color: var(--primary);">{{ total_providers }}</div>
+                    <div style="font-size: 13px; color: #666;">Doctors</div>
+                </th>
+                <th style="width: 34%; text-align: center; padding: 20px;">
+                    <div style="font-size: 36px; font-weight: bold; color: var(--primary);">{{ total_patients }}</div>
+                    <div style="font-size: 13px; color: #666;">Patients</div>
+                </th>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Departments -->
+<div class="module" style="margin-top: 20px;">
+    <table>
+        <caption>Departments</caption>
+        <thead>
+            <tr>
+                <th>Department Name</th>
+                <th>Location</th>
+                <th>Phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dept in departments %}
+            <tr>
+                <td>{{ dept.department_name }}</td>
+                <td>{{ dept.location|default:"N/A" }}</td>
+                <td>{{ dept.phone|default:"N/A" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" style="text-align: center; color: #666;">
+                    No departments found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Doctors -->
+<div class="module" style="margin-top: 20px;">
+    <table>
+        <caption>Doctors</caption>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Specialty</th>
+                <th>Department</th>
+                <th>NPI</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for provider in providers %}
+            <tr>
+                <td>
+                    <a href="{% url 'physician_detail' provider.provider_id %}">
+                        Dr. {{ provider.full_name }}
+                    </a>
+                </td>
+                <td>{{ provider.specialty|default:"N/A" }}</td>
+                <td>{{ provider.department.department_name|default:"N/A" }}</td>
+                <td>{{ provider.npi }}</td>
+                <td>
+                    <a href="{% url 'physician_detail' provider.provider_id %}">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: #666;">
+                    No doctors found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
