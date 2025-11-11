@@ -4,86 +4,438 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}InHealth EHR{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'medical-blue': '#0066CC',
-                    }
-                }
-            }
+    <style>
+        /* Django Admin-inspired styling */
+        :root {
+            --primary: #417690;
+            --primary-dark: #205067;
+            --secondary: #447e9b;
+            --accent: #79aec8;
+            --body-bg: #f8f8f8;
+            --body-fg: #333;
+            --header-color: #ffc;
+            --header-link-color: white;
+            --breadcrumb-fg: #c4dce8;
+            --breadcrumb-link-fg: white;
+            --link-fg: #447e9b;
+            --link-hover-color: #036;
+            --link-selected-fg: #5b80b2;
+            --hairline-color: #e8e8e8;
+            --border-color: #ccc;
+            --error-fg: #ba2121;
+            --message-success-bg: #dfd;
+            --message-warning-bg: #ffc;
+            --message-error-bg: #ffefef;
+            --darkened-bg: #f8f8f8;
+            --selected-bg: #e4e4e4;
+            --selected-row: #ffc;
+            --button-fg: #fff;
+            --button-bg: #417690;
+            --button-hover-bg: #205067;
+            --default-button-bg: #417690;
+            --default-button-hover-bg: #205067;
+            --close-button-bg: #888;
+            --close-button-hover-bg: #747474;
+            --delete-button-bg: #ba2121;
+            --delete-button-hover-bg: #a41515;
         }
-    </script>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            font-family: "Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+            color: var(--body-fg);
+            background: var(--body-bg);
+        }
+
+        a:link, a:visited {
+            color: var(--link-fg);
+            text-decoration: none;
+        }
+
+        a:focus, a:hover {
+            color: var(--link-hover-color);
+        }
+
+        a:focus {
+            text-decoration: underline;
+        }
+
+        /* Header */
+        #header {
+            background: var(--primary);
+            color: var(--header-link-color);
+            overflow: hidden;
+        }
+
+        #header a:link, #header a:visited {
+            color: var(--header-link-color);
+        }
+
+        #branding {
+            float: left;
+            padding: 10px 40px;
+        }
+
+        #branding h1 {
+            padding: 0;
+            margin: 0;
+            font-weight: 300;
+            font-size: 24px;
+            color: var(--accent);
+        }
+
+        #user-tools {
+            float: right;
+            padding: 10px 40px;
+            text-align: right;
+            font-size: 11px;
+        }
+
+        #user-tools a {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        /* Navigation */
+        .module {
+            background: white;
+            margin-bottom: 10px;
+        }
+
+        .module h2 {
+            margin: 0;
+            padding: 8px;
+            font-size: 13px;
+            background: var(--primary);
+            color: var(--header-link-color);
+        }
+
+        .module ul {
+            margin: 0;
+            padding: 0;
+        }
+
+        .module li {
+            list-style: none;
+            border-bottom: 1px solid var(--hairline-color);
+        }
+
+        .module a {
+            display: block;
+            padding: 8px 10px;
+        }
+
+        #content {
+            padding: 20px 40px;
+        }
+
+        /* Breadcrumbs */
+        .breadcrumbs {
+            background: var(--primary);
+            padding: 10px 40px;
+            border-top: 1px solid transparent;
+            color: var(--breadcrumb-fg);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .breadcrumbs a {
+            color: var(--breadcrumb-link-fg);
+        }
+
+        .breadcrumbs a:focus, .breadcrumbs a:hover {
+            color: var(--header-link-color);
+        }
+
+        /* Content */
+        #content-main {
+            float: left;
+            width: 100%;
+        }
+
+        /* Messages */
+        ul.messagelist {
+            padding: 0;
+            margin: 0 0 20px;
+        }
+
+        ul.messagelist li {
+            display: block;
+            font-weight: 400;
+            font-size: 13px;
+            padding: 10px 10px 10px 65px;
+            margin: 0 0 10px;
+            background: var(--message-success-bg) url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNy41IDEuNWE2IDYgMCAxIDEgMCAxMiA2IDYgMCAwIDEgMC0xMnoiIHN0cm9rZT0iIzJlN2QzMiIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cGF0aCBkPSJNNC41IDcuNWwyIDIgMy0zLjUiIHN0cm9rZT0iIzJlN2QzMiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==) 40px 12px no-repeat;
+            background-size: 15px auto;
+            color: #2e7d32;
+            border-radius: 4px;
+            list-style: none;
+        }
+
+        ul.messagelist li.warning {
+            background: var(--message-warning-bg) url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNy41IDEuNWE2IDYgMCAxIDEgMCAxMiA2IDYgMCAwIDEgMC0xMnoiIHN0cm9rZT0iI2YyYzA0NyIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cGF0aCBkPSJNNy41IDVWOCIgc3Ryb2tlPSIjZjJjMDQ3IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNy41IiBjeT0iMTAuNSIgcj0iMC43NSIgZmlsbD0iI2YyYzA0NyIvPjwvc3ZnPg==) 40px 12px no-repeat;
+            background-size: 15px auto;
+            color: #856404;
+        }
+
+        ul.messagelist li.error {
+            background: var(--message-error-bg) url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNy41IDEuNWE2IDYgMCAxIDEgMCAxMiA2IDYgMCAwIDEgMC0xMnoiIHN0cm9rZT0iI2JhMjEyMSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cGF0aCBkPSJNNS41IDUuNWw0IDRtMC00bC00IDQiIHN0cm9rZT0iI2JhMjEyMSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==) 40px 12px no-repeat;
+            background-size: 15px auto;
+            color: var(--error-fg);
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        thead th {
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--hairline-color);
+            background: var(--darkened-bg);
+            color: var(--body-fg);
+        }
+
+        tbody td {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--hairline-color);
+            font-size: 13px;
+        }
+
+        tbody tr:hover {
+            background: var(--darkened-bg);
+        }
+
+        /* Buttons */
+        .button, input[type=submit], input[type=button], .submit-row input, button {
+            background: var(--button-bg);
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            color: var(--button-fg);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover, button:hover {
+            background: var(--button-hover-bg);
+        }
+
+        /* Forms */
+        input[type=text], input[type=email], input[type=password], input[type=date], input[type=number], select, textarea {
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: "Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+        }
+
+        input[type=text]:focus, input[type=email]:focus, input[type=password]:focus,
+        input[type=date]:focus, input[type=number]:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        /* Object tools */
+        .object-tools {
+            float: right;
+            margin-top: -48px;
+            margin-bottom: 10px;
+        }
+
+        .object-tools li {
+            display: inline-block;
+            margin-left: 10px;
+            list-style: none;
+        }
+
+        /* Module styling */
+        .module {
+            background: white;
+            border: 1px solid var(--hairline-color);
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .module h2, .module caption {
+            margin: 0;
+            padding: 10px 15px;
+            font-weight: 400;
+            font-size: 13px;
+            text-align: left;
+            background: var(--primary);
+            color: var(--header-link-color);
+        }
+
+        .module h3 {
+            margin: 0;
+            padding: 8px 15px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--hairline-color);
+            background: var(--darkened-bg);
+        }
+
+        /* Dashboard */
+        .dashboard .module table {
+            width: 100%;
+        }
+
+        .dashboard .module h3 a {
+            color: var(--link-fg);
+        }
+
+        /* Status badges */
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status-scheduled { background: #d1ecf1; color: #0c5460; }
+        .status-in-progress { background: #fff3cd; color: #856404; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-discontinued { background: #f8d7da; color: #721c24; }
+
+        /* Utility */
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        /* Page header */
+        #content h1 {
+            margin: 0 0 20px;
+            font-weight: 300;
+            font-size: 28px;
+        }
+
+        /* Search form */
+        .search-form {
+            background: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--hairline-color);
+            border-radius: 4px;
+        }
+
+        .search-form input[type=text] {
+            width: 300px;
+            margin-right: 10px;
+        }
+
+        /* Navigation tabs */
+        .nav-tabs {
+            border-bottom: 1px solid var(--hairline-color);
+            margin-bottom: 20px;
+            padding: 0;
+        }
+
+        .nav-tabs li {
+            display: inline-block;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-tabs a {
+            display: block;
+            padding: 10px 20px;
+            border: 1px solid transparent;
+            border-bottom: none;
+            margin-right: 5px;
+            color: var(--link-fg);
+        }
+
+        .nav-tabs a:hover {
+            background: var(--darkened-bg);
+            border-color: var(--hairline-color);
+        }
+
+        .nav-tabs a.active {
+            background: white;
+            border-color: var(--hairline-color);
+            color: var(--body-fg);
+        }
+
+        /* Footer */
+        #footer {
+            clear: both;
+            padding: 10px;
+            text-align: center;
+            color: #666;
+            font-size: 11px;
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <!-- Navigation -->
-    <nav class="bg-medical-blue text-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <div class="flex-shrink-0 flex items-center">
-                        <a href="{% url 'index' %}" class="text-2xl font-bold">InHealth EHR</a>
-                    </div>
-                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                        <a href="{% url 'index' %}" class="inline-flex items-center px-1 pt-1 text-sm font-medium hover:text-gray-200">
-                            Dashboard
-                        </a>
-                        <a href="{% url 'patient_list' %}" class="inline-flex items-center px-1 pt-1 text-sm font-medium hover:text-gray-200">
-                            Patients
-                        </a>
-                        <a href="{% url 'physician_list' %}" class="inline-flex items-center px-1 pt-1 text-sm font-medium hover:text-gray-200">
-                            Physicians
-                        </a>
-                        <a href="{% url 'appointment_list' %}" class="inline-flex items-center px-1 pt-1 text-sm font-medium hover:text-gray-200">
-                            Appointments
-                        </a>
-                        <a href="{% url 'prescription_list' %}" class="inline-flex items-center px-1 pt-1 text-sm font-medium hover:text-gray-200">
-                            Prescriptions
-                        </a>
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    {% if user.is_authenticated %}
-                    <span class="text-sm mr-4">Welcome, {{ user.username }}</span>
-                    <a href="{% url 'logout' %}" class="inline-flex items-center px-3 py-2 border border-white text-sm font-medium rounded-md text-white hover:bg-blue-700">
-                        Logout
-                    </a>
-                    {% else %}
-                    <a href="{% url 'login' %}" class="inline-flex items-center px-3 py-2 border border-white text-sm font-medium rounded-md text-white hover:bg-blue-700">
-                        Login
-                    </a>
-                    {% endif %}
-                </div>
+<body>
+    <div id="container">
+        <!-- Header -->
+        <div id="header">
+            <div id="branding">
+                <h1><a href="{% url 'index' %}">InHealth EHR Administration</a></h1>
             </div>
+            {% if user.is_authenticated %}
+            <div id="user-tools">
+                Welcome, <strong>{{ user.username }}</strong>.
+                {% if user.is_superuser %}
+                <a href="/admin/">Admin Panel</a>
+                {% endif %}
+                <a href="{% url 'logout' %}">Log out</a>
+            </div>
+            {% endif %}
         </div>
-    </nav>
 
-    <!-- Messages -->
-    {% if messages %}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        {% for message in messages %}
-        <div class="bg-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}blue{% endif %}-100 border border-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}blue{% endif %}-400 text-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}blue{% endif %}-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline">{{ message }}</span>
+        <!-- Navigation/Breadcrumbs -->
+        <div class="breadcrumbs">
+            <a href="{% url 'index' %}">Home</a>
+            {% block breadcrumbs %}{% endblock %}
         </div>
-        {% endfor %}
+
+        <!-- Messages -->
+        {% if messages %}
+        <div id="content">
+            <ul class="messagelist">
+                {% for message in messages %}
+                <li class="{% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Main Content -->
+        <div id="content" class="{% block coltype %}colM{% endblock %}">
+            {% block pretitle %}{% endblock %}
+            {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+            {% block content %}
+            {% block object-tools %}{% endblock %}
+            {{ content }}
+            {% endblock %}
+            {% block sidebar %}{% endblock %}
+            <br class="clear">
+        </div>
+
+        <!-- Footer -->
+        <div id="footer">
+            &copy; 2024 InHealth EHR System. All rights reserved.
+        </div>
     </div>
-    {% endif %}
-
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {% block content %}
-        {% endblock %}
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-12">
-        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <p class="text-center text-gray-500 text-sm">
-                &copy; 2024 InHealth EHR System. All rights reserved.
-            </p>
-        </div>
-    </footer>
 </body>
 </html>
