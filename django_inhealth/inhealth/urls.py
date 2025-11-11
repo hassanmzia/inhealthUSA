@@ -6,6 +6,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+# Customize Django Admin Site
+admin.site.site_header = "InHealth EHR Administration"
+admin.site.site_title = "InHealth EHR Admin"
+admin.site.index_title = "InHealth EHR Administration"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('healthcare.urls')),
