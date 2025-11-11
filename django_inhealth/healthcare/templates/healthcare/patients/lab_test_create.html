@@ -1,0 +1,105 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Add Lab Test - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0 max-w-4xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Add Lab Test</h1>
+        <p class="mt-2 text-sm text-gray-700">Patient: {{ patient.full_name }}</p>
+    </div>
+
+    <div class="bg-white shadow sm:rounded-lg p-6">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <!-- Test Name -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Test Name *</label>
+                    <input type="text" name="test_name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., Complete Blood Count (CBC)">
+                </div>
+
+                <!-- Test Code -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Test Code</label>
+                    <input type="text" name="test_code" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., CBC-001">
+                </div>
+
+                <!-- Ordering Provider -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Ordering Provider</label>
+                    <select name="ordered_by" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="">Select Provider</option>
+                        {% for provider in providers %}
+                        <option value="{{ provider.provider_id }}">Dr. {{ provider.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Ordered Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Ordered Date *</label>
+                    <input type="date" name="ordered_date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <!-- Collection Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Collection Date</label>
+                    <input type="date" name="collection_date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                    <select name="status" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="Ordered" selected>Ordered</option>
+                        <option value="Collected">Collected</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <!-- Result Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Result Date</label>
+                    <input type="date" name="result_date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <!-- Result -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Result</label>
+                    <textarea name="result" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="Enter test results"></textarea>
+                </div>
+
+                <!-- Reference Range -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Reference Range</label>
+                    <input type="text" name="reference_range" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., 4.5-11.0 x10^9/L">
+                </div>
+
+                <!-- Unit -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Unit</label>
+                    <input type="text" name="unit" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., mg/dL, mmol/L">
+                </div>
+
+                <!-- Notes -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea name="notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm"></textarea>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <a href="{% url 'patient_edit' patient.patient_id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700">
+                    Save Lab Test
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

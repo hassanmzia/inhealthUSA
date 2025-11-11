@@ -28,6 +28,22 @@ urlpatterns = [
     path('patients/<int:patient_id>/prescriptions/create/', views.patient_prescription_create, name='patient_prescription_create'),
     path('patients/<int:patient_id>/prescriptions/<int:prescription_id>/edit/', views.patient_prescription_edit, name='patient_prescription_edit'),
 
+    # Patient Medical History URLs
+    path('patients/<int:patient_id>/medical-history/create/', views.patient_medical_history_create, name='patient_medical_history_create'),
+    path('patients/<int:patient_id>/medical-history/<int:medical_history_id>/edit/', views.patient_medical_history_edit, name='patient_medical_history_edit'),
+
+    # Patient Social History URLs
+    path('patients/<int:patient_id>/social-history/create/', views.patient_social_history_create, name='patient_social_history_create'),
+    path('patients/<int:patient_id>/social-history/<int:social_history_id>/edit/', views.patient_social_history_edit, name='patient_social_history_edit'),
+
+    # Patient Allergy URLs
+    path('patients/<int:patient_id>/allergies/create/', views.patient_allergy_create, name='patient_allergy_create'),
+    path('patients/<int:patient_id>/allergies/<int:allergy_id>/edit/', views.patient_allergy_edit, name='patient_allergy_edit'),
+
+    # Patient Lab Test URLs
+    path('patients/<int:patient_id>/lab-tests/create/', views.patient_lab_test_create, name='patient_lab_test_create'),
+    path('patients/<int:patient_id>/lab-tests/<int:lab_test_id>/edit/', views.patient_lab_test_edit, name='patient_lab_test_edit'),
+
     # Physician URLs
     path('physicians/', views.physician_list, name='physician_list'),
     path('physicians/<int:provider_id>/', views.physician_detail, name='physician_detail'),

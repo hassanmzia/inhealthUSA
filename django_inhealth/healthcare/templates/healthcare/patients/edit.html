@@ -18,18 +18,30 @@
 
     <!-- Tabs -->
     <div class="border-b border-gray-200 mb-6">
-        <nav class="-mb-px flex space-x-8">
-            <button onclick="showTab('demographics')" id="tab-demographics" class="tab-button border-b-2 border-medical-blue text-medical-blue py-4 px-1 text-sm font-medium">
+        <nav class="-mb-px flex space-x-4 overflow-x-auto">
+            <button onclick="showTab('demographics')" id="tab-demographics" class="tab-button border-b-2 border-medical-blue text-medical-blue py-4 px-1 text-sm font-medium whitespace-nowrap">
                 Demographics
             </button>
-            <button onclick="showTab('vitals')" id="tab-vitals" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+            <button onclick="showTab('vitals')" id="tab-vitals" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium whitespace-nowrap">
                 Vitals
             </button>
-            <button onclick="showTab('diagnoses')" id="tab-diagnoses" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+            <button onclick="showTab('diagnoses')" id="tab-diagnoses" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium whitespace-nowrap">
                 Diagnoses
             </button>
-            <button onclick="showTab('prescriptions')" id="tab-prescriptions" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+            <button onclick="showTab('prescriptions')" id="tab-prescriptions" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium whitespace-nowrap">
                 Prescriptions
+            </button>
+            <button onclick="showTab('medical-history')" id="tab-medical-history" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium whitespace-nowrap">
+                Medical History
+            </button>
+            <button onclick="showTab('social-history')" id="tab-social-history" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium whitespace-nowrap">
+                Social History
+            </button>
+            <button onclick="showTab('allergies')" id="tab-allergies" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium whitespace-nowrap">
+                Allergies
+            </button>
+            <button onclick="showTab('lab-tests')" id="tab-lab-tests" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium whitespace-nowrap">
+                Lab Tests
             </button>
         </nav>
     </div>
@@ -292,6 +304,208 @@
             {% else %}
             <div class="px-4 py-5 sm:px-6">
                 <p class="text-sm text-gray-500">No prescriptions recorded.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Medical History Tab -->
+    <div id="content-medical-history" class="tab-content hidden">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Medical History</h3>
+                <a href="{% url 'patient_medical_history_create' patient.patient_id %}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-medical-blue hover:bg-blue-700">
+                    Add Medical History
+                </a>
+            </div>
+            {% if medical_history %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Condition</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Diagnosis Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for history in medical_history %}
+                        <tr>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ history.condition }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% if history.diagnosis_date %}{{ history.diagnosis_date|date:"Y-m-d" }}{% else %}N/A{% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    {% if history.status == 'Active' %}bg-red-100 text-red-800
+                                    {% elif history.status == 'Chronic' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ history.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <a href="{% url 'patient_medical_history_edit' patient.patient_id history.medical_history_id %}" class="text-medical-blue hover:underline">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="px-4 py-5 sm:px-6">
+                <p class="text-sm text-gray-500">No medical history recorded.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Social History Tab -->
+    <div id="content-social-history" class="tab-content hidden">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Social History</h3>
+                <a href="{% url 'patient_social_history_create' patient.patient_id %}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-medical-blue hover:bg-blue-700">
+                    Add Social History
+                </a>
+            </div>
+            {% if social_history %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Smoking Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Alcohol Use</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Occupation</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marital Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recorded Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for history in social_history %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ history.smoking_status|default:"N/A" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ history.alcohol_use|default:"N/A" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ history.occupation|default:"N/A" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ history.marital_status|default:"N/A" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ history.recorded_date|date:"Y-m-d" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <a href="{% url 'patient_social_history_edit' patient.patient_id history.social_history_id %}" class="text-medical-blue hover:underline">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="px-4 py-5 sm:px-6">
+                <p class="text-sm text-gray-500">No social history recorded.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Allergies Tab -->
+    <div id="content-allergies" class="tab-content hidden">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Allergies</h3>
+                <a href="{% url 'patient_allergy_create' patient.patient_id %}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-medical-blue hover:bg-blue-700">
+                    Add Allergy
+                </a>
+            </div>
+            {% if allergies %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Allergen</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Severity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reaction</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for allergy in allergies %}
+                        <tr>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ allergy.allergen }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ allergy.allergy_type }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    {% if allergy.severity == 'Severe' %}bg-red-100 text-red-800
+                                    {% elif allergy.severity == 'Moderate' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ allergy.severity|default:"Unknown" }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ allergy.reaction|default:"N/A" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <a href="{% url 'patient_allergy_edit' patient.patient_id allergy.allergy_id %}" class="text-medical-blue hover:underline">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="px-4 py-5 sm:px-6">
+                <p class="text-sm text-gray-500">No allergies recorded.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Lab Tests Tab -->
+    <div id="content-lab-tests" class="tab-content hidden">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Lab Tests</h3>
+                <a href="{% url 'patient_lab_test_create' patient.patient_id %}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-medical-blue hover:bg-blue-700">
+                    Add Lab Test
+                </a>
+            </div>
+            {% if lab_tests %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Test Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ordered Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Result</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for lab_test in lab_tests %}
+                        <tr>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ lab_test.test_name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ lab_test.ordered_date|date:"Y-m-d" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    {% if lab_test.status == 'Completed' %}bg-green-100 text-green-800
+                                    {% elif lab_test.status == 'In Progress' %}bg-yellow-100 text-yellow-800
+                                    {% elif lab_test.status == 'Ordered' %}bg-blue-100 text-blue-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ lab_test.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                {% if lab_test.result_value %}{{ lab_test.result_value }} {{ lab_test.result_unit }}{% else %}Pending{% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <a href="{% url 'patient_lab_test_edit' patient.patient_id lab_test.lab_test_id %}" class="text-medical-blue hover:underline">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="px-4 py-5 sm:px-6">
+                <p class="text-sm text-gray-500">No lab tests recorded.</p>
             </div>
             {% endif %}
         </div>

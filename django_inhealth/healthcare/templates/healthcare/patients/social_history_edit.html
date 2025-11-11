@@ -1,0 +1,87 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Edit Social History - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0 max-w-4xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Edit Social History</h1>
+        <p class="mt-2 text-sm text-gray-700">Patient: {{ patient.full_name }}</p>
+        <p class="mt-1 text-xs text-gray-500">Recorded: {{ social_history.recorded_date|date:"M d, Y" }}</p>
+    </div>
+
+    <div class="bg-white shadow sm:rounded-lg p-6">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Smoking Status</label>
+                    <select name="smoking_status" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="">Select Status</option>
+                        <option value="Never" {% if social_history.smoking_status == 'Never' %}selected{% endif %}>Never Smoker</option>
+                        <option value="Former" {% if social_history.smoking_status == 'Former' %}selected{% endif %}>Former Smoker</option>
+                        <option value="Current" {% if social_history.smoking_status == 'Current' %}selected{% endif %}>Current Smoker</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Alcohol Use</label>
+                    <select name="alcohol_use" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="">Select Status</option>
+                        <option value="None" {% if social_history.alcohol_use == 'None' %}selected{% endif %}>None</option>
+                        <option value="Occasional" {% if social_history.alcohol_use == 'Occasional' %}selected{% endif %}>Occasional</option>
+                        <option value="Moderate" {% if social_history.alcohol_use == 'Moderate' %}selected{% endif %}>Moderate</option>
+                        <option value="Heavy" {% if social_history.alcohol_use == 'Heavy' %}selected{% endif %}>Heavy</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Drug Use</label>
+                    <select name="drug_use" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="">Select Status</option>
+                        <option value="None" {% if social_history.drug_use == 'None' %}selected{% endif %}>None</option>
+                        <option value="Former" {% if social_history.drug_use == 'Former' %}selected{% endif %}>Former Use</option>
+                        <option value="Current" {% if social_history.drug_use == 'Current' %}selected{% endif %}>Current Use</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Exercise Frequency</label>
+                    <input type="text" name="exercise_frequency" value="{{ social_history.exercise_frequency|default:'' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., 3 times per week">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Occupation</label>
+                    <input type="text" name="occupation" value="{{ social_history.occupation|default:'' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Marital Status</label>
+                    <select name="marital_status" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="">Select Status</option>
+                        <option value="Single" {% if social_history.marital_status == 'Single' %}selected{% endif %}>Single</option>
+                        <option value="Married" {% if social_history.marital_status == 'Married' %}selected{% endif %}>Married</option>
+                        <option value="Divorced" {% if social_history.marital_status == 'Divorced' %}selected{% endif %}>Divorced</option>
+                        <option value="Widowed" {% if social_history.marital_status == 'Widowed' %}selected{% endif %}>Widowed</option>
+                        <option value="Separated" {% if social_history.marital_status == 'Separated' %}selected{% endif %}>Separated</option>
+                    </select>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea name="notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">{{ social_history.notes|default:'' }}</textarea>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <a href="{% url 'patient_edit' patient.patient_id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700">
+                    Update Social History
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
