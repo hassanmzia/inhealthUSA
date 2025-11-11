@@ -1,0 +1,127 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Edit Prescription - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0 max-w-4xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Edit Prescription</h1>
+        <p class="mt-2 text-sm text-gray-700">Patient: {{ patient.full_name }}</p>
+        <p class="mt-1 text-xs text-gray-500">Medication: {{ prescription.medication_name }}</p>
+    </div>
+
+    <div class="bg-white shadow sm:rounded-lg p-6">
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <!-- Provider Selection -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Provider *</label>
+                    <select name="provider_id" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="">Select Provider</option>
+                        {% for provider in providers %}
+                        <option value="{{ provider.provider_id }}" {% if prescription.provider_id == provider.provider_id %}selected{% endif %}>Dr. {{ provider.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Medication Name -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Medication Name *</label>
+                    <input type="text" name="medication_name" value="{{ prescription.medication_name }}" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., Lisinopril">
+                </div>
+
+                <!-- Dosage -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Dosage *</label>
+                    <input type="text" name="dosage" value="{{ prescription.dosage }}" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., 10mg">
+                </div>
+
+                <!-- Frequency -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Frequency *</label>
+                    <input type="text" name="frequency" value="{{ prescription.frequency }}" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., Once daily">
+                </div>
+
+                <!-- Route -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Route</label>
+                    <select name="route" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="">Select Route</option>
+                        <option value="Oral" {% if prescription.route == 'Oral' %}selected{% endif %}>Oral</option>
+                        <option value="IV" {% if prescription.route == 'IV' %}selected{% endif %}>Intravenous (IV)</option>
+                        <option value="IM" {% if prescription.route == 'IM' %}selected{% endif %}>Intramuscular (IM)</option>
+                        <option value="SC" {% if prescription.route == 'SC' %}selected{% endif %}>Subcutaneous (SC)</option>
+                        <option value="Topical" {% if prescription.route == 'Topical' %}selected{% endif %}>Topical</option>
+                        <option value="Inhalation" {% if prescription.route == 'Inhalation' %}selected{% endif %}>Inhalation</option>
+                        <option value="Rectal" {% if prescription.route == 'Rectal' %}selected{% endif %}>Rectal</option>
+                        <option value="Other" {% if prescription.route == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <!-- Quantity -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Quantity</label>
+                    <input type="number" name="quantity" value="{{ prescription.quantity|default:'' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="30">
+                </div>
+
+                <!-- Refills -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Refills</label>
+                    <input type="number" name="refills" value="{{ prescription.refills }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                    <select name="status" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="Active" {% if prescription.status == 'Active' %}selected{% endif %}>Active</option>
+                        <option value="Discontinued" {% if prescription.status == 'Discontinued' %}selected{% endif %}>Discontinued</option>
+                        <option value="Completed" {% if prescription.status == 'Completed' %}selected{% endif %}>Completed</option>
+                    </select>
+                </div>
+
+                <!-- Start Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Start Date *</label>
+                    <input type="date" name="start_date" value="{{ prescription.start_date|date:'Y-m-d' }}" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <!-- End Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">End Date</label>
+                    <input type="date" name="end_date" value="{% if prescription.end_date %}{{ prescription.end_date|date:'Y-m-d' }}{% endif %}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <!-- Instructions -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Instructions</label>
+                    <textarea name="instructions" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="Take one tablet by mouth once daily with food">{{ prescription.instructions|default:'' }}</textarea>
+                </div>
+
+                <!-- Pharmacy Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Pharmacy Name</label>
+                    <input type="text" name="pharmacy_name" value="{{ prescription.pharmacy_name|default:'' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <!-- Pharmacy Phone -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Pharmacy Phone</label>
+                    <input type="text" name="pharmacy_phone" value="{{ prescription.pharmacy_phone|default:'' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <a href="{% url 'patient_edit' patient.patient_id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700">
+                    Update Prescription
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
