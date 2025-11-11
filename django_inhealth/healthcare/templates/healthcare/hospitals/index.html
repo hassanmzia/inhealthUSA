@@ -1,0 +1,64 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Hospitals - InHealth EHR{% endblock %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'hospital_list' %}">Hospitals</a>
+{% endblock %}
+
+{% block content %}
+<h1>Hospitals</h1>
+
+<!-- Search -->
+<div class="search-form">
+    <form method="get" action="{% url 'hospital_list' %}">
+        <input type="text" name="search" value="{{ search }}" placeholder="Search hospitals by name, city, or state...">
+        <button type="submit">Search</button>
+    </form>
+</div>
+
+<!-- Hospital List -->
+<div class="module">
+    <table>
+        <caption>Hospital List</caption>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Phone</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for hospital in hospitals %}
+            <tr>
+                <td>{{ hospital.hospital_id }}</td>
+                <td>
+                    <a href="{% url 'hospital_detail' hospital.hospital_id %}">
+                        {{ hospital.name }}
+                    </a>
+                </td>
+                <td>{{ hospital.city }}</td>
+                <td>{{ hospital.state }}</td>
+                <td>{{ hospital.phone }}</td>
+                <td>
+                    <a href="{% url 'hospital_detail' hospital.hospital_id %}">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; color: #666;">
+                    No hospitals found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<p style="margin-top: 20px; font-size: 12px; color: #666;">
+    <strong>Note:</strong> To add or edit hospitals, please use the <a href="/admin/healthcare/hospital/">Admin Panel</a>.
+</p>
+{% endblock %}

@@ -1,120 +1,123 @@
 {% extends 'healthcare/base.html' %}
 
-{% block title %}{{ physician.full_name }} - InHealth EHR{% endblock %}
+{% block title %}Dr. {{ physician.full_name }} - InHealth EHR{% endblock %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'physician_list' %}">Physicians</a>
+&rsaquo; Dr. {{ physician.full_name }}
+{% endblock %}
 
 {% block content %}
-<div class="px-4 sm:px-0">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Dr. {{ physician.full_name }}</h1>
-        <p class="mt-2 text-sm text-gray-700">{{ physician.specialty }}</p>
-    </div>
+<h1>Dr. {{ physician.full_name }}</h1>
+<p style="color: #666; margin-top: 5px; margin-bottom: 20px;">{{ physician.specialty|default:"General Practice" }}</p>
 
-    <!-- Physician Information -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
-        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Physician Information</h3>
-        </div>
-        <div class="border-t border-gray-200">
-            <dl>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Provider ID</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ physician.provider_id }}</dd>
-                </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Full Name</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">Dr. {{ physician.full_name }}</dd>
-                </div>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Specialty</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ physician.specialty|default:"N/A" }}</dd>
-                </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">NPI Number</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ physician.npi }}</dd>
-                </div>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">License Number</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ physician.license_number|default:"N/A" }}</dd>
-                </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Email</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ physician.email|default:"N/A" }}</dd>
-                </div>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Phone</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ physician.phone|default:"N/A" }}</dd>
-                </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Department</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {% if physician.department %}
-                            {{ physician.department.department_name }}
-                        {% else %}
-                            N/A
-                        {% endif %}
-                    </dd>
-                </div>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Status</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if physician.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
-                            {% if physician.is_active %}Active{% else %}Inactive{% endif %}
-                        </span>
-                    </dd>
-                </div>
-            </dl>
-        </div>
-    </div>
+<!-- Physician Information -->
+<div class="module">
+    <h2>Physician Information</h2>
+    <table style="width: 100%;">
+        <tbody>
+            <tr>
+                <th style="width: 200px; text-align: left; padding: 10px; background: var(--darkened-bg);">Provider ID:</th>
+                <td style="padding: 10px;">{{ physician.provider_id }}</td>
+            </tr>
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">Full Name:</th>
+                <td style="padding: 10px;">Dr. {{ physician.full_name }}</td>
+            </tr>
+            {% if physician.hospital %}
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">Hospital:</th>
+                <td style="padding: 10px;">
+                    <a href="{% url 'hospital_detail' physician.hospital.hospital_id %}">
+                        {{ physician.hospital.name }}
+                    </a>
+                </td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">Specialty:</th>
+                <td style="padding: 10px;">{{ physician.specialty|default:"N/A" }}</td>
+            </tr>
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">NPI Number:</th>
+                <td style="padding: 10px;">{{ physician.npi }}</td>
+            </tr>
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">License Number:</th>
+                <td style="padding: 10px;">{{ physician.license_number|default:"N/A" }}</td>
+            </tr>
+            {% if physician.department %}
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">Department:</th>
+                <td style="padding: 10px;">{{ physician.department.department_name }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">Email:</th>
+                <td style="padding: 10px;">
+                    {% if physician.email %}
+                        <a href="mailto:{{ physician.email }}">{{ physician.email }}</a>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">Phone:</th>
+                <td style="padding: 10px;">{{ physician.phone|default:"N/A" }}</td>
+            </tr>
+            <tr>
+                <th style="text-align: left; padding: 10px; background: var(--darkened-bg);">Status:</th>
+                <td style="padding: 10px;">
+                    <span class="status-badge {% if physician.is_active %}status-active{% else %}status-discontinued{% endif %}">
+                        {% if physician.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
-    <!-- Recent Encounters -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Appointments</h3>
-        </div>
-        {% if encounters %}
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for encounter in encounters %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ encounter.encounter_date|date:"Y-m-d H:i" }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <a href="{% url 'patient_detail' encounter.patient.patient_id %}" class="text-medical-blue hover:underline">
-                                {{ encounter.patient.full_name }}
-                            </a>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ encounter.encounter_type }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                {% if encounter.status == 'Completed' %}bg-green-100 text-green-800
-                                {% elif encounter.status == 'In Progress' %}bg-yellow-100 text-yellow-800
-                                {% elif encounter.status == 'Scheduled' %}bg-blue-100 text-blue-800
-                                {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                {{ encounter.status }}
-                            </span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="px-4 py-5 sm:px-6">
-            <p class="text-sm text-gray-500">No appointments found for this physician.</p>
-        </div>
-        {% endif %}
-    </div>
+<!-- Recent Appointments -->
+<div class="module" style="margin-top: 20px;">
+    <table>
+        <caption>Recent Appointments</caption>
+        <thead>
+            <tr>
+                <th>Date & Time</th>
+                <th>Patient</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for encounter in encounters %}
+            <tr>
+                <td>{{ encounter.encounter_date|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <a href="{% url 'patient_detail' encounter.patient.patient_id %}">
+                        {{ encounter.patient.full_name }}
+                    </a>
+                </td>
+                <td>{{ encounter.encounter_type }}</td>
+                <td>
+                    <span class="status-badge status-{{ encounter.status|lower|cut:' ' }}">
+                        {{ encounter.status }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{% url 'appointment_detail' encounter.encounter_id %}">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: #666;">
+                    No appointments found for this physician.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

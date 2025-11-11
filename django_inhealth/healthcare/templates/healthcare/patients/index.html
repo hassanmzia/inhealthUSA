@@ -25,10 +25,10 @@
             <tr>
                 <th>ID</th>
                 <th>Name</th>
-                <th>Date of Birth</th>
-                <th>Gender</th>
+                <th>Primary Doctor</th>
+                <th>Hospital</th>
+                <th>DOB</th>
                 <th>Phone</th>
-                <th>Email</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -41,10 +41,26 @@
                         {{ patient.full_name }}
                     </a>
                 </td>
+                <td>
+                    {% if patient.primary_doctor %}
+                        <a href="{% url 'physician_detail' patient.primary_doctor.provider_id %}">
+                            Dr. {{ patient.primary_doctor.full_name }}
+                        </a>
+                    {% else %}
+                        <span style="color: #999;">Not assigned</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if patient.primary_doctor.hospital %}
+                        <a href="{% url 'hospital_detail' patient.primary_doctor.hospital.hospital_id %}">
+                            {{ patient.primary_doctor.hospital.name }}
+                        </a>
+                    {% else %}
+                        <span style="color: #999;">N/A</span>
+                    {% endif %}
+                </td>
                 <td>{{ patient.date_of_birth|date:"Y-m-d" }}</td>
-                <td>{{ patient.gender }}</td>
                 <td>{{ patient.phone|default:"N/A" }}</td>
-                <td>{{ patient.email|default:"N/A" }}</td>
                 <td>
                     <a href="{% url 'patient_detail' patient.patient_id %}">View</a>
                 </td>

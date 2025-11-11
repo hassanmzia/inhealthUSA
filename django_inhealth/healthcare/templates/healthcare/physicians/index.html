@@ -25,10 +25,10 @@
             <tr>
                 <th>ID</th>
                 <th>Name</th>
+                <th>Hospital</th>
                 <th>Specialty</th>
                 <th>NPI</th>
                 <th>Phone</th>
-                <th>Email</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -41,10 +41,18 @@
                         Dr. {{ physician.full_name }}
                     </a>
                 </td>
+                <td>
+                    {% if physician.hospital %}
+                        <a href="{% url 'hospital_detail' physician.hospital.hospital_id %}">
+                            {{ physician.hospital.name }}
+                        </a>
+                    {% else %}
+                        <span style="color: #999;">Not assigned</span>
+                    {% endif %}
+                </td>
                 <td>{{ physician.specialty|default:"N/A" }}</td>
                 <td>{{ physician.npi }}</td>
                 <td>{{ physician.phone|default:"N/A" }}</td>
-                <td>{{ physician.email|default:"N/A" }}</td>
                 <td>
                     <a href="{% url 'physician_detail' physician.provider_id %}">View</a>
                 </td>

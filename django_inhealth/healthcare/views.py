@@ -6,7 +6,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Q
 from django.utils import timezone
 from .models import (
-    Patient, Provider, Encounter, VitalSign, Diagnosis,
+    Hospital, Patient, Provider, Encounter, VitalSign, Diagnosis,
     Prescription, Department, Allergy, MedicalHistory, SocialHistory
 )
 from .forms import UserRegistrationForm
@@ -68,6 +68,7 @@ def user_register(request):
 def index(request):
     """Dashboard/Home view"""
     context = {
+        'total_hospitals': Hospital.objects.filter(is_active=True).count(),
         'total_patients': Patient.objects.filter(is_active=True).count(),
         'total_providers': Provider.objects.filter(is_active=True).count(),
         'total_appointments_today': Encounter.objects.filter(
@@ -83,7 +84,7 @@ def index(request):
 def patient_list(request):
     """List all patients"""
     search = request.GET.get('search', '')
-    patients = Patient.objects.filter(is_active=True)
+    patients = Patient.objects.filter(is_active=True).select_related('primary_doctor', 'primary_doctor__hospital')
 
     if search:
         patients = patients.filter(
@@ -177,17 +178,18 @@ def patient_edit(request, patient_id):
 def physician_list(request):
     """List all physicians"""
     search = request.GET.get('search', '')
-    physicians = Provider.objects.filter(is_active=True)
+    physicians = Provider.objects.filter(is_active=True).select_related('hospital', 'department')
 
     if search:
         physicians = physicians.filter(
             Q(first_name__icontains=search) |
             Q(last_name__icontains=search) |
             Q(npi__icontains=search) |
-            Q(specialty__icontains=search)
+            Q(specialty__icontains=search) |
+            Q(hospital__name__icontains=search)
         )
 
-    physicians = physicians.order_by('last_name', 'first_name')
+    physicians = physicians.order_by('hospital__name', 'last_name', 'first_name')
     return render(request, 'healthcare/physicians/index.html', {'physicians': physicians, 'search': search})
 
 
@@ -410,3 +412,45 @@ def prescription_create(request):
         'encounters': encounters,
     }
     return render(request, 'healthcare/prescriptions/create.html', context)
+
+
+# Hospital Views
+@login_required
+def hospital_list(request):
+    """List all hospitals"""
+    search = request.GET.get('search', '')
+    hospitals = Hospital.objects.filter(is_active=True)
+
+    if search:
+        hospitals = hospitals.filter(
+            Q(name__icontains=search) |
+            Q(city__icontains=search) |
+            Q(state__icontains=search)
+        )
+
+    hospitals = hospitals.order_by('name')
+    return render(request, 'healthcare/hospitals/index.html', {'hospitals': hospitals, 'search': search})
+
+
+@login_required
+def hospital_detail(request, hospital_id):
+    """View hospital details"""
+    hospital = get_object_or_404(Hospital, hospital_id=hospital_id)
+    departments = hospital.departments.filter(is_active=True).order_by('department_name')
+    providers = hospital.providers.filter(is_active=True).order_by('last_name', 'first_name')
+    
+    # Count patients through providers
+    total_patients = Patient.objects.filter(
+        primary_doctor__hospital=hospital,
+        is_active=True
+    ).count()
+
+    context = {
+        'hospital': hospital,
+        'departments': departments,
+        'providers': providers,
+        'total_patients': total_patients,
+        'total_departments': departments.count(),
+        'total_providers': providers.count(),
+    }
+    return render(request, 'healthcare/hospitals/show.html', context)
