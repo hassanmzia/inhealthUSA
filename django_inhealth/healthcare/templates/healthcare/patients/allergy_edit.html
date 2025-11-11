@@ -1,0 +1,77 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Edit Allergy - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0 max-w-4xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Edit Allergy</h1>
+        <p class="mt-2 text-sm text-gray-700">Patient: {{ patient.full_name }}</p>
+        <p class="mt-1 text-xs text-gray-500">Allergen: {{ allergy.allergen }}</p>
+    </div>
+
+    <div class="bg-white shadow sm:rounded-lg p-6">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Allergen *</label>
+                    <input type="text" name="allergen" value="{{ allergy.allergen }}" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., Penicillin, Peanuts">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Allergy Type</label>
+                    <select name="allergy_type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="">Select Type</option>
+                        <option value="Drug" {% if allergy.allergy_type == 'Drug' %}selected{% endif %}>Drug</option>
+                        <option value="Food" {% if allergy.allergy_type == 'Food' %}selected{% endif %}>Food</option>
+                        <option value="Environmental" {% if allergy.allergy_type == 'Environmental' %}selected{% endif %}>Environmental</option>
+                        <option value="Other" {% if allergy.allergy_type == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Severity</label>
+                    <select name="severity" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="">Select Severity</option>
+                        <option value="Mild" {% if allergy.severity == 'Mild' %}selected{% endif %}>Mild</option>
+                        <option value="Moderate" {% if allergy.severity == 'Moderate' %}selected{% endif %}>Moderate</option>
+                        <option value="Severe" {% if allergy.severity == 'Severe' %}selected{% endif %}>Severe</option>
+                    </select>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Reaction</label>
+                    <textarea name="reaction" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., Rash, difficulty breathing">{{ allergy.reaction|default:'' }}</textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Onset Date</label>
+                    <input type="date" name="onset_date" value="{% if allergy.onset_date %}{{ allergy.onset_date|date:'Y-m-d' }}{% endif %}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <div>
+                    <label class="flex items-center mt-6">
+                        <input type="checkbox" name="is_active" value="true" {% if allergy.is_active %}checked{% endif %} class="h-4 w-4 text-medical-blue focus:ring-medical-blue border-gray-300 rounded">
+                        <span class="ml-2 text-sm text-gray-700">Active Allergy</span>
+                    </label>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea name="notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">{{ allergy.notes|default:'' }}</textarea>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <a href="{% url 'patient_edit' patient.patient_id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700">
+                    Update Allergy
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

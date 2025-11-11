@@ -7,7 +7,8 @@ from django.db.models import Q
 from django.utils import timezone
 from .models import (
     Hospital, Patient, Provider, Encounter, VitalSign, Diagnosis,
-    Prescription, Department, Allergy, MedicalHistory, SocialHistory
+    Prescription, Department, Allergy, MedicalHistory, SocialHistory,
+    LabTest, Message, Notification
 )
 from .forms import UserRegistrationForm
 
@@ -145,7 +146,7 @@ def patient_create(request):
 
 @login_required
 def patient_edit(request, patient_id):
-    """Edit patient with vitals, diagnoses, and prescriptions"""
+    """Edit patient with comprehensive medical records"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
 
     if request.method == 'POST':
@@ -186,6 +187,25 @@ def patient_edit(request, patient_id):
     # Get all prescriptions for the patient
     prescriptions = patient.prescriptions.select_related('provider').order_by('-start_date')
 
+    # Get all medical history
+    medical_history = patient.medical_history.all().order_by('-diagnosis_date')
+
+    # Get all social history
+    social_history = patient.social_history.all().order_by('-recorded_date')
+
+    # Get all allergies
+    allergies = patient.allergies.filter(is_active=True).order_by('-severity', 'allergen')
+
+    # Get all lab tests
+    lab_tests = patient.lab_tests.select_related('provider').order_by('-ordered_date')
+
+    # Get all messages (sent and received)
+    sent_messages = patient.user.sent_messages.all().order_by('-created_at')[:20] if patient.user else []
+    received_messages = patient.user.received_messages.all().order_by('-created_at')[:20] if patient.user else []
+
+    # Get all notifications
+    notifications = patient.user.notifications.all().order_by('-created_at')[:20] if patient.user else []
+
     # Get all providers for dropdowns
     providers = Provider.objects.filter(is_active=True).order_by('last_name', 'first_name')
 
@@ -195,6 +215,13 @@ def patient_edit(request, patient_id):
         'vital_signs': vital_signs,
         'diagnoses': diagnoses,
         'prescriptions': prescriptions,
+        'medical_history': medical_history,
+        'social_history': social_history,
+        'allergies': allergies,
+        'lab_tests': lab_tests,
+        'sent_messages': sent_messages,
+        'received_messages': received_messages,
+        'notifications': notifications,
         'providers': providers,
     }
     return render(request, 'healthcare/patients/edit.html', context)
@@ -425,6 +452,223 @@ def patient_prescription_edit(request, patient_id, prescription_id):
         'providers': providers,
     }
     return render(request, 'healthcare/patients/prescription_edit.html', context)
+
+
+# Patient Medical History Views
+@login_required
+def patient_medical_history_create(request, patient_id):
+    """Create medical history for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    if request.method == 'POST':
+        MedicalHistory.objects.create(
+            patient=patient,
+            condition=request.POST['condition'],
+            diagnosis_date=request.POST.get('diagnosis_date') or None,
+            status=request.POST.get('status', 'Active'),
+            notes=request.POST.get('notes', ''),
+        )
+        messages.success(request, 'Medical history added successfully.')
+        return redirect('patient_edit', patient_id=patient.patient_id)
+
+    context = {
+        'patient': patient,
+    }
+    return render(request, 'healthcare/patients/medical_history_create.html', context)
+
+
+@login_required
+def patient_medical_history_edit(request, patient_id, medical_history_id):
+    """Edit medical history for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    medical_history = get_object_or_404(MedicalHistory, medical_history_id=medical_history_id)
+
+    if request.method == 'POST':
+        medical_history.condition = request.POST['condition']
+        medical_history.diagnosis_date = request.POST.get('diagnosis_date') or None
+        medical_history.status = request.POST.get('status', 'Active')
+        medical_history.notes = request.POST.get('notes', '')
+        medical_history.save()
+
+        messages.success(request, 'Medical history updated successfully.')
+        return redirect('patient_edit', patient_id=patient.patient_id)
+
+    context = {
+        'patient': patient,
+        'medical_history': medical_history,
+    }
+    return render(request, 'healthcare/patients/medical_history_edit.html', context)
+
+
+# Patient Social History Views
+@login_required
+def patient_social_history_create(request, patient_id):
+    """Create social history for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    if request.method == 'POST':
+        SocialHistory.objects.create(
+            patient=patient,
+            smoking_status=request.POST.get('smoking_status', ''),
+            alcohol_use=request.POST.get('alcohol_use', ''),
+            drug_use=request.POST.get('drug_use', ''),
+            occupation=request.POST.get('occupation', ''),
+            marital_status=request.POST.get('marital_status', ''),
+            notes=request.POST.get('notes', ''),
+        )
+        messages.success(request, 'Social history added successfully.')
+        return redirect('patient_edit', patient_id=patient.patient_id)
+
+    context = {
+        'patient': patient,
+    }
+    return render(request, 'healthcare/patients/social_history_create.html', context)
+
+
+@login_required
+def patient_social_history_edit(request, patient_id, social_history_id):
+    """Edit social history for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    social_history = get_object_or_404(SocialHistory, social_history_id=social_history_id)
+
+    if request.method == 'POST':
+        social_history.smoking_status = request.POST.get('smoking_status', '')
+        social_history.alcohol_use = request.POST.get('alcohol_use', '')
+        social_history.drug_use = request.POST.get('drug_use', '')
+        social_history.occupation = request.POST.get('occupation', '')
+        social_history.marital_status = request.POST.get('marital_status', '')
+        social_history.notes = request.POST.get('notes', '')
+        social_history.save()
+
+        messages.success(request, 'Social history updated successfully.')
+        return redirect('patient_edit', patient_id=patient.patient_id)
+
+    context = {
+        'patient': patient,
+        'social_history': social_history,
+    }
+    return render(request, 'healthcare/patients/social_history_edit.html', context)
+
+
+# Patient Allergy Views
+@login_required
+def patient_allergy_create(request, patient_id):
+    """Create allergy for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    if request.method == 'POST':
+        Allergy.objects.create(
+            patient=patient,
+            allergen=request.POST['allergen'],
+            allergy_type=request.POST['allergy_type'],
+            severity=request.POST.get('severity', ''),
+            reaction=request.POST.get('reaction', ''),
+            onset_date=request.POST.get('onset_date') or None,
+            notes=request.POST.get('notes', ''),
+            is_active=True,
+        )
+        messages.success(request, 'Allergy added successfully.')
+        return redirect('patient_edit', patient_id=patient.patient_id)
+
+    context = {
+        'patient': patient,
+    }
+    return render(request, 'healthcare/patients/allergy_create.html', context)
+
+
+@login_required
+def patient_allergy_edit(request, patient_id, allergy_id):
+    """Edit allergy for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    allergy = get_object_or_404(Allergy, allergy_id=allergy_id)
+
+    if request.method == 'POST':
+        allergy.allergen = request.POST['allergen']
+        allergy.allergy_type = request.POST['allergy_type']
+        allergy.severity = request.POST.get('severity', '')
+        allergy.reaction = request.POST.get('reaction', '')
+        allergy.onset_date = request.POST.get('onset_date') or None
+        allergy.notes = request.POST.get('notes', '')
+        allergy.is_active = request.POST.get('is_active', 'true') == 'true'
+        allergy.save()
+
+        messages.success(request, 'Allergy updated successfully.')
+        return redirect('patient_edit', patient_id=patient.patient_id)
+
+    context = {
+        'patient': patient,
+        'allergy': allergy,
+    }
+    return render(request, 'healthcare/patients/allergy_edit.html', context)
+
+
+# Patient Lab Test Views
+@login_required
+def patient_lab_test_create(request, patient_id):
+    """Create lab test for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    providers = Provider.objects.filter(is_active=True).order_by('last_name', 'first_name')
+    encounters = patient.encounters.all()
+
+    if request.method == 'POST':
+        LabTest.objects.create(
+            patient=patient,
+            provider_id=request.POST.get('provider_id'),
+            encounter_id=request.POST.get('encounter_id') or None,
+            test_name=request.POST['test_name'],
+            test_code=request.POST.get('test_code', ''),
+            status=request.POST.get('status', 'Ordered'),
+            collection_date=request.POST.get('collection_date') or None,
+            result_date=request.POST.get('result_date') or None,
+            result=request.POST.get('result', ''),
+            result_value=request.POST.get('result_value', ''),
+            result_unit=request.POST.get('result_unit', ''),
+            reference_range=request.POST.get('reference_range', ''),
+            abnormal_flag=request.POST.get('abnormal_flag') == 'on',
+            notes=request.POST.get('notes', ''),
+        )
+        messages.success(request, 'Lab test added successfully.')
+        return redirect('patient_edit', patient_id=patient.patient_id)
+
+    context = {
+        'patient': patient,
+        'providers': providers,
+        'encounters': encounters,
+    }
+    return render(request, 'healthcare/patients/lab_test_create.html', context)
+
+
+@login_required
+def patient_lab_test_edit(request, patient_id, lab_test_id):
+    """Edit lab test for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    lab_test = get_object_or_404(LabTest, lab_test_id=lab_test_id)
+    providers = Provider.objects.filter(is_active=True).order_by('last_name', 'first_name')
+
+    if request.method == 'POST':
+        lab_test.provider_id = request.POST.get('provider_id')
+        lab_test.test_name = request.POST['test_name']
+        lab_test.test_code = request.POST.get('test_code', '')
+        lab_test.status = request.POST.get('status', 'Ordered')
+        lab_test.collection_date = request.POST.get('collection_date') or None
+        lab_test.result_date = request.POST.get('result_date') or None
+        lab_test.result = request.POST.get('result', '')
+        lab_test.result_value = request.POST.get('result_value', '')
+        lab_test.result_unit = request.POST.get('result_unit', '')
+        lab_test.reference_range = request.POST.get('reference_range', '')
+        lab_test.abnormal_flag = request.POST.get('abnormal_flag') == 'on'
+        lab_test.notes = request.POST.get('notes', '')
+        lab_test.save()
+
+        messages.success(request, 'Lab test updated successfully.')
+        return redirect('patient_edit', patient_id=patient.patient_id)
+
+    context = {
+        'patient': patient,
+        'lab_test': lab_test,
+        'providers': providers,
+    }
+    return render(request, 'healthcare/patients/lab_test_edit.html', context)
 
 
 # Physician (Provider) Views
