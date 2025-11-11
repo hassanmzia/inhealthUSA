@@ -521,7 +521,7 @@ def appointment_create(request):
 
 @login_required
 def appointment_edit(request, encounter_id):
-    """Edit appointment"""
+    """Edit appointment with vitals, diagnoses, and prescriptions"""
     appointment = get_object_or_404(Encounter, encounter_id=encounter_id)
 
     if request.method == 'POST':
@@ -537,17 +537,216 @@ def appointment_edit(request, encounter_id):
         appointment.save()
 
         messages.success(request, 'Appointment updated successfully.')
-        return redirect('appointment_detail', encounter_id=appointment.encounter_id)
+        return redirect('appointment_edit', encounter_id=appointment.encounter_id)
 
     physicians = Provider.objects.filter(is_active=True).order_by('last_name', 'first_name')
     departments = Department.objects.filter(is_active=True).order_by('department_name')
+
+    # Get related data for the encounter
+    vital_signs = appointment.vital_signs.all().order_by('-recorded_at')
+    diagnoses = appointment.diagnoses.all().order_by('-diagnosed_at')
+    prescriptions = appointment.prescriptions.all().order_by('-start_date')
 
     context = {
         'appointment': appointment,
         'physicians': physicians,
         'departments': departments,
+        'vital_signs': vital_signs,
+        'diagnoses': diagnoses,
+        'prescriptions': prescriptions,
     }
     return render(request, 'healthcare/appointments/edit.html', context)
+
+
+# Encounter Vital Signs Views
+@login_required
+def encounter_vital_create(request, encounter_id):
+    """Create vital signs for an encounter"""
+    encounter = get_object_or_404(Encounter, encounter_id=encounter_id)
+
+    if request.method == 'POST':
+        VitalSign.objects.create(
+            encounter=encounter,
+            temperature_value=request.POST.get('temperature_value') or None,
+            temperature_unit=request.POST.get('temperature_unit') or None,
+            blood_pressure_systolic=request.POST.get('blood_pressure_systolic') or None,
+            blood_pressure_diastolic=request.POST.get('blood_pressure_diastolic') or None,
+            heart_rate=request.POST.get('heart_rate') or None,
+            respiratory_rate=request.POST.get('respiratory_rate') or None,
+            oxygen_saturation=request.POST.get('oxygen_saturation') or None,
+            weight_value=request.POST.get('weight_value') or None,
+            weight_unit=request.POST.get('weight_unit') or None,
+            height_value=request.POST.get('height_value') or None,
+            height_unit=request.POST.get('height_unit') or None,
+            bmi=request.POST.get('bmi') or None,
+            notes=request.POST.get('notes', ''),
+            recorded_at=timezone.now(),
+        )
+        messages.success(request, 'Vital signs added successfully.')
+        return redirect('appointment_edit', encounter_id=encounter.encounter_id)
+
+    context = {
+        'encounter': encounter,
+    }
+    return render(request, 'healthcare/appointments/vital_create.html', context)
+
+
+@login_required
+def encounter_vital_edit(request, encounter_id, vital_signs_id):
+    """Edit vital signs for an encounter"""
+    encounter = get_object_or_404(Encounter, encounter_id=encounter_id)
+    vital_sign = get_object_or_404(VitalSign, vital_signs_id=vital_signs_id)
+
+    if request.method == 'POST':
+        vital_sign.temperature_value = request.POST.get('temperature_value') or None
+        vital_sign.temperature_unit = request.POST.get('temperature_unit') or None
+        vital_sign.blood_pressure_systolic = request.POST.get('blood_pressure_systolic') or None
+        vital_sign.blood_pressure_diastolic = request.POST.get('blood_pressure_diastolic') or None
+        vital_sign.heart_rate = request.POST.get('heart_rate') or None
+        vital_sign.respiratory_rate = request.POST.get('respiratory_rate') or None
+        vital_sign.oxygen_saturation = request.POST.get('oxygen_saturation') or None
+        vital_sign.weight_value = request.POST.get('weight_value') or None
+        vital_sign.weight_unit = request.POST.get('weight_unit') or None
+        vital_sign.height_value = request.POST.get('height_value') or None
+        vital_sign.height_unit = request.POST.get('height_unit') or None
+        vital_sign.bmi = request.POST.get('bmi') or None
+        vital_sign.notes = request.POST.get('notes', '')
+        vital_sign.save()
+
+        messages.success(request, 'Vital signs updated successfully.')
+        return redirect('appointment_edit', encounter_id=encounter.encounter_id)
+
+    context = {
+        'encounter': encounter,
+        'vital_sign': vital_sign,
+    }
+    return render(request, 'healthcare/appointments/vital_edit.html', context)
+
+
+# Encounter Diagnosis Views
+@login_required
+def encounter_diagnosis_create(request, encounter_id):
+    """Create diagnosis for an encounter"""
+    encounter = get_object_or_404(Encounter, encounter_id=encounter_id)
+    providers = Provider.objects.filter(is_active=True).order_by('last_name', 'first_name')
+
+    if request.method == 'POST':
+        Diagnosis.objects.create(
+            encounter=encounter,
+            diagnosis_description=request.POST['diagnosis_description'],
+            icd10_code=request.POST.get('icd10_code', ''),
+            icd11_code=request.POST.get('icd11_code', ''),
+            diagnosis_type=request.POST['diagnosis_type'],
+            status=request.POST.get('status', 'Active'),
+            onset_date=request.POST.get('onset_date') or None,
+            resolved_date=request.POST.get('resolved_date') or None,
+            notes=request.POST.get('notes', ''),
+            diagnosed_at=timezone.now(),
+        )
+        messages.success(request, 'Diagnosis added successfully.')
+        return redirect('appointment_edit', encounter_id=encounter.encounter_id)
+
+    context = {
+        'encounter': encounter,
+        'providers': providers,
+    }
+    return render(request, 'healthcare/appointments/diagnosis_create.html', context)
+
+
+@login_required
+def encounter_diagnosis_edit(request, encounter_id, diagnosis_id):
+    """Edit diagnosis for an encounter"""
+    encounter = get_object_or_404(Encounter, encounter_id=encounter_id)
+    diagnosis = get_object_or_404(Diagnosis, diagnosis_id=diagnosis_id)
+
+    if request.method == 'POST':
+        diagnosis.diagnosis_description = request.POST['diagnosis_description']
+        diagnosis.icd10_code = request.POST.get('icd10_code', '')
+        diagnosis.icd11_code = request.POST.get('icd11_code', '')
+        diagnosis.diagnosis_type = request.POST['diagnosis_type']
+        diagnosis.status = request.POST.get('status', 'Active')
+        diagnosis.onset_date = request.POST.get('onset_date') or None
+        diagnosis.resolved_date = request.POST.get('resolved_date') or None
+        diagnosis.notes = request.POST.get('notes', '')
+        diagnosis.save()
+
+        messages.success(request, 'Diagnosis updated successfully.')
+        return redirect('appointment_edit', encounter_id=encounter.encounter_id)
+
+    context = {
+        'encounter': encounter,
+        'diagnosis': diagnosis,
+    }
+    return render(request, 'healthcare/appointments/diagnosis_edit.html', context)
+
+
+# Encounter Prescription Views
+@login_required
+def encounter_prescription_create(request, encounter_id):
+    """Create prescription for an encounter"""
+    encounter = get_object_or_404(Encounter, encounter_id=encounter_id)
+    providers = Provider.objects.filter(is_active=True).order_by('last_name', 'first_name')
+
+    if request.method == 'POST':
+        Prescription.objects.create(
+            patient=encounter.patient,
+            provider_id=request.POST.get('provider_id'),
+            encounter=encounter,
+            medication_name=request.POST['medication_name'],
+            dosage=request.POST['dosage'],
+            frequency=request.POST['frequency'],
+            route=request.POST.get('route', ''),
+            quantity=request.POST.get('quantity') or None,
+            refills=request.POST.get('refills', 0),
+            start_date=request.POST['start_date'],
+            end_date=request.POST.get('end_date') or None,
+            instructions=request.POST.get('instructions', ''),
+            pharmacy_name=request.POST.get('pharmacy_name', ''),
+            pharmacy_phone=request.POST.get('pharmacy_phone', ''),
+            status='Active',
+        )
+        messages.success(request, 'Prescription added successfully.')
+        return redirect('appointment_edit', encounter_id=encounter.encounter_id)
+
+    context = {
+        'encounter': encounter,
+        'providers': providers,
+    }
+    return render(request, 'healthcare/appointments/prescription_create.html', context)
+
+
+@login_required
+def encounter_prescription_edit(request, encounter_id, prescription_id):
+    """Edit prescription for an encounter"""
+    encounter = get_object_or_404(Encounter, encounter_id=encounter_id)
+    prescription = get_object_or_404(Prescription, prescription_id=prescription_id)
+    providers = Provider.objects.filter(is_active=True).order_by('last_name', 'first_name')
+
+    if request.method == 'POST':
+        prescription.provider_id = request.POST.get('provider_id')
+        prescription.medication_name = request.POST['medication_name']
+        prescription.dosage = request.POST['dosage']
+        prescription.frequency = request.POST['frequency']
+        prescription.route = request.POST.get('route', '')
+        prescription.quantity = request.POST.get('quantity') or None
+        prescription.refills = request.POST.get('refills', 0)
+        prescription.start_date = request.POST['start_date']
+        prescription.end_date = request.POST.get('end_date') or None
+        prescription.instructions = request.POST.get('instructions', '')
+        prescription.pharmacy_name = request.POST.get('pharmacy_name', '')
+        prescription.pharmacy_phone = request.POST.get('pharmacy_phone', '')
+        prescription.status = request.POST['status']
+        prescription.save()
+
+        messages.success(request, 'Prescription updated successfully.')
+        return redirect('appointment_edit', encounter_id=encounter.encounter_id)
+
+    context = {
+        'encounter': encounter,
+        'prescription': prescription,
+        'providers': providers,
+    }
+    return render(request, 'healthcare/appointments/prescription_edit.html', context)
 
 
 # Vital Signs Views

@@ -38,10 +38,22 @@ urlpatterns = [
     path('appointments/<int:encounter_id>/', views.appointment_detail, name='appointment_detail'),
     path('appointments/<int:encounter_id>/edit/', views.appointment_edit, name='appointment_edit'),
 
-    # Vital Signs URLs
+    # Encounter Vital Signs URLs
+    path('appointments/<int:encounter_id>/vitals/create/', views.encounter_vital_create, name='encounter_vital_create'),
+    path('appointments/<int:encounter_id>/vitals/<int:vital_signs_id>/edit/', views.encounter_vital_edit, name='encounter_vital_edit'),
+
+    # Encounter Diagnosis URLs
+    path('appointments/<int:encounter_id>/diagnoses/create/', views.encounter_diagnosis_create, name='encounter_diagnosis_create'),
+    path('appointments/<int:encounter_id>/diagnoses/<int:diagnosis_id>/edit/', views.encounter_diagnosis_edit, name='encounter_diagnosis_edit'),
+
+    # Encounter Prescription URLs
+    path('appointments/<int:encounter_id>/prescriptions/create/', views.encounter_prescription_create, name='encounter_prescription_create'),
+    path('appointments/<int:encounter_id>/prescriptions/<int:prescription_id>/edit/', views.encounter_prescription_edit, name='encounter_prescription_edit'),
+
+    # Vital Signs URLs (deprecated - use encounter URLs above)
     path('appointments/<int:encounter_id>/vital-signs/create/', views.vital_sign_create, name='vital_sign_create'),
 
-    # Diagnosis URLs
+    # Diagnosis URLs (deprecated - use encounter URLs above)
     path('appointments/<int:encounter_id>/diagnoses/create/', views.diagnosis_create, name='diagnosis_create'),
 
     # Prescription URLs
