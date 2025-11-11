@@ -63,7 +63,7 @@ class UserProfile(models.Model):
 class Department(models.Model):
     """Department model"""
     department_id = models.AutoField(primary_key=True)
-    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='departments')
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='departments', null=True, blank=True)
     department_name = models.CharField(max_length=200)
     location = models.CharField(max_length=255, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
@@ -74,7 +74,9 @@ class Department(models.Model):
         ordering = ['department_name']
 
     def __str__(self):
-        return f"{self.department_name} - {self.hospital.name}"
+        if self.hospital:
+            return f"{self.department_name} - {self.hospital.name}"
+        return self.department_name
 
 
 class Provider(models.Model):
