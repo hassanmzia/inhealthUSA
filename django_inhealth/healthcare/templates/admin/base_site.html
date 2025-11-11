@@ -1,0 +1,28 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<div id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></div>
+{% if user.is_active and user.is_staff %}
+<div id="site-url"><a href="/">{% trans 'View site' %}</a></div>
+{% endif %}
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* Make the header text white for better contrast */
+    #header #site-name a:link,
+    #header #site-name a:visited {
+        color: white !important;
+    }
+
+    #header #site-name a:hover,
+    #header #site-name a:focus {
+        color: white !important;
+    }
+</style>
+{% endblock %}
