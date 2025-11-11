@@ -3,51 +3,239 @@
 {% block title %}Patients - InHealth EHR{% endblock %}
 
 {% block breadcrumbs %}
-&rsaquo; <a href="{% url 'patient_list' %}">Patients</a>
+&rsaquo; Patients
 {% endblock %}
 
 {% block content %}
-<h1>Patients</h1>
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
 
-<!-- Search -->
+    .page-header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 300;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .search-form {
+        background: white;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+    }
+
+    .search-form form {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .search-form input[type="text"] {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .search-form input[type="text"]:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(65, 118, 144, 0.1);
+    }
+
+    .data-module {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .data-module table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-module caption {
+        background: var(--primary);
+        color: var(--header-link-color);
+        padding: 12px 15px;
+        text-align: left;
+        font-weight: 500;
+        font-size: 15px;
+    }
+
+    .data-module thead {
+        background: var(--darkened-bg);
+    }
+
+    .data-module thead th {
+        padding: 10px 15px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--body-fg);
+        border-bottom: 1px solid var(--hairline-color);
+    }
+
+    .data-module tbody td {
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--hairline-color);
+        font-size: 13px;
+    }
+
+    .data-module tbody tr:hover {
+        background: var(--darkened-bg);
+    }
+
+    .data-module tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .patient-name {
+        font-weight: 600;
+        color: var(--link-fg);
+    }
+
+    .patient-name:hover {
+        color: var(--link-hover-color);
+        text-decoration: underline;
+    }
+
+    .text-muted {
+        color: #999;
+        font-style: italic;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+
+    .empty-state svg {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        opacity: 0.3;
+    }
+
+    .empty-state p {
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .stats-bar {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>
+
+<div class="page-header">
+    <h1>Patients</h1>
+    <div class="action-buttons">
+        <a href="/admin/healthcare/patient/add/" class="button">+ Add Patient</a>
+    </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <div class="stat-item">
+        <div class="stat-value">{{ patients|length }}</div>
+        <div class="stat-label">Total Patients</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value">{{ patients|length }}</div>
+        <div class="stat-label">Active Records</div>
+    </div>
+</div>
+
+<!-- Search Form -->
 <div class="search-form">
     <form method="get" action="{% url 'patient_list' %}">
-        <input type="text" name="search" value="{{ search }}" placeholder="Search patients by name, email, or phone...">
-        <button type="submit">Search</button>
+        <input type="text" name="search" value="{{ search }}" placeholder="Search by name, email, phone, or patient ID...">
+        <button type="submit" class="button">Search</button>
+        {% if search %}
+        <a href="{% url 'patient_list' %}" class="button button-secondary">Clear</a>
+        {% endif %}
     </form>
 </div>
 
 <!-- Patient List -->
-<div class="module">
+<div class="data-module">
     <table>
-        <caption>Patient List</caption>
+        <caption>
+            {% if search %}
+                Search Results for "{{ search }}"
+            {% else %}
+                All Patients
+            {% endif %}
+        </caption>
         <thead>
             <tr>
-                <th>ID</th>
+                <th>Patient ID</th>
                 <th>Name</th>
+                <th>Date of Birth</th>
+                <th>Gender</th>
+                <th>Phone</th>
                 <th>Primary Doctor</th>
                 <th>Hospital</th>
-                <th>DOB</th>
-                <th>Phone</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for patient in patients %}
             <tr>
-                <td>{{ patient.patient_id }}</td>
+                <td><strong>{{ patient.patient_id }}</strong></td>
                 <td>
-                    <a href="{% url 'patient_detail' patient.patient_id %}">
+                    <a href="{% url 'patient_detail' patient.patient_id %}" class="patient-name">
                         {{ patient.full_name }}
                     </a>
                 </td>
+                <td>{{ patient.date_of_birth|date:"M d, Y" }}</td>
+                <td>{{ patient.gender }}</td>
+                <td>{{ patient.phone|default:"—" }}</td>
                 <td>
                     {% if patient.primary_doctor %}
                         <a href="{% url 'physician_detail' patient.primary_doctor.provider_id %}">
                             Dr. {{ patient.primary_doctor.full_name }}
                         </a>
                     {% else %}
-                        <span style="color: #999;">Not assigned</span>
+                        <span class="text-muted">Not assigned</span>
                     {% endif %}
                 </td>
                 <td>
@@ -56,19 +244,30 @@
                             {{ patient.primary_doctor.hospital.name }}
                         </a>
                     {% else %}
-                        <span style="color: #999;">N/A</span>
+                        <span class="text-muted">N/A</span>
                     {% endif %}
                 </td>
-                <td>{{ patient.date_of_birth|date:"Y-m-d" }}</td>
-                <td>{{ patient.phone|default:"N/A" }}</td>
                 <td>
-                    <a href="{% url 'patient_detail' patient.patient_id %}">View</a>
+                    <a href="{% url 'patient_detail' patient.patient_id %}" style="color: var(--link-fg); font-weight: 500;">View</a>
+                    &nbsp;|&nbsp;
+                    <a href="{% url 'patient_edit' patient.patient_id %}" style="color: var(--link-fg); font-weight: 500;">Edit</a>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7" style="text-align: center; color: #666;">
-                    No patients found.
+                <td colspan="8">
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <p>
+                            {% if search %}
+                                No patients found matching "{{ search }}"
+                            {% else %}
+                                No patients registered yet
+                            {% endif %}
+                        </p>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -77,6 +276,6 @@
 </div>
 
 <p style="margin-top: 20px; font-size: 12px; color: #666;">
-    <strong>Note:</strong> To add or edit patients, please use the <a href="/admin/healthcare/patient/">Admin Panel</a>.
+    <strong>Tip:</strong> Use the <a href="/admin/healthcare/patient/">Django Admin Panel</a> for advanced patient management operations.
 </p>
 {% endblock %}
