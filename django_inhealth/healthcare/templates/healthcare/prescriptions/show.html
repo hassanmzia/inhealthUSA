@@ -1,52 +1,256 @@
 {% extends 'healthcare/base.html' %}
-
-{% block title %}Prescription - InHealth EHR{% endblock %}
-
+{% block title %}Prescription Details - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'prescription_list' %}">Prescriptions</a> &rsaquo; {{ prescription.medication_name }}{% endblock %}
 {% block content %}
-<div class="px-4 sm:px-0">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">{{ prescription.medication_name }}</h1>
-    </div>
+<style>
+    .detail-header {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Prescription Details</h3>
+    .detail-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        font-weight: 300;
+    }
+
+    .detail-header .meta {
+        font-size: 13px;
+        color: #666;
+    }
+
+    .detail-header .actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .info-module {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .info-module h2 {
+        margin: 0;
+        padding: 12px 20px;
+        font-weight: 500;
+        font-size: 15px;
+        background: var(--primary);
+        color: var(--header-link-color);
+    }
+
+    .info-module dl {
+        margin: 0;
+    }
+
+    .info-module dl > div {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 20px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--hairline-color);
+    }
+
+    .info-module dl > div:nth-child(even) {
+        background: var(--darkened-bg);
+    }
+
+    .info-module dl > div:last-child {
+        border-bottom: none;
+    }
+
+    .info-module dt {
+        font-size: 13px;
+        font-weight: 600;
+        color: #666;
+    }
+
+    .info-module dd {
+        font-size: 13px;
+        color: var(--body-fg);
+        margin: 0;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge.status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-badge.status-discontinued {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-badge.status-completed {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .alert-warning {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 4px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        color: #856404;
+    }
+
+    .alert-warning h3 {
+        margin: 0 0 8px 0;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .alert-warning p {
+        margin: 0;
+        font-size: 13px;
+    }
+</style>
+
+<div class="detail-header">
+    <div>
+        <h1>{{ prescription.medication_name }}</h1>
+        <div class="meta">
+            <strong>Patient:</strong> <a href="{% url 'patient_detail' prescription.patient.patient_id %}" style="color: var(--link-fg);">{{ prescription.patient.full_name }}</a> |
+            <strong>Prescription ID:</strong> {{ prescription.prescription_id }}
         </div>
-        <div class="border-t border-gray-200">
-            <dl>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Patient</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <a href="{% url 'patient_detail' prescription.patient.patient_id %}" class="text-medical-blue hover:underline">
-                            {{ prescription.patient.full_name }}
-                        </a>
-                    </dd>
-                </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Medication</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ prescription.medication_name }}</dd>
-                </div>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Dosage</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ prescription.dosage }}</dd>
-                </div>
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Frequency</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ prescription.frequency }}</dd>
-                </div>
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-medium text-gray-500">Status</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                            {% if prescription.status == 'Active' %}bg-green-100 text-green-800
-                            {% elif prescription.status == 'Discontinued' %}bg-red-100 text-red-800
-                            {% else %}bg-gray-100 text-gray-800{% endif %}">
-                            {{ prescription.status }}
-                        </span>
-                    </dd>
-                </div>
-            </dl>
-        </div>
+    </div>
+    <div class="actions">
+        <a href="{% url 'patient_detail' prescription.patient.patient_id %}" class="button button-secondary">View Patient</a>
+        <a href="/admin/healthcare/prescription/{{ prescription.prescription_id }}/change/" class="button">Edit Prescription</a>
     </div>
 </div>
+
+{% if prescription.status == 'Discontinued' %}
+<div class="alert-warning">
+    <h3>⚠️ Discontinued Prescription</h3>
+    <p>This prescription has been discontinued and is no longer active.</p>
+</div>
+{% endif %}
+
+<div class="info-module">
+    <h2>Prescription Information</h2>
+    <dl>
+        <div>
+            <dt>Patient</dt>
+            <dd>
+                <a href="{% url 'patient_detail' prescription.patient.patient_id %}" style="color: var(--link-fg); font-weight: 600;">
+                    {{ prescription.patient.full_name }}
+                </a>
+            </dd>
+        </div>
+        <div>
+            <dt>Medication Name</dt>
+            <dd><strong>{{ prescription.medication_name }}</strong></dd>
+        </div>
+        <div>
+            <dt>Dosage</dt>
+            <dd>{{ prescription.dosage }}</dd>
+        </div>
+        <div>
+            <dt>Frequency</dt>
+            <dd>{{ prescription.frequency }}</dd>
+        </div>
+        <div>
+            <dt>Route</dt>
+            <dd>{{ prescription.route|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Start Date</dt>
+            <dd>{{ prescription.start_date|date:"F d, Y" }}</dd>
+        </div>
+        <div>
+            <dt>End Date</dt>
+            <dd>{{ prescription.end_date|date:"F d, Y"|default:"Ongoing" }}</dd>
+        </div>
+        <div>
+            <dt>Status</dt>
+            <dd>
+                <span class="status-badge status-{{ prescription.status|lower }}">
+                    {{ prescription.status }}
+                </span>
+            </dd>
+        </div>
+        {% if prescription.prescribing_physician %}
+        <div>
+            <dt>Prescribing Physician</dt>
+            <dd>
+                <a href="{% url 'physician_detail' prescription.prescribing_physician.provider_id %}" style="color: var(--link-fg);">
+                    Dr. {{ prescription.prescribing_physician.full_name }}
+                </a>
+            </dd>
+        </div>
+        {% endif %}
+        {% if prescription.encounter %}
+        <div>
+            <dt>Related Encounter</dt>
+            <dd>
+                <a href="{% url 'appointment_detail' prescription.encounter.encounter_id %}" style="color: var(--link-fg);">
+                    {{ prescription.encounter.encounter_type }} - {{ prescription.encounter.encounter_date|date:"M d, Y" }}
+                </a>
+            </dd>
+        </div>
+        {% endif %}
+        {% if prescription.pharmacy %}
+        <div>
+            <dt>Pharmacy</dt>
+            <dd>{{ prescription.pharmacy }}</dd>
+        </div>
+        {% endif %}
+        {% if prescription.refills %}
+        <div>
+            <dt>Refills</dt>
+            <dd>{{ prescription.refills }}</dd>
+        </div>
+        {% endif %}
+        {% if prescription.instructions %}
+        <div>
+            <dt>Instructions</dt>
+            <dd>{{ prescription.instructions }}</dd>
+        </div>
+        {% endif %}
+        {% if prescription.notes %}
+        <div>
+            <dt>Notes</dt>
+            <dd>{{ prescription.notes }}</dd>
+        </div>
+        {% endif %}
+    </dl>
+</div>
+
+<div class="info-module">
+    <h2>Prescription History</h2>
+    <dl>
+        <div>
+            <dt>Created</dt>
+            <dd>{{ prescription.created_at|date:"F d, Y g:i A" }}</dd>
+        </div>
+        <div>
+            <dt>Last Updated</dt>
+            <dd>{{ prescription.updated_at|date:"F d, Y g:i A" }}</dd>
+        </div>
+    </dl>
+</div>
+
+<p style="margin-top: 20px; font-size: 12px; color: #666;">
+    <strong>Note:</strong> Use the <a href="/admin/healthcare/prescription/{{ prescription.prescription_id }}/change/">Django Admin Panel</a> to edit prescription details.
+</p>
 {% endblock %}

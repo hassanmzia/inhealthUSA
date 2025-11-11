@@ -3,20 +3,257 @@
 {% block title %}Prescriptions - InHealth EHR{% endblock %}
 
 {% block breadcrumbs %}
-&rsaquo; <a href="{% url 'prescription_list' %}">Prescriptions</a>
+&rsaquo; Prescriptions
 {% endblock %}
 
 {% block content %}
-<h1>Prescriptions</h1>
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
 
-<div class="module">
+    .page-header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 300;
+    }
+
+    .filter-form {
+        background: white;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+    }
+
+    .filter-form form {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-form label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--body-fg);
+    }
+
+    .filter-form select,
+    .filter-form input[type="text"] {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .filter-form input[type="text"] {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .filter-form select:focus,
+    .filter-form input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(65, 118, 144, 0.1);
+    }
+
+    .data-module {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .data-module table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-module caption {
+        background: var(--primary);
+        color: var(--header-link-color);
+        padding: 12px 15px;
+        text-align: left;
+        font-weight: 500;
+        font-size: 15px;
+    }
+
+    .data-module thead {
+        background: var(--darkened-bg);
+    }
+
+    .data-module thead th {
+        padding: 10px 15px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--body-fg);
+        border-bottom: 1px solid var(--hairline-color);
+    }
+
+    .data-module tbody td {
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--hairline-color);
+        font-size: 13px;
+    }
+
+    .data-module tbody tr:hover {
+        background: var(--darkened-bg);
+    }
+
+    .data-module tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .medication-name {
+        font-weight: 600;
+        color: var(--body-fg);
+    }
+
+    .patient-link {
+        color: var(--link-fg);
+        font-weight: 500;
+    }
+
+    .patient-link:hover {
+        color: var(--link-hover-color);
+        text-decoration: underline;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge.status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-badge.status-discontinued {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-badge.status-completed {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+
+    .empty-state svg {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        opacity: 0.3;
+    }
+
+    .empty-state p {
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .stats-bar {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>
+
+<div class="page-header">
+    <h1>Prescriptions</h1>
+    <div>
+        <a href="/admin/healthcare/prescription/add/" class="button">+ New Prescription</a>
+    </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <div class="stat-item">
+        <div class="stat-value">{{ prescriptions|length }}</div>
+        <div class="stat-label">Total Prescriptions</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value">{{ prescriptions|length }}</div>
+        <div class="stat-label">Active Records</div>
+    </div>
+</div>
+
+<!-- Filter Form -->
+<div class="filter-form">
+    <form method="get">
+        <input type="text" name="search" value="{{ search }}" placeholder="Search by medication, patient name, or prescription ID...">
+        <label for="status">Status:</label>
+        <select name="status" id="status">
+            <option value="">All Statuses</option>
+            <option value="Active" {% if status == 'Active' %}selected{% endif %}>Active</option>
+            <option value="Discontinued" {% if status == 'Discontinued' %}selected{% endif %}>Discontinued</option>
+            <option value="Completed" {% if status == 'Completed' %}selected{% endif %}>Completed</option>
+        </select>
+        <button type="submit" class="button">Filter</button>
+        {% if search or status %}
+        <a href="{% url 'prescription_list' %}" class="button button-secondary">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Prescription List -->
+<div class="data-module">
     <table>
-        <caption>Prescription List</caption>
+        <caption>
+            {% if search %}
+                Search Results for "{{ search }}"
+            {% elif status %}
+                {{ status }} Prescriptions
+            {% else %}
+                All Prescriptions
+            {% endif %}
+        </caption>
         <thead>
             <tr>
+                <th>Prescription ID</th>
                 <th>Medication</th>
                 <th>Patient</th>
                 <th>Dosage</th>
+                <th>Frequency</th>
                 <th>Start Date</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -25,27 +262,42 @@
         <tbody>
             {% for prescription in prescriptions %}
             <tr>
-                <td>{{ prescription.medication_name }}</td>
+                <td><strong>{{ prescription.prescription_id }}</strong></td>
+                <td class="medication-name">{{ prescription.medication_name }}</td>
                 <td>
-                    <a href="{% url 'patient_detail' prescription.patient.patient_id %}">
+                    <a href="{% url 'patient_detail' prescription.patient.patient_id %}" class="patient-link">
                         {{ prescription.patient.full_name }}
                     </a>
                 </td>
                 <td>{{ prescription.dosage }}</td>
-                <td>{{ prescription.start_date|date:"Y-m-d" }}</td>
+                <td>{{ prescription.frequency }}</td>
+                <td>{{ prescription.start_date|date:"M d, Y" }}</td>
                 <td>
                     <span class="status-badge status-{{ prescription.status|lower }}">
                         {{ prescription.status }}
                     </span>
                 </td>
                 <td>
-                    <a href="{% url 'prescription_detail' prescription.prescription_id %}">View</a>
+                    <a href="{% url 'prescription_detail' prescription.prescription_id %}" style="color: var(--link-fg); font-weight: 500;">View</a>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" style="text-align: center; color: #666;">
-                    No prescriptions found.
+                <td colspan="8">
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        <p>
+                            {% if search %}
+                                No prescriptions found matching "{{ search }}"
+                            {% elif status %}
+                                No {{ status|lower }} prescriptions found
+                            {% else %}
+                                No prescriptions recorded yet
+                            {% endif %}
+                        </p>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -54,6 +306,6 @@
 </div>
 
 <p style="margin-top: 20px; font-size: 12px; color: #666;">
-    <strong>Note:</strong> To add or edit prescriptions, please use the <a href="/admin/healthcare/prescription/">Admin Panel</a>.
+    <strong>Tip:</strong> Use the <a href="/admin/healthcare/prescription/">Django Admin Panel</a> for advanced prescription management operations.
 </p>
 {% endblock %}

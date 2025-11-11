@@ -1,16 +1,155 @@
 {% extends 'healthcare/base.html' %}
 {% block title %}New Prescription - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'prescription_list' %}">Prescriptions</a> &rsaquo; New Prescription{% endblock %}
 {% block content %}
-<div class="px-4 sm:px-0 max-w-2xl mx-auto">
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">New Prescription</h1>
-    <div class="bg-white shadow sm:rounded-lg p-6">
-        <form method="POST">
-            {% csrf_token %}
-            <p class="text-sm text-gray-500 mb-4">Feature coming soon. Use the Django admin panel at <a href="/admin/" class="text-medical-blue">/admin/</a> to create prescriptions.</p>
-            <a href="{% url 'prescription_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                Back to Prescriptions
-            </a>
-        </form>
+
+{% include 'healthcare/includes/form_styles.html' %}
+
+<div class="form-container">
+    <div class="form-header">
+        <div>
+            <h1>New Prescription</h1>
+            <div class="meta">
+                Create a new prescription record
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'prescription_list' %}" class="button-secondary">Back to Prescriptions</a>
+        </div>
+    </div>
+
+    <div class="module form-module">
+        <h2>Prescription Information</h2>
+        <div class="form-content">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label class="required">Patient</label>
+                        <select name="patient_id" required>
+                            <option value="">Select a patient...</option>
+                            {% for patient in patients %}
+                            <option value="{{ patient.patient_id }}">{{ patient.full_name }} (ID: {{ patient.patient_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label class="required">Medication Name</label>
+                        <input type="text" name="medication_name" required placeholder="e.g., Lisinopril">
+                    </div>
+                    <div class="form-field">
+                        <label class="required">Dosage</label>
+                        <input type="text" name="dosage" required placeholder="e.g., 10mg">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label class="required">Frequency</label>
+                        <input type="text" name="frequency" required placeholder="e.g., Once daily">
+                    </div>
+                    <div class="form-field">
+                        <label>Route</label>
+                        <select name="route">
+                            <option value="">Select route...</option>
+                            <option value="Oral">Oral</option>
+                            <option value="Topical">Topical</option>
+                            <option value="Injection">Injection</option>
+                            <option value="Intravenous">Intravenous</option>
+                            <option value="Inhalation">Inhalation</option>
+                            <option value="Sublingual">Sublingual</option>
+                            <option value="Rectal">Rectal</option>
+                            <option value="Transdermal">Transdermal</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label class="required">Start Date</label>
+                        <input type="date" name="start_date" required>
+                    </div>
+                    <div class="form-field">
+                        <label>End Date</label>
+                        <input type="date" name="end_date">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label class="required">Status</label>
+                        <select name="status" required>
+                            <option value="Active">Active</option>
+                            <option value="Discontinued">Discontinued</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Refills</label>
+                        <input type="number" name="refills" min="0" placeholder="Number of refills">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Prescribing Physician</label>
+                        <select name="prescribing_physician_id">
+                            <option value="">Select physician...</option>
+                            {% for physician in physicians %}
+                            <option value="{{ physician.provider_id }}">Dr. {{ physician.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Related Encounter</label>
+                        <select name="encounter_id">
+                            <option value="">Select encounter...</option>
+                            {% for encounter in encounters %}
+                            <option value="{{ encounter.encounter_id }}">
+                                {{ encounter.encounter_type }} - {{ encounter.encounter_date|date:"M d, Y" }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field full-width">
+                        <label>Pharmacy</label>
+                        <input type="text" name="pharmacy" placeholder="Pharmacy name and location">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field full-width">
+                        <label>Instructions</label>
+                        <textarea name="instructions" rows="3" placeholder="Patient instructions for taking medication..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field full-width">
+                        <label>Notes</label>
+                        <textarea name="notes" rows="3" placeholder="Additional notes or comments..."></textarea>
+                    </div>
+                </div>
+
+                <div class="submit-row">
+                    <div class="buttons-right">
+                        <a href="{% url 'prescription_list' %}" class="button-secondary">Cancel</a>
+                        <button type="submit" class="button-primary">Create Prescription</button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+
+<p style="margin-top: 20px; font-size: 12px; color: #666;">
+    <strong>Note:</strong> You can also use the <a href="/admin/healthcare/prescription/add/">Django Admin Panel</a> to create prescriptions with more advanced options.
+</p>
 {% endblock %}
