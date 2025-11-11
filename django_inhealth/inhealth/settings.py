@@ -18,13 +18,13 @@ ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
+    'healthcare',  # Our main healthcare app - must come before django.contrib.admin to override templates
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'healthcare',  # Our main healthcare app
 ]
 
 MIDDLEWARE = [
