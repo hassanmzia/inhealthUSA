@@ -1,0 +1,127 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Add Prescription - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0 max-w-4xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Add Prescription</h1>
+        <p class="mt-2 text-sm text-gray-700">Encounter for Patient: {{ encounter.patient.full_name }}</p>
+    </div>
+
+    <div class="bg-white shadow sm:rounded-lg p-6">
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <!-- Provider Selection -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Provider *</label>
+                    <select name="provider_id" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="">Select Provider</option>
+                        {% for provider in providers %}
+                        <option value="{{ provider.provider_id }}">Dr. {{ provider.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Encounter Selection (optional) -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Encounter (Optional)</label>
+                    <select name="encounter_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="">No Associated Encounter</option>
+                        {% for encounter in encounters %}
+                        <option value="{{ encounter.encounter_id }}">{{ encounter.encounter_date|date:"Y-m-d H:i" }} - {{ encounter.encounter_type }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Medication Name -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Medication Name *</label>
+                    <input type="text" name="medication_name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., Lisinopril">
+                </div>
+
+                <!-- Dosage -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Dosage *</label>
+                    <input type="text" name="dosage" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., 10mg">
+                </div>
+
+                <!-- Frequency -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Frequency *</label>
+                    <input type="text" name="frequency" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="E.g., Once daily">
+                </div>
+
+                <!-- Route -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Route</label>
+                    <select name="route" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                        <option value="">Select Route</option>
+                        <option value="Oral">Oral</option>
+                        <option value="IV">Intravenous (IV)</option>
+                        <option value="IM">Intramuscular (IM)</option>
+                        <option value="SC">Subcutaneous (SC)</option>
+                        <option value="Topical">Topical</option>
+                        <option value="Inhalation">Inhalation</option>
+                        <option value="Rectal">Rectal</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Quantity -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Quantity</label>
+                    <input type="number" name="quantity" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="30">
+                </div>
+
+                <!-- Refills -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Refills</label>
+                    <input type="number" name="refills" value="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <!-- Start Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Start Date *</label>
+                    <input type="date" name="start_date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <!-- End Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">End Date</label>
+                    <input type="date" name="end_date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <!-- Instructions -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Instructions</label>
+                    <textarea name="instructions" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm" placeholder="Take one tablet by mouth once daily with food"></textarea>
+                </div>
+
+                <!-- Pharmacy Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Pharmacy Name</label>
+                    <input type="text" name="pharmacy_name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+
+                <!-- Pharmacy Phone -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Pharmacy Phone</label>
+                    <input type="text" name="pharmacy_phone" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <a href="{% url 'appointment_edit' encounter.encounter_id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700">
+                    Save Prescription
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

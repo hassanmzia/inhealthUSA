@@ -1,16 +1,329 @@
 {% extends 'healthcare/base.html' %}
+
 {% block title %}Edit Appointment - InHealth EHR{% endblock %}
+
 {% block content %}
-<div class="px-4 sm:px-0 max-w-2xl mx-auto">
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">Edit Appointment</h1>
-    <div class="bg-white shadow sm:rounded-lg p-6">
-        <form method="POST">
-            {% csrf_token %}
-            <p class="text-sm text-gray-500 mb-4">Feature coming soon. Use the Django admin panel at <a href="/admin/" class="text-medical-blue">/admin/</a> to edit appointments.</p>
+<div class="px-4 sm:px-0">
+    <div class="mb-8 sm:flex sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Edit Appointment</h1>
+            <p class="mt-2 text-sm text-gray-700">Patient: {{ appointment.patient.full_name }} - Encounter ID: {{ appointment.encounter_id }}</p>
+        </div>
+        <div class="mt-4 sm:mt-0">
             <a href="{% url 'appointment_detail' appointment.encounter_id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                 Back to Appointment
             </a>
-        </form>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 mb-6">
+        <nav class="-mb-px flex space-x-8">
+            <button onclick="showTab('details')" id="tab-details" class="tab-button border-b-2 border-medical-blue text-medical-blue py-4 px-1 text-sm font-medium">
+                Appointment Details
+            </button>
+            <button onclick="showTab('vitals')" id="tab-vitals" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+                Vitals
+            </button>
+            <button onclick="showTab('diagnoses')" id="tab-diagnoses" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+                Diagnoses
+            </button>
+            <button onclick="showTab('prescriptions')" id="tab-prescriptions" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+                Prescriptions
+            </button>
+        </nav>
+    </div>
+
+    <!-- Appointment Details Tab -->
+    <div id="content-details" class="tab-content">
+        <div class="bg-white shadow sm:rounded-lg p-6">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Provider *</label>
+                        <select name="provider_id" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                            {% for physician in physicians %}
+                            <option value="{{ physician.provider_id }}" {% if appointment.provider_id == physician.provider_id %}selected{% endif %}>
+                                Dr. {{ physician.full_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Department</label>
+                        <select name="department_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                            <option value="">No Department</option>
+                            {% for department in departments %}
+                            <option value="{{ department.department_id }}" {% if appointment.department_id == department.department_id %}selected{% endif %}>
+                                {{ department.department_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Appointment Date & Time *</label>
+                        <input type="datetime-local" name="encounter_date" value="{{ appointment.encounter_date|date:'Y-m-d\TH:i' }}" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Appointment Type *</label>
+                        <select name="encounter_type" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                            <option value="Office Visit" {% if appointment.encounter_type == 'Office Visit' %}selected{% endif %}>Office Visit</option>
+                            <option value="Follow-up" {% if appointment.encounter_type == 'Follow-up' %}selected{% endif %}>Follow-up</option>
+                            <option value="Annual Physical" {% if appointment.encounter_type == 'Annual Physical' %}selected{% endif %}>Annual Physical</option>
+                            <option value="Urgent Care" {% if appointment.encounter_type == 'Urgent Care' %}selected{% endif %}>Urgent Care</option>
+                            <option value="Consultation" {% if appointment.encounter_type == 'Consultation' %}selected{% endif %}>Consultation</option>
+                            <option value="Telemedicine" {% if appointment.encounter_type == 'Telemedicine' %}selected{% endif %}>Telemedicine</option>
+                            <option value="Emergency" {% if appointment.encounter_type == 'Emergency' %}selected{% endif %}>Emergency</option>
+                            <option value="Procedure" {% if appointment.encounter_type == 'Procedure' %}selected{% endif %}>Procedure</option>
+                            <option value="Lab Review" {% if appointment.encounter_type == 'Lab Review' %}selected{% endif %}>Lab Review</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Status *</label>
+                        <select name="status" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">
+                            <option value="Scheduled" {% if appointment.status == 'Scheduled' %}selected{% endif %}>Scheduled</option>
+                            <option value="Checked In" {% if appointment.status == 'Checked In' %}selected{% endif %}>Checked In</option>
+                            <option value="In Progress" {% if appointment.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                            <option value="Completed" {% if appointment.status == 'Completed' %}selected{% endif %}>Completed</option>
+                            <option value="Cancelled" {% if appointment.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                            <option value="No Show" {% if appointment.status == 'No Show' %}selected{% endif %}>No Show</option>
+                        </select>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Chief Complaint</label>
+                        <textarea name="chief_complaint" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">{{ appointment.chief_complaint|default:'' }}</textarea>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Clinical Impression</label>
+                        <textarea name="clinical_impression" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">{{ appointment.clinical_impression|default:'' }}</textarea>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Treatment Plan</label>
+                        <textarea name="treatment_plan" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">{{ appointment.treatment_plan|default:'' }}</textarea>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Notes</label>
+                        <textarea name="notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm">{{ appointment.notes|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-medical-blue">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Vitals Tab -->
+    <div id="content-vitals" class="tab-content hidden">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Vital Signs</h3>
+                <a href="{% url 'encounter_vital_create' appointment.encounter_id %}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-medical-blue hover:bg-blue-700">
+                    Add Vital Signs
+                </a>
+            </div>
+            {% if vital_signs %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">BP</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Heart Rate</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Temp</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Weight</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for vital in vital_signs %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ vital.recorded_at|date:"Y-m-d H:i" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ vital.blood_pressure|default:"N/A" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% if vital.heart_rate %}{{ vital.heart_rate }} bpm{% else %}N/A{% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% if vital.temperature_value %}{{ vital.temperature_value }}°{{ vital.temperature_unit }}{% else %}N/A{% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% if vital.weight_value %}{{ vital.weight_value }} {{ vital.weight_unit }}{% else %}N/A{% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <a href="{% url 'encounter_vital_edit' appointment.encounter_id vital.vital_signs_id %}" class="text-medical-blue hover:underline">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="px-4 py-5 sm:px-6">
+                <p class="text-sm text-gray-500">No vital signs recorded for this encounter.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Diagnoses Tab -->
+    <div id="content-diagnoses" class="tab-content hidden">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Diagnoses</h3>
+                <a href="{% url 'encounter_diagnosis_create' appointment.encounter_id %}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-medical-blue hover:bg-blue-700">
+                    Add Diagnosis
+                </a>
+            </div>
+            {% if diagnoses %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ICD-10</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for diagnosis in diagnoses %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ diagnosis.diagnosed_at|date:"Y-m-d" }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                {{ diagnosis.diagnosis_description }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ diagnosis.icd10_code|default:"N/A" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ diagnosis.diagnosis_type }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    {% if diagnosis.status == 'Active' %}bg-green-100 text-green-800
+                                    {% elif diagnosis.status == 'Resolved' %}bg-gray-100 text-gray-800
+                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    {{ diagnosis.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <a href="{% url 'encounter_diagnosis_edit' appointment.encounter_id diagnosis.diagnosis_id %}" class="text-medical-blue hover:underline">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="px-4 py-5 sm:px-6">
+                <p class="text-sm text-gray-500">No diagnoses recorded for this encounter.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Prescriptions Tab -->
+    <div id="content-prescriptions" class="tab-content hidden">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Prescriptions</h3>
+                <a href="{% url 'encounter_prescription_create' appointment.encounter_id %}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-medical-blue hover:bg-blue-700">
+                    Add Prescription
+                </a>
+            </div>
+            {% if prescriptions %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Medication</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dosage</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Frequency</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for prescription in prescriptions %}
+                        <tr>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                                {{ prescription.medication_name }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ prescription.dosage }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ prescription.frequency }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ prescription.start_date|date:"Y-m-d" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    {% if prescription.status == 'Active' %}bg-green-100 text-green-800
+                                    {% elif prescription.status == 'Discontinued' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ prescription.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <a href="{% url 'encounter_prescription_edit' appointment.encounter_id prescription.prescription_id %}" class="text-medical-blue hover:underline">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="px-4 py-5 sm:px-6">
+                <p class="text-sm text-gray-500">No prescriptions recorded for this encounter.</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </div>
+
+<script>
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+
+    // Remove active state from all tabs
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('border-medical-blue', 'text-medical-blue');
+        button.classList.add('border-transparent', 'text-gray-500');
+    });
+
+    // Show selected tab content
+    document.getElementById('content-' + tabName).classList.remove('hidden');
+
+    // Add active state to selected tab
+    const activeTab = document.getElementById('tab-' + tabName);
+    activeTab.classList.add('border-medical-blue', 'text-medical-blue');
+    activeTab.classList.remove('border-transparent', 'text-gray-500');
+}
+</script>
 {% endblock %}

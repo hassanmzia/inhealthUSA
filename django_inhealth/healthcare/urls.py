@@ -16,6 +16,18 @@ urlpatterns = [
     path('patients/<int:patient_id>/', views.patient_detail, name='patient_detail'),
     path('patients/<int:patient_id>/edit/', views.patient_edit, name='patient_edit'),
 
+    # Patient Vital Signs URLs
+    path('patients/<int:patient_id>/vitals/create/', views.patient_vital_create, name='patient_vital_create'),
+    path('patients/<int:patient_id>/vitals/<int:vital_signs_id>/edit/', views.patient_vital_edit, name='patient_vital_edit'),
+
+    # Patient Diagnosis URLs
+    path('patients/<int:patient_id>/diagnoses/create/', views.patient_diagnosis_create, name='patient_diagnosis_create'),
+    path('patients/<int:patient_id>/diagnoses/<int:diagnosis_id>/edit/', views.patient_diagnosis_edit, name='patient_diagnosis_edit'),
+
+    # Patient Prescription URLs
+    path('patients/<int:patient_id>/prescriptions/create/', views.patient_prescription_create, name='patient_prescription_create'),
+    path('patients/<int:patient_id>/prescriptions/<int:prescription_id>/edit/', views.patient_prescription_edit, name='patient_prescription_edit'),
+
     # Physician URLs
     path('physicians/', views.physician_list, name='physician_list'),
     path('physicians/<int:provider_id>/', views.physician_detail, name='physician_detail'),
@@ -26,10 +38,22 @@ urlpatterns = [
     path('appointments/<int:encounter_id>/', views.appointment_detail, name='appointment_detail'),
     path('appointments/<int:encounter_id>/edit/', views.appointment_edit, name='appointment_edit'),
 
-    # Vital Signs URLs
+    # Encounter Vital Signs URLs
+    path('appointments/<int:encounter_id>/vitals/create/', views.encounter_vital_create, name='encounter_vital_create'),
+    path('appointments/<int:encounter_id>/vitals/<int:vital_signs_id>/edit/', views.encounter_vital_edit, name='encounter_vital_edit'),
+
+    # Encounter Diagnosis URLs
+    path('appointments/<int:encounter_id>/diagnoses/create/', views.encounter_diagnosis_create, name='encounter_diagnosis_create'),
+    path('appointments/<int:encounter_id>/diagnoses/<int:diagnosis_id>/edit/', views.encounter_diagnosis_edit, name='encounter_diagnosis_edit'),
+
+    # Encounter Prescription URLs
+    path('appointments/<int:encounter_id>/prescriptions/create/', views.encounter_prescription_create, name='encounter_prescription_create'),
+    path('appointments/<int:encounter_id>/prescriptions/<int:prescription_id>/edit/', views.encounter_prescription_edit, name='encounter_prescription_edit'),
+
+    # Vital Signs URLs (deprecated - use encounter URLs above)
     path('appointments/<int:encounter_id>/vital-signs/create/', views.vital_sign_create, name='vital_sign_create'),
 
-    # Diagnosis URLs
+    # Diagnosis URLs (deprecated - use encounter URLs above)
     path('appointments/<int:encounter_id>/diagnoses/create/', views.diagnosis_create, name='diagnosis_create'),
 
     # Prescription URLs
