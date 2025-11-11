@@ -1,0 +1,18 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<div id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></div>
+{% if user.is_active and user.is_staff %}
+<div id="site-url"><a href="/">{% trans 'View site' %}</a></div>
+{% endif %}
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block footer %}
+<div id="footer" style="text-align: center; padding: 20px; color: #666; font-size: 12px; border-top: 1px solid #eaeaea; margin-top: 20px;">
+    &copy; 2025 InHealth EHR System. All rights reserved.
+</div>
+{% endblock %}
