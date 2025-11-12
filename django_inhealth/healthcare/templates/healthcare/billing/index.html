@@ -4,41 +4,366 @@
 
 {% block content %}
 <style>
-.detail-header{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
-.detail-header h1{margin:0;font-size:28px;font-weight:300}
-.detail-header .meta{font-size:13px;color:#666;margin-top:8px}
-.detail-header .actions{display:flex;gap:10px}
-.billing-card{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:20px;margin-bottom:20px;transition:box-shadow 0.2s}
-.billing-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-.billing-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:15px;padding-bottom:15px;border-bottom:2px solid var(--hairline-color)}
-.billing-number{font-size:18px;font-weight:600;color:var(--body-fg)}
-.billing-date{font-size:13px;color:#666}
-.status-badge{padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600;display:inline-block}
-.status-pending{background:#fff3cd;color:#856404}
-.status-paid{background:#d1ecf1;color:#0c5460}
-.status-overdue{background:#f8d7da;color:#721c24}
-.status-partial{background:#e7e7ff;color:#4a4aff}
-.billing-details{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-.billing-details .detail-item{display:flex;flex-direction:column;gap:3px}
-.billing-details .detail-label{font-size:11px;font-weight:600;text-transform:uppercase;color:#666}
-.billing-details .detail-value{font-size:14px;font-weight:500;color:var(--body-fg)}
-.billing-summary{display:flex;justify-content:space-between;align-items:center;padding-top:15px;border-top:2px solid var(--hairline-color);margin-top:15px}
-.amount-label{font-size:13px;color:#666}
-.amount-value{font-size:20px;font-weight:700}
-.amount-due{color:#d9534f}
-.amount-paid{color:#5cb85c}
+/* Header Styles */
+.detail-header {
+    background: white;
+    border: 1px solid var(--hairline-color);
+    border-radius: 4px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.detail-header h1 {
+    margin: 0 0 10px 0;
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--primary);
+}
+
+.detail-header .meta {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+/* Filter Styles - Consistent with Family History */
+.filter-section {
+    background: white;
+    border: 1px solid var(--hairline-color);
+    border-radius: 4px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.filter-section h3 {
+    margin: 0 0 20px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary);
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--body-fg);
+    margin-bottom: 8px;
+    display: block;
+}
+
+.select-input,
+.text-input,
+.date-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+}
+
+.select-input:focus,
+.text-input:focus,
+.date-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(65, 118, 144, 0.1);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--hairline-color);
+}
+
+.button-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.button-primary:hover {
+    background: #35606f;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.button-secondary {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.button-secondary:hover {
+    background: #5a6268;
+}
+
+/* Separator Line */
+.content-separator {
+    height: 2px;
+    background: linear-gradient(to right, var(--primary), transparent);
+    margin: 30px 0;
+}
+
+/* Billing Card Styles */
+.billing-card {
+    background: white;
+    border: 1px solid var(--hairline-color);
+    border-radius: 4px;
+    padding: 25px;
+    margin-bottom: 20px;
+    transition: box-shadow 0.2s;
+}
+
+.billing-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.billing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--hairline-color);
+}
+
+.billing-number {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--body-fg);
+    margin-bottom: 5px;
+}
+
+.billing-date {
+    font-size: 13px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-paid {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-overdue {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-partial {
+    background: #e7e7ff;
+    color: #4a4aff;
+}
+
+.billing-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.billing-details .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.billing-details .detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #666;
+    letter-spacing: 0.5px;
+}
+
+.billing-details .detail-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--body-fg);
+}
+
+.billing-items-table {
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+.billing-items-table table {
+    width: 100%;
+    font-size: 13px;
+    border-collapse: collapse;
+}
+
+.billing-items-table thead {
+    background: var(--darkened-bg);
+}
+
+.billing-items-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--body-fg);
+    letter-spacing: 0.5px;
+}
+
+.billing-items-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--hairline-color);
+}
+
+.billing-items-table tr:last-child td {
+    border-bottom: none;
+}
+
+.billing-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 2px solid var(--hairline-color);
+    margin-top: 20px;
+}
+
+.amount-label {
+    font-size: 14px;
+    color: #666;
+}
+
+.amount-value {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.amount-due {
+    color: #d9534f;
+}
+
+.amount-paid {
+    color: #5cb85c;
+}
+
+/* Empty State */
+.empty-state {
+    background: white;
+    border: 1px solid var(--hairline-color);
+    border-radius: 4px;
+    padding: 60px 40px;
+    text-align: center;
+}
+
+.empty-state-icon {
+    font-size: 64px;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    color: #666;
+    margin-bottom: 10px;
+    font-size: 20px;
+    font-weight: 400;
+}
+
+.empty-state p {
+    color: #999;
+    font-size: 14px;
+}
 </style>
 
 <div class="detail-header">
     <div>
         <h1>Billing Information</h1>
-        <div class="meta"><strong>Patient:</strong> {{ patient.full_name }} | <strong>Patient ID:</strong> {{ patient.patient_id }}</div>
-    </div>
-    <div class="actions">
-        <a href="{% url 'patient_detail' patient.patient_id %}" class="button">Back to Patient</a>
+        <div class="meta">
+            <strong>Patient:</strong> {{ patient.full_name }} |
+            <strong>Patient ID:</strong> {{ patient.patient_id }}
+        </div>
+        <a href="{% url 'patient_detail' patient.patient_id %}" class="button">← Back to Patient</a>
     </div>
 </div>
 
+<!-- Filter Section -->
+<div class="filter-section">
+    <h3>Filter Billing Records</h3>
+    <form method="GET" action="">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select name="status" class="select-input">
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="partial">Partial Payment</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">From Date</label>
+                <input type="date" name="from_date" class="date-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">To Date</label>
+                <input type="date" name="to_date" class="date-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Invoice Number</label>
+                <input type="text" name="invoice" class="text-input" placeholder="Search by invoice...">
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="button-primary">Apply Filters</button>
+            <button type="reset" class="button-secondary" onclick="window.location.href='{% url 'patient_billing_list' patient.patient_id %}'">Clear Filters</button>
+        </div>
+    </form>
+</div>
+
+<!-- Content Separator -->
+<div class="content-separator"></div>
+
+<!-- Billing Records -->
 {% if billings %}
     {% for billing in billings %}
     <div class="billing-card">
@@ -70,28 +395,28 @@
             </div>
             <div class="detail-item">
                 <span class="detail-label">Amount Due</span>
-                <span class="detail-value" style="color:#d9534f;font-weight:700">${{ billing.amount_due|floatformat:2 }}</span>
+                <span class="detail-value amount-due">${{ billing.amount_due|floatformat:2 }}</span>
             </div>
         </div>
 
         {% if billing.billing_items.all %}
-        <div style="margin-top:15px">
-            <table style="width:100%;font-size:13px">
-                <thead style="background:var(--darkened-bg)">
+        <div class="billing-items-table">
+            <table>
+                <thead>
                     <tr>
-                        <th style="padding:8px;text-align:left">Service/Item</th>
-                        <th style="padding:8px;text-align:center">Quantity</th>
-                        <th style="padding:8px;text-align:right">Unit Price</th>
-                        <th style="padding:8px;text-align:right">Total</th>
+                        <th>Service/Item</th>
+                        <th style="text-align:center">Quantity</th>
+                        <th style="text-align:right">Unit Price</th>
+                        <th style="text-align:right">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in billing.billing_items.all %}
-                    <tr style="border-bottom:1px solid var(--hairline-color)">
-                        <td style="padding:8px">{{ item.description }}</td>
-                        <td style="padding:8px;text-align:center">{{ item.quantity }}</td>
-                        <td style="padding:8px;text-align:right">${{ item.unit_price|floatformat:2 }}</td>
-                        <td style="padding:8px;text-align:right;font-weight:600">${{ item.total_price|floatformat:2 }}</td>
+                    <tr>
+                        <td>{{ item.description }}</td>
+                        <td style="text-align:center">{{ item.quantity }}</td>
+                        <td style="text-align:right">${{ item.unit_price|floatformat:2 }}</td>
+                        <td style="text-align:right;font-weight:600">${{ item.total_price|floatformat:2 }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -100,7 +425,7 @@
         {% endif %}
 
         <div class="billing-summary">
-            <a href="{% url 'patient_billing_detail' patient.patient_id billing.billing_id %}" class="button" style="color:white">View Details</a>
+            <a href="{% url 'patient_billing_detail' patient.patient_id billing.billing_id %}" class="button-primary">View Details</a>
             <div>
                 {% if billing.amount_due > 0 %}
                     <span class="amount-label">Amount Due: </span>
@@ -113,10 +438,10 @@
     </div>
     {% endfor %}
 {% else %}
-    <div style="background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:40px;text-align:center">
-        <div style="font-size:48px;color:#ccc;margin-bottom:15px">💵</div>
-        <h3 style="color:#666;margin-bottom:10px">No Billing Records</h3>
-        <p style="color:#999">No billing information found for this patient.</p>
+    <div class="empty-state">
+        <div class="empty-state-icon">💵</div>
+        <h3>No Billing Records</h3>
+        <p>No billing information found for this patient.</p>
     </div>
 {% endif %}
 

@@ -4,40 +4,310 @@
 
 {% block content %}
 <style>
-.detail-header{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
-.detail-header h1{margin:0;font-size:28px;font-weight:300}
-.detail-header .meta{font-size:13px;color:#666;margin-top:8px}
-.detail-header .actions{display:flex;gap:10px}
-.payment-card{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:20px;margin-bottom:15px;transition:box-shadow 0.2s;display:flex;justify-content:space-between;align-items:center}
-.payment-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-.payment-info{flex:1}
-.payment-header{display:flex;align-items:center;gap:15px;margin-bottom:10px}
-.payment-amount{font-size:24px;font-weight:700;color:#5cb85c}
-.payment-id{font-size:14px;color:#666;font-family:monospace}
-.payment-details{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;font-size:13px}
-.payment-detail{display:flex;flex-direction:column;gap:3px}
-.detail-label{font-size:11px;font-weight:600;text-transform:uppercase;color:#666}
-.detail-value{font-weight:500;color:var(--body-fg)}
-.payment-actions{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
-.status-badge{padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600}
-.status-completed{background:#d1ecf1;color:#0c5460}
-.status-pending{background:#fff3cd;color:#856404}
-.status-failed{background:#f8d7da;color:#721c24}
-.status-refunded{background:#e7e7ff;color:#4a4aff}
-.summary-card{background:linear-gradient(135deg,#5cb85c 0%,#449d44 100%);color:white;border-radius:4px;padding:25px;margin-bottom:20px}
-.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.summary-item{text-align:center}
-.summary-label{font-size:12px;opacity:0.9;margin-bottom:5px}
-.summary-value{font-size:28px;font-weight:700}
+/* Header Styles */
+.detail-header {
+    background: white;
+    border: 1px solid var(--hairline-color);
+    border-radius: 4px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.detail-header h1 {
+    margin: 0 0 10px 0;
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--primary);
+}
+
+.detail-header .meta {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+/* Summary Card */
+.summary-card {
+    background: linear-gradient(135deg, #5cb85c 0%, #449d44 100%);
+    color: white;
+    border-radius: 4px;
+    padding: 30px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+}
+
+.summary-item {
+    text-align: center;
+}
+
+.summary-label {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.summary-value {
+    font-size: 32px;
+    font-weight: 700;
+}
+
+/* Filter Styles */
+.filter-section {
+    background: white;
+    border: 1px solid var(--hairline-color);
+    border-radius: 4px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.filter-section h3 {
+    margin: 0 0 20px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary);
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--body-fg);
+    margin-bottom: 8px;
+    display: block;
+}
+
+.select-input,
+.text-input,
+.date-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+}
+
+.select-input:focus,
+.text-input:focus,
+.date-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(65, 118, 144, 0.1);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--hairline-color);
+}
+
+.button-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.button-primary:hover {
+    background: #35606f;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.button-secondary {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.button-secondary:hover {
+    background: #5a6268;
+}
+
+/* Separator Line */
+.content-separator {
+    height: 2px;
+    background: linear-gradient(to right, var(--primary), transparent);
+    margin: 30px 0;
+}
+
+/* Payment Card Styles */
+.payment-card {
+    background: white;
+    border: 1px solid var(--hairline-color);
+    border-radius: 4px;
+    padding: 25px;
+    margin-bottom: 15px;
+    transition: box-shadow 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.payment-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.payment-info {
+    flex: 1;
+}
+
+.payment-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.payment-amount {
+    font-size: 26px;
+    font-weight: 700;
+    color: #5cb85c;
+}
+
+.payment-id {
+    font-size: 13px;
+    color: #666;
+    font-family: monospace;
+    background: var(--darkened-bg);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.payment-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    font-size: 13px;
+}
+
+.payment-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.detail-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #666;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    font-weight: 600;
+    color: var(--body-fg);
+    font-size: 14px;
+}
+
+.payment-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-completed {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-refunded {
+    background: #e7e7ff;
+    color: #4a4aff;
+}
+
+/* Empty State */
+.empty-state {
+    background: white;
+    border: 1px solid var(--hairline-color);
+    border-radius: 4px;
+    padding: 60px 40px;
+    text-align: center;
+}
+
+.empty-state-icon {
+    font-size: 64px;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    color: #666;
+    margin-bottom: 10px;
+    font-size: 20px;
+    font-weight: 400;
+}
+
+.empty-state p {
+    color: #999;
+    font-size: 14px;
+}
 </style>
 
 <div class="detail-header">
     <div>
         <h1>Payment History</h1>
-        <div class="meta"><strong>Patient:</strong> {{ patient.full_name }} | <strong>Patient ID:</strong> {{ patient.patient_id }}</div>
-    </div>
-    <div class="actions">
-        <a href="{% url 'patient_detail' patient.patient_id %}" class="button">Back to Patient</a>
+        <div class="meta">
+            <strong>Patient:</strong> {{ patient.full_name }} |
+            <strong>Patient ID:</strong> {{ patient.patient_id }}
+        </div>
+        <a href="{% url 'patient_detail' patient.patient_id %}" class="button">← Back to Patient</a>
     </div>
 </div>
 
@@ -55,53 +325,107 @@
         </div>
         <div class="summary-item">
             <div class="summary-label">Last Payment</div>
-            <div class="summary-value" style="font-size:18px">{{ payments.0.payment_date|date:"M d, Y" }}</div>
+            <div class="summary-value" style="font-size:20px">{{ payments.0.payment_date|date:"M d, Y" }}</div>
         </div>
     </div>
 </div>
+{% endif %}
+
+<!-- Filter Section -->
+<div class="filter-section">
+    <h3>Filter Payment History</h3>
+    <form method="GET" action="">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select name="status" class="select-input">
+                    <option value="">All Statuses</option>
+                    <option value="completed">Completed</option>
+                    <option value="pending">Pending</option>
+                    <option value="failed">Failed</option>
+                    <option value="refunded">Refunded</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Payment Method</label>
+                <select name="method" class="select-input">
+                    <option value="">All Methods</option>
+                    <option value="cash">Cash</option>
+                    <option value="check">Check</option>
+                    <option value="credit_card">Credit Card</option>
+                    <option value="debit_card">Debit Card</option>
+                    <option value="insurance">Insurance</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">From Date</label>
+                <input type="date" name="from_date" class="date-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">To Date</label>
+                <input type="date" name="to_date" class="date-input">
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="button-primary">Apply Filters</button>
+            <button type="reset" class="button-secondary" onclick="window.location.href='{% url 'patient_payment_list' patient.patient_id %}'">Clear Filters</button>
+        </div>
+    </form>
+</div>
+
+<!-- Content Separator -->
+<div class="content-separator"></div>
 
 <!-- Payment List -->
-{% for payment in payments %}
-<div class="payment-card">
-    <div class="payment-info">
-        <div class="payment-header">
-            <div class="payment-amount">${{ payment.amount|floatformat:2 }}</div>
-            <div class="payment-id">Transaction: {{ payment.transaction_id|default:"N/A" }}</div>
-        </div>
-        <div class="payment-details">
-            <div class="payment-detail">
-                <span class="detail-label">Payment Date</span>
-                <span class="detail-value">{{ payment.payment_date|date:"F d, Y" }}</span>
+{% if payments %}
+    {% for payment in payments %}
+    <div class="payment-card">
+        <div class="payment-info">
+            <div class="payment-header">
+                <div class="payment-amount">${{ payment.amount|floatformat:2 }}</div>
+                <div class="payment-id">{{ payment.transaction_id|default:"N/A" }}</div>
             </div>
-            <div class="payment-detail">
-                <span class="detail-label">Payment Method</span>
-                <span class="detail-value">{{ payment.payment_method }}</span>
-            </div>
-            <div class="payment-detail">
-                <span class="detail-label">Invoice</span>
-                <span class="detail-value">
-                    {% if payment.billing %}
-                        <a href="{% url 'patient_billing_detail' patient.patient_id payment.billing.billing_id %}">Invoice #{{ payment.billing.billing_id }}</a>
-                    {% else %}
-                        —
-                    {% endif %}
-                </span>
-            </div>
-        </div>
-    </div>
-    <div class="payment-actions">
-        <span class="status-badge status-{{ payment.status|lower }}">{{ payment.status }}</span>
-        <a href="{% url 'patient_payment_detail' patient.patient_id payment.payment_id %}" class="button">View Receipt</a>
-    </div>
-</div>
-{% endfor %}
 
+            <div class="payment-details">
+                <div class="payment-detail">
+                    <span class="detail-label">Payment Date</span>
+                    <span class="detail-value">{{ payment.payment_date|date:"F d, Y" }}</span>
+                </div>
+                <div class="payment-detail">
+                    <span class="detail-label">Payment Method</span>
+                    <span class="detail-value">{{ payment.payment_method|title }}</span>
+                </div>
+                {% if payment.billing %}
+                <div class="payment-detail">
+                    <span class="detail-label">Invoice</span>
+                    <span class="detail-value">
+                        <a href="{% url 'patient_billing_detail' patient.patient_id payment.billing.billing_id %}" style="color:var(--link-fg);font-weight:600">
+                            #{{ payment.billing.billing_id }}
+                        </a>
+                    </span>
+                </div>
+                {% endif %}
+                {% if payment.reference_number %}
+                <div class="payment-detail">
+                    <span class="detail-label">Reference</span>
+                    <span class="detail-value" style="font-family:monospace">{{ payment.reference_number }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="payment-actions">
+            <span class="status-badge status-{{ payment.status|lower }}">{{ payment.status }}</span>
+            <a href="{% url 'patient_payment_detail' patient.patient_id payment.payment_id %}" class="button-primary">View Receipt</a>
+        </div>
+    </div>
+    {% endfor %}
 {% else %}
-<div style="background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:40px;text-align:center">
-    <div style="font-size:48px;color:#ccc;margin-bottom:15px">💳</div>
-    <h3 style="color:#666;margin-bottom:10px">No Payment Records</h3>
-    <p style="color:#999">No payments have been recorded for this patient.</p>
-</div>
+    <div class="empty-state">
+        <div class="empty-state-icon">💳</div>
+        <h3>No Payment History</h3>
+        <p>No payments found for this patient.</p>
+    </div>
 {% endif %}
 
 {% endblock %}
