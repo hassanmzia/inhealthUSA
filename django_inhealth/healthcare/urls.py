@@ -97,4 +97,7 @@ urlpatterns = [
 
     # Allergies Questionnaire
     path('questionnaire/allergies/', views.allergies_questionnaire, name='allergies_questionnaire'),
+
+    # Insurance Information
+    path('insurance/', views.insurance_information, name='insurance_information'),
 ]

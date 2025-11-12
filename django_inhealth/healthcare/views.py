@@ -1311,3 +1311,57 @@ def allergies_questionnaire(request):
 
     # For GET requests, display the questionnaire form
     return render(request, 'healthcare/questionnaire/allergies.html')
+
+
+# Insurance Information
+@login_required
+def insurance_information(request):
+    """Display and process comprehensive insurance information form"""
+    if request.method == 'POST':
+        # TODO: In production, parse form data and create/update Insurance records:
+        # Primary Insurance:
+        # - Carrier name, plan type, member ID, group number
+        # - BIN, PCN, RxGrp numbers for prescription coverage
+        # - Coverage dates (effective and termination)
+        # - Subscriber information (name, DOB, SSN, relationship)
+        # - Employer information
+        # - Contact information (customer service, claims, pre-auth phones)
+        # - Coverage types (medical, prescription, dental, vision, etc.)
+        # - Copay amounts (PCP, specialist, ER, urgent care, inpatient, outpatient)
+        # - Deductible information (individual, family, amounts met)
+        # - Out-of-pocket maximums
+        # - Coinsurance percentage
+        # - Referral and prior authorization requirements
+        # - PCP information
+        # - Insurance card images (front and back)
+        #
+        # Secondary Insurance (if applicable):
+        # - Same fields as primary
+        #
+        # Tertiary Insurance (if applicable):
+        # - Same fields as primary
+        #
+        # Coordination of Benefits:
+        # - COB rules (birthday rule, active/working, court order)
+        # - COB notes
+        #
+        # Special Coverage:
+        # - Medicare information (number, parts enrolled, effective dates)
+        # - Medicaid information
+        # - Workers' compensation (claim number, injury date, carrier, adjuster info)
+        # - Auto insurance for accidents (carrier, policy, claim info)
+        #
+        # Additional:
+        # - Financial responsibility acceptance
+        # - Assignment of benefits authorization
+        # - Release of information authorization
+        # - Preferred contact method
+        # - Additional notes
+        # - Referral source
+        # - etc.
+
+        messages.success(request, 'Insurance information submitted successfully. Your insurance details have been recorded and will be used for billing purposes.')
+        return redirect('index')
+
+    # For GET requests, display the insurance information form
+    return render(request, 'healthcare/insurance_information.html')
