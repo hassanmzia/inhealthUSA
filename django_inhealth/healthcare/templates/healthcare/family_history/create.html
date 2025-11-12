@@ -17,7 +17,7 @@
                 {% csrf_token %}
                 <div class="form-row">
                     <div class="form-field"><label class="required">Patient</label>
-                        <select name="patient_id" required><option value="">Select a patient...</option>{% for patient in patients %}<option value="{{ patient.patient_id }}">{{ patient.full_name }} (ID: {{ patient.patient_id }})</option>{% endfor %}</select>
+                        <select name="patient_id" required><option value="">Select a patient...</option>{% for patient in patients %}<option value="{{ patient.patient_id }}" {% if pre_selected_patient_id and patient.patient_id|stringformat:"s" == pre_selected_patient_id %}selected{% endif %}>{{ patient.full_name }} (ID: {{ patient.patient_id }})</option>{% endfor %}</select>
                     </div>
                 </div>
                 <div class="form-row">

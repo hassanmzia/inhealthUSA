@@ -642,7 +642,7 @@
         <div class="data-table-container">
             <div class="data-table-header">
                 <h3>Family History</h3>
-                <a href="/admin/healthcare/familyhistory/add/" class="add-button">+ Add Family History</a>
+                <a href="{% url 'family_history_create' %}?patient_id={{ patient.patient_id }}" class="add-button">+ Add Family History</a>
             </div>
             {% if family_history %}
             <table class="data-table">
@@ -671,7 +671,7 @@
                         </td>
                         <td>{{ history.recorded_date|date:"M d, Y" }}</td>
                         <td>
-                            <a href="/admin/healthcare/familyhistory/{{ history.family_history_id }}/change/" class="edit-link">Edit</a>
+                            <a href="{% url 'family_history_detail' history.family_history_id %}" class="edit-link">View</a>
                         </td>
                     </tr>
                     {% endfor %}
