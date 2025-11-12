@@ -1,0 +1,169 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Insurance Coverage - {{ patient.full_name }} - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo; Insurance Coverage{% endblock %}
+
+{% block content %}
+<style>
+.detail-header{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.detail-header h1{margin:0;font-size:28px;font-weight:300}
+.detail-header .meta{font-size:13px;color:#666;margin-top:8px}
+.detail-header .actions{display:flex;gap:10px}
+.insurance-card{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:25px;margin-bottom:20px;transition:box-shadow 0.2s}
+.insurance-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.insurance-card.primary{border:2px solid #5cb85c;background:linear-gradient(to right,#f0fff0 0%,white 100%)}
+.insurance-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:20px;padding-bottom:20px;border-bottom:2px solid var(--hairline-color)}
+.insurance-provider{font-size:22px;font-weight:700;color:var(--body-fg);margin-bottom:5px}
+.insurance-type{font-size:14px;color:#666;margin-bottom:10px}
+.badge-primary{background:#5cb85c;color:white;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase}
+.badge-secondary{background:#999;color:white;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase}
+.badge-active{background:#d1ecf1;color:#0c5460;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600}
+.badge-inactive{background:#f8d7da;color:#721c24;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600}
+.insurance-details{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.insurance-detail{display:flex;flex-direction:column;gap:5px}
+.detail-label{font-size:11px;font-weight:600;text-transform:uppercase;color:#666;letter-spacing:0.5px}
+.detail-value{font-size:14px;font-weight:600;color:var(--body-fg)}
+.coverage-info{background:var(--darkened-bg);padding:15px;border-radius:4px;margin-top:20px}
+.coverage-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;text-align:center}
+.coverage-item{display:flex;flex-direction:column;gap:3px}
+.coverage-label{font-size:10px;color:#666;text-transform:uppercase;font-weight:600}
+.coverage-value{font-size:16px;font-weight:700;color:var(--body-fg)}
+</style>
+
+<div class="detail-header">
+    <div>
+        <h1>Insurance Coverage</h1>
+        <div class="meta"><strong>Patient:</strong> {{ patient.full_name }} | <strong>Patient ID:</strong> {{ patient.patient_id }}</div>
+    </div>
+    <div class="actions">
+        <a href="{% url 'patient_detail' patient.patient_id %}" class="button">Back to Patient</a>
+    </div>
+</div>
+
+{% if insurances %}
+    <!-- Primary Insurance -->
+    {% if primary_insurance %}
+    <div style="margin-bottom:15px">
+        <h2 style="font-size:16px;font-weight:600;color:#666;margin:0">Primary Insurance</h2>
+    </div>
+    <div class="insurance-card primary">
+        <div class="insurance-header">
+            <div>
+                <div class="insurance-provider">{{ primary_insurance.insurance_provider }}</div>
+                <div class="insurance-type">Plan: {{ primary_insurance.plan_name|default:"Standard Plan" }}</div>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                    <span class="badge-primary">Primary</span>
+                    <span class="badge-{% if primary_insurance.is_active %}active{% else %}inactive{% endif %}">
+                        {% if primary_insurance.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+            <a href="{% url 'patient_insurance_detail' patient.patient_id primary_insurance.insurance_id %}" class="button" style="color:white">View Details</a>
+        </div>
+
+        <div class="insurance-details">
+            <div class="insurance-detail">
+                <span class="detail-label">Policy Number</span>
+                <span class="detail-value" style="font-family:monospace">{{ primary_insurance.policy_number }}</span>
+            </div>
+            <div class="insurance-detail">
+                <span class="detail-label">Group Number</span>
+                <span class="detail-value" style="font-family:monospace">{{ primary_insurance.group_number|default:"—" }}</span>
+            </div>
+            <div class="insurance-detail">
+                <span class="detail-label">Effective Date</span>
+                <span class="detail-value">{{ primary_insurance.effective_date|date:"M d, Y" }}</span>
+            </div>
+        </div>
+
+        <div class="coverage-info">
+            <div class="coverage-grid">
+                <div class="coverage-item">
+                    <span class="coverage-label">Deductible</span>
+                    <span class="coverage-value">${{ primary_insurance.deductible|floatformat:2|default:"—" }}</span>
+                </div>
+                <div class="coverage-item">
+                    <span class="coverage-label">Co-Pay</span>
+                    <span class="coverage-value">${{ primary_insurance.copay|floatformat:2|default:"—" }}</span>
+                </div>
+                <div class="coverage-item">
+                    <span class="coverage-label">Out-of-Pocket Max</span>
+                    <span class="coverage-value">${{ primary_insurance.out_of_pocket_max|floatformat:2|default:"—" }}</span>
+                </div>
+                <div class="coverage-item">
+                    <span class="coverage-label">Coverage %</span>
+                    <span class="coverage-value">{{ primary_insurance.coverage_percentage|default:"—" }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Secondary Insurance -->
+    {% if secondary_insurances %}
+    <div style="margin:25px 0 15px">
+        <h2 style="font-size:16px;font-weight:600;color:#666;margin:0">Secondary Insurance</h2>
+    </div>
+    {% for insurance in secondary_insurances %}
+    <div class="insurance-card">
+        <div class="insurance-header">
+            <div>
+                <div class="insurance-provider">{{ insurance.insurance_provider }}</div>
+                <div class="insurance-type">Plan: {{ insurance.plan_name|default:"Standard Plan" }}</div>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                    <span class="badge-secondary">Secondary</span>
+                    <span class="badge-{% if insurance.is_active %}active{% else %}inactive{% endif %}">
+                        {% if insurance.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+            <a href="{% url 'patient_insurance_detail' patient.patient_id insurance.insurance_id %}" class="button" style="color:white">View Details</a>
+        </div>
+
+        <div class="insurance-details">
+            <div class="insurance-detail">
+                <span class="detail-label">Policy Number</span>
+                <span class="detail-value" style="font-family:monospace">{{ insurance.policy_number }}</span>
+            </div>
+            <div class="insurance-detail">
+                <span class="detail-label">Group Number</span>
+                <span class="detail-value" style="font-family:monospace">{{ insurance.group_number|default:"—" }}</span>
+            </div>
+            <div class="insurance-detail">
+                <span class="detail-label">Effective Date</span>
+                <span class="detail-value">{{ insurance.effective_date|date:"M d, Y" }}</span>
+            </div>
+        </div>
+
+        <div class="coverage-info">
+            <div class="coverage-grid">
+                <div class="coverage-item">
+                    <span class="coverage-label">Deductible</span>
+                    <span class="coverage-value">${{ insurance.deductible|floatformat:2|default:"—" }}</span>
+                </div>
+                <div class="coverage-item">
+                    <span class="coverage-label">Co-Pay</span>
+                    <span class="coverage-value">${{ insurance.copay|floatformat:2|default:"—" }}</span>
+                </div>
+                <div class="coverage-item">
+                    <span class="coverage-label">Out-of-Pocket Max</span>
+                    <span class="coverage-value">${{ insurance.out_of_pocket_max|floatformat:2|default:"—" }}</span>
+                </div>
+                <div class="coverage-item">
+                    <span class="coverage-label">Coverage %</span>
+                    <span class="coverage-value">{{ insurance.coverage_percentage|default:"—" }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+{% else %}
+<div style="background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:40px;text-align:center">
+    <div style="font-size:48px;color:#ccc;margin-bottom:15px">🛡️</div>
+    <h3 style="color:#666;margin-bottom:10px">No Insurance Coverage</h3>
+    <p style="color:#999">No insurance policies found for this patient.</p>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,164 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Invoice #{{ billing.billing_id }} - {{ patient.full_name }} - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo; <a href="{% url 'patient_billing_list' patient.patient_id %}">Billing</a> &rsaquo; Invoice #{{ billing.billing_id }}{% endblock %}
+
+{% block content %}
+<style>
+.detail-header{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.detail-header h1{margin:0;font-size:28px;font-weight:300}
+.detail-header .meta{font-size:13px;color:#666;margin-top:8px}
+.detail-header .actions{display:flex;gap:10px}
+.info-module{background:white;border:1px solid var(--hairline-color);border-radius:4px;margin-bottom:20px;overflow:hidden}
+.info-module h2{margin:0;padding:12px 20px;font-weight:500;font-size:15px;background:var(--primary);color:var(--header-link-color)}
+.info-module .content{padding:0}
+.info-module dl{margin:0}
+.info-module dl>div{display:grid;grid-template-columns:200px 1fr;gap:20px;padding:12px 20px;border-bottom:1px solid var(--hairline-color)}
+.info-module dl>div:nth-child(even){background:var(--darkened-bg)}
+.info-module dl>div:last-child{border-bottom:none}
+.info-module dt{font-size:13px;font-weight:600;color:#666}
+.info-module dd{font-size:13px;color:var(--body-fg);margin:0}
+.status-badge{padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600;display:inline-block}
+.status-pending{background:#fff3cd;color:#856404}
+.status-paid{background:#d1ecf1;color:#0c5460}
+.status-overdue{background:#f8d7da;color:#721c24}
+.status-partial{background:#e7e7ff;color:#4a4aff}
+.data-table-module{background:white;border:1px solid var(--hairline-color);border-radius:4px;margin-bottom:20px;overflow:hidden}
+.data-table-module h2{margin:0;padding:12px 20px;font-weight:500;font-size:15px;background:var(--primary);color:var(--header-link-color)}
+.data-table-module table{width:100%;border-collapse:collapse}
+.data-table-module thead{background:var(--darkened-bg)}
+.data-table-module thead th{padding:10px 15px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--body-fg);border-bottom:1px solid var(--hairline-color)}
+.data-table-module tbody td{padding:12px 15px;border-bottom:1px solid var(--hairline-color);font-size:13px}
+.data-table-module tbody tr:hover{background:var(--darkened-bg)}
+.data-table-module tbody tr:last-child td{border-bottom:none}
+.total-row{background:var(--primary);color:var(--header-link-color);font-weight:700;font-size:15px}
+</style>
+
+<div class="detail-header">
+    <div>
+        <h1>Invoice #{{ billing.billing_id }}</h1>
+        <div class="meta">
+            <strong>Patient:</strong> {{ patient.full_name }} |
+            <strong>Date:</strong> {{ billing.billing_date|date:"F d, Y" }} |
+            <span class="status-badge status-{{ billing.status|lower }}">{{ billing.status }}</span>
+        </div>
+    </div>
+    <div class="actions">
+        <a href="{% url 'patient_billing_list' patient.patient_id %}" class="button">Back to Billing</a>
+        <a href="#" class="button" style="color:white">Print Invoice</a>
+    </div>
+</div>
+
+<!-- Invoice Information -->
+<div class="info-module">
+    <h2>Invoice Details</h2>
+    <div class="content">
+        <dl>
+            <div>
+                <dt>Invoice Number</dt>
+                <dd>#{{ billing.billing_id }}</dd>
+            </div>
+            <div>
+                <dt>Billing Date</dt>
+                <dd>{{ billing.billing_date|date:"F d, Y" }}</dd>
+            </div>
+            <div>
+                <dt>Due Date</dt>
+                <dd>{{ billing.due_date|date:"F d, Y"|default:"—" }}</dd>
+            </div>
+            {% if billing.encounter %}
+            <div>
+                <dt>Related Encounter</dt>
+                <dd><a href="{% url 'appointment_detail' billing.encounter.encounter_id %}">{{ billing.encounter.encounter_date|date:"F d, Y" }}</a></dd>
+            </div>
+            {% endif %}
+            <div>
+                <dt>Status</dt>
+                <dd><span class="status-badge status-{{ billing.status|lower }}">{{ billing.status }}</span></dd>
+            </div>
+            {% if billing.notes %}
+            <div>
+                <dt>Notes</dt>
+                <dd>{{ billing.notes }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+    </div>
+</div>
+
+<!-- Billing Items -->
+<div class="data-table-module">
+    <h2>Services & Items</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th style="text-align:center">Quantity</th>
+                <th style="text-align:right">Unit Price</th>
+                <th style="text-align:right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in billing_items %}
+            <tr>
+                <td><strong>{{ item.description }}</strong></td>
+                <td style="text-align:center">{{ item.quantity }}</td>
+                <td style="text-align:right">${{ item.unit_price|floatformat:2 }}</td>
+                <td style="text-align:right;font-weight:600">${{ item.total_price|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align:center;color:#999">No billing items found</td>
+            </tr>
+            {% endfor %}
+            {% if billing_items %}
+            <tr class="total-row">
+                <td colspan="3" style="text-align:right;padding:15px">Subtotal:</td>
+                <td style="text-align:right;padding:15px">${{ billing.total_amount|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="text-align:right;padding:12px 15px;color:#666">Insurance Coverage:</td>
+                <td style="text-align:right;padding:12px 15px;color:#5cb85c;font-weight:600">-${{ billing.insurance_coverage|floatformat:2|default:"0.00" }}</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="text-align:right;padding:12px 15px;color:#666">Amount Paid:</td>
+                <td style="text-align:right;padding:12px 15px;color:#5cb85c;font-weight:600">-${{ billing.amount_paid|floatformat:2 }}</td>
+            </tr>
+            <tr style="background:#f8f9fa;font-size:16px;font-weight:700">
+                <td colspan="3" style="text-align:right;padding:15px">Amount Due:</td>
+                <td style="text-align:right;padding:15px;color:#d9534f">${{ billing.amount_due|floatformat:2 }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Payment History -->
+{% if payments %}
+<div class="data-table-module">
+    <h2>Payment History</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Payment Date</th>
+                <th>Payment Method</th>
+                <th>Transaction ID</th>
+                <th style="text-align:right">Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                <td>{{ payment.payment_method }}</td>
+                <td style="font-family:monospace">{{ payment.transaction_id|default:"—" }}</td>
+                <td style="text-align:right;font-weight:600;color:#5cb85c">${{ payment.amount|floatformat:2 }}</td>
+                <td><span class="status-badge status-{{ payment.status|lower }}">{{ payment.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% endblock %}
