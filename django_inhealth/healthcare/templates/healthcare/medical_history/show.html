@@ -1,0 +1,47 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Medical History Details - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'medical_history_list' %}">Medical History</a> &rsaquo; {{ history.condition }}{% endblock %}
+{% block content %}
+<style>
+    .detail-header { background: white; border: 1px solid var(--hairline-color); border-radius: 4px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .detail-header h1 { margin: 0 0 8px 0; font-size: 28px; font-weight: 300; }
+    .detail-header .meta { font-size: 13px; color: #666; }
+    .detail-header .actions { display: flex; gap: 10px; }
+    .info-module { background: white; border: 1px solid var(--hairline-color); border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+    .info-module h2 { margin: 0; padding: 12px 20px; font-weight: 500; font-size: 15px; background: var(--primary); color: var(--header-link-color); }
+    .info-module dl { margin: 0; }
+    .info-module dl > div { display: grid; grid-template-columns: 200px 1fr; gap: 20px; padding: 12px 20px; border-bottom: 1px solid var(--hairline-color); }
+    .info-module dl > div:nth-child(even) { background: var(--darkened-bg); }
+    .info-module dl > div:last-child { border-bottom: none; }
+    .info-module dt { font-size: 13px; font-weight: 600; color: #666; }
+    .info-module dd { font-size: 13px; color: var(--body-fg); margin: 0; }
+    .status-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .status-badge.status-active { background: #d4edda; color: #155724; }
+    .status-badge.status-resolved { background: #e2e3e5; color: #383d41; }
+    .status-badge.status-chronic { background: #fff3cd; color: #856404; }
+</style>
+
+<div class="detail-header">
+    <div>
+        <h1>{{ history.condition }}</h1>
+        <div class="meta"><strong>Patient:</strong> <a href="{% url 'patient_detail' history.patient.patient_id %}" style="color: var(--link-fg);">{{ history.patient.full_name }}</a> | <strong>History ID:</strong> {{ history.medical_history_id }}</div>
+    </div>
+    <div class="actions">
+        <a href="{% url 'patient_detail' history.patient.patient_id %}" class="button button-secondary">View Patient</a>
+        <a href="/admin/healthcare/medicalhistory/{{ history.medical_history_id }}/change/" class="button">Edit Record</a>
+    </div>
+</div>
+
+<div class="info-module">
+    <h2>Medical History Information</h2>
+    <dl>
+        <div><dt>Patient</dt><dd><a href="{% url 'patient_detail' history.patient.patient_id %}" style="color: var(--link-fg); font-weight: 600;">{{ history.patient.full_name }}</a></dd></div>
+        <div><dt>Condition</dt><dd><strong>{{ history.condition }}</strong></dd></div>
+        <div><dt>Diagnosis Date</dt><dd>{{ history.diagnosis_date|date:"F d, Y"|default:"Unknown" }}</dd></div>
+        <div><dt>Status</dt><dd><span class="status-badge status-{{ history.status|lower }}">{{ history.status }}</span></dd></div>
+        {% if history.notes %}<div><dt>Notes</dt><dd>{{ history.notes }}</dd></div>{% endif %}
+    </dl>
+</div>
+
+<p style="margin-top: 20px; font-size: 12px; color: #666;"><strong>Note:</strong> Use the <a href="/admin/healthcare/medicalhistory/{{ history.medical_history_id }}/change/">Django Admin Panel</a> to edit medical history details.</p>
+{% endblock %}

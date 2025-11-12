@@ -1,0 +1,243 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Allergy Details - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'allergy_list' %}">Allergies</a> &rsaquo; {{ allergy.allergen }}{% endblock %}
+{% block content %}
+<style>
+    .detail-header {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .detail-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        font-weight: 300;
+    }
+
+    .detail-header .meta {
+        font-size: 13px;
+        color: #666;
+    }
+
+    .detail-header .actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .info-module {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .info-module h2 {
+        margin: 0;
+        padding: 12px 20px;
+        font-weight: 500;
+        font-size: 15px;
+        background: var(--primary);
+        color: var(--header-link-color);
+    }
+
+    .info-module dl {
+        margin: 0;
+    }
+
+    .info-module dl > div {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 20px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--hairline-color);
+    }
+
+    .info-module dl > div:nth-child(even) {
+        background: var(--darkened-bg);
+    }
+
+    .info-module dl > div:last-child {
+        border-bottom: none;
+    }
+
+    .info-module dt {
+        font-size: 13px;
+        font-weight: 600;
+        color: #666;
+    }
+
+    .info-module dd {
+        font-size: 13px;
+        color: var(--body-fg);
+        margin: 0;
+    }
+
+    .severity-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .severity-badge.severity-mild {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .severity-badge.severity-moderate {
+        background: #ffe5b4;
+        color: #cc7a00;
+    }
+
+    .severity-badge.severity-severe {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .type-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .alert-warning {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        color: #721c24;
+    }
+
+    .alert-warning h3 {
+        margin: 0 0 8px 0;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .alert-warning p {
+        margin: 0;
+        font-size: 13px;
+    }
+
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-indicator.active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-indicator.inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-indicator::before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+</style>
+
+<div class="detail-header">
+    <div>
+        <h1>{{ allergy.allergen }}</h1>
+        <div class="meta">
+            <strong>Patient:</strong> <a href="{% url 'patient_detail' allergy.patient.patient_id %}" style="color: var(--link-fg);">{{ allergy.patient.full_name }}</a> |
+            <strong>Allergy ID:</strong> {{ allergy.allergy_id }}
+        </div>
+    </div>
+    <div class="actions">
+        <a href="{% url 'patient_detail' allergy.patient.patient_id %}" class="button button-secondary">View Patient</a>
+        <a href="/admin/healthcare/allergy/{{ allergy.allergy_id }}/change/" class="button">Edit Allergy</a>
+    </div>
+</div>
+
+{% if allergy.severity == 'Severe' %}
+<div class="alert-warning">
+    <h3>⚠️ Severe Allergy</h3>
+    <p>This is a severe allergy. Extra caution should be taken to avoid exposure to {{ allergy.allergen }}.</p>
+</div>
+{% endif %}
+
+<div class="info-module">
+    <h2>Allergy Information</h2>
+    <dl>
+        <div>
+            <dt>Patient</dt>
+            <dd>
+                <a href="{% url 'patient_detail' allergy.patient.patient_id %}" style="color: var(--link-fg); font-weight: 600;">
+                    {{ allergy.patient.full_name }}
+                </a>
+            </dd>
+        </div>
+        <div>
+            <dt>Allergen</dt>
+            <dd><strong>{{ allergy.allergen }}</strong></dd>
+        </div>
+        <div>
+            <dt>Allergy Type</dt>
+            <dd><span class="type-badge">{{ allergy.allergy_type }}</span></dd>
+        </div>
+        <div>
+            <dt>Severity</dt>
+            <dd>
+                <span class="severity-badge severity-{{ allergy.severity|lower }}">
+                    {{ allergy.severity }}
+                </span>
+            </dd>
+        </div>
+        <div>
+            <dt>Reaction</dt>
+            <dd>{{ allergy.reaction|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Onset Date</dt>
+            <dd>{{ allergy.onset_date|date:"F d, Y"|default:"Unknown" }}</dd>
+        </div>
+        <div>
+            <dt>Status</dt>
+            <dd>
+                <span class="status-indicator {% if allergy.is_active %}active{% else %}inactive{% endif %}">
+                    {% if allergy.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </dd>
+        </div>
+        {% if allergy.notes %}
+        <div>
+            <dt>Notes</dt>
+            <dd>{{ allergy.notes }}</dd>
+        </div>
+        {% endif %}
+    </dl>
+</div>
+
+<p style="margin-top: 20px; font-size: 12px; color: #666;">
+    <strong>Note:</strong> Use the <a href="/admin/healthcare/allergy/{{ allergy.allergy_id }}/change/">Django Admin Panel</a> to edit allergy details.
+</p>
+{% endblock %}

@@ -1,0 +1,286 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Lab Test Details - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'lab_test_list' %}">Lab Tests</a> &rsaquo; {{ lab_test.test_name }}{% endblock %}
+{% block content %}
+<style>
+    .detail-header {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .detail-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        font-weight: 300;
+    }
+
+    .detail-header .meta {
+        font-size: 13px;
+        color: #666;
+    }
+
+    .detail-header .actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .info-module {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .info-module h2 {
+        margin: 0;
+        padding: 12px 20px;
+        font-weight: 500;
+        font-size: 15px;
+        background: var(--primary);
+        color: var(--header-link-color);
+    }
+
+    .info-module dl {
+        margin: 0;
+    }
+
+    .info-module dl > div {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 20px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--hairline-color);
+    }
+
+    .info-module dl > div:nth-child(even) {
+        background: var(--darkened-bg);
+    }
+
+    .info-module dl > div:last-child {
+        border-bottom: none;
+    }
+
+    .info-module dt {
+        font-size: 13px;
+        font-weight: 600;
+        color: #666;
+    }
+
+    .info-module dd {
+        font-size: 13px;
+        color: var(--body-fg);
+        margin: 0;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge.status-ordered {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .status-badge.status-collected {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-badge.status-in.progress {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .status-badge.status-completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-badge.status-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .alert-warning {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        color: #721c24;
+    }
+
+    .alert-warning h3 {
+        margin: 0 0 8px 0;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .alert-warning p {
+        margin: 0;
+        font-size: 13px;
+    }
+
+    .result-highlight {
+        padding: 15px;
+        background: #f8f9fa;
+        border-left: 4px solid var(--primary);
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .result-highlight.abnormal {
+        background: #fff3cd;
+        border-left-color: #ffc107;
+    }
+
+    .test-code {
+        font-family: monospace;
+        font-size: 12px;
+        color: #666;
+        padding: 4px 8px;
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+</style>
+
+<div class="detail-header">
+    <div>
+        <h1>{{ lab_test.test_name }}</h1>
+        <div class="meta">
+            <strong>Patient:</strong> <a href="{% url 'patient_detail' lab_test.patient.patient_id %}" style="color: var(--link-fg);">{{ lab_test.patient.full_name }}</a> |
+            <strong>Test ID:</strong> {{ lab_test.lab_test_id }}
+        </div>
+    </div>
+    <div class="actions">
+        <a href="{% url 'patient_detail' lab_test.patient.patient_id %}" class="button button-secondary">View Patient</a>
+        <a href="/admin/healthcare/labtest/{{ lab_test.lab_test_id }}/change/" class="button">Edit Lab Test</a>
+    </div>
+</div>
+
+{% if lab_test.abnormal_flag %}
+<div class="alert-warning">
+    <h3>⚠️ Abnormal Result</h3>
+    <p>This lab test has returned an abnormal result that requires attention.</p>
+</div>
+{% endif %}
+
+<div class="info-module">
+    <h2>Test Information</h2>
+    <dl>
+        <div>
+            <dt>Patient</dt>
+            <dd>
+                <a href="{% url 'patient_detail' lab_test.patient.patient_id %}" style="color: var(--link-fg); font-weight: 600;">
+                    {{ lab_test.patient.full_name }}
+                </a>
+            </dd>
+        </div>
+        <div>
+            <dt>Test Name</dt>
+            <dd><strong>{{ lab_test.test_name }}</strong></dd>
+        </div>
+        <div>
+            <dt>Test Code</dt>
+            <dd>
+                {% if lab_test.test_code %}
+                <span class="test-code">{{ lab_test.test_code }}</span>
+                {% else %}—{% endif %}
+            </dd>
+        </div>
+        <div>
+            <dt>Ordered By</dt>
+            <dd>
+                {% if lab_test.provider %}
+                <a href="{% url 'physician_detail' lab_test.provider.provider_id %}" style="color: var(--link-fg);">
+                    Dr. {{ lab_test.provider.full_name }}
+                </a>
+                {% else %}—{% endif %}
+            </dd>
+        </div>
+        <div>
+            <dt>Ordered Date</dt>
+            <dd>{{ lab_test.ordered_date|date:"F d, Y g:i A" }}</dd>
+        </div>
+        <div>
+            <dt>Collection Date</dt>
+            <dd>{{ lab_test.collection_date|date:"F d, Y g:i A"|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Result Date</dt>
+            <dd>{{ lab_test.result_date|date:"F d, Y g:i A"|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Status</dt>
+            <dd>
+                <span class="status-badge status-{{ lab_test.status|lower|cut:' ' }}">
+                    {{ lab_test.status }}
+                </span>
+            </dd>
+        </div>
+        {% if lab_test.encounter %}
+        <div>
+            <dt>Related Encounter</dt>
+            <dd>
+                <a href="{% url 'appointment_detail' lab_test.encounter.encounter_id %}" style="color: var(--link-fg);">
+                    {{ lab_test.encounter.encounter_type }} - {{ lab_test.encounter.encounter_date|date:"M d, Y" }}
+                </a>
+            </dd>
+        </div>
+        {% endif %}
+    </dl>
+</div>
+
+{% if lab_test.result_value %}
+<div class="info-module">
+    <h2>Test Results</h2>
+    <dl>
+        <div>
+            <dt>Result Value</dt>
+            <dd>
+                <div class="result-highlight {% if lab_test.abnormal_flag %}abnormal{% endif %}">
+                    {{ lab_test.result_value }} {{ lab_test.result_unit }}
+                    {% if lab_test.abnormal_flag %}
+                    <span style="color: #856404; margin-left: 10px;">ABNORMAL</span>
+                    {% endif %}
+                </div>
+            </dd>
+        </div>
+        <div>
+            <dt>Reference Range</dt>
+            <dd>{{ lab_test.reference_range|default:"—" }}</dd>
+        </div>
+        {% if lab_test.result %}
+        <div>
+            <dt>Full Result</dt>
+            <dd>{{ lab_test.result }}</dd>
+        </div>
+        {% endif %}
+        {% if lab_test.notes %}
+        <div>
+            <dt>Notes</dt>
+            <dd>{{ lab_test.notes }}</dd>
+        </div>
+        {% endif %}
+    </dl>
+</div>
+{% endif %}
+
+<p style="margin-top: 20px; font-size: 12px; color: #666;">
+    <strong>Note:</strong> Use the <a href="/admin/healthcare/labtest/{{ lab_test.lab_test_id }}/change/">Django Admin Panel</a> to edit lab test details.
+</p>
+{% endblock %}

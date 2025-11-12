@@ -1,0 +1,44 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}New Medical History - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'medical_history_list' %}">Medical History</a> &rsaquo; New Record{% endblock %}
+{% block content %}
+{% include 'healthcare/includes/form_styles.html' %}
+
+<div class="form-container">
+    <div class="form-header">
+        <div><h1>New Medical History Record</h1><div class="meta">Document a patient's medical history</div></div>
+        <div><a href="{% url 'medical_history_list' %}" class="button-secondary">Back to Medical History</a></div>
+    </div>
+
+    <div class="module form-module">
+        <h2>Medical History Information</h2>
+        <div class="form-content">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-field"><label class="required">Patient</label>
+                        <select name="patient_id" required><option value="">Select a patient...</option>{% for patient in patients %}<option value="{{ patient.patient_id }}">{{ patient.full_name }} (ID: {{ patient.patient_id }})</option>{% endfor %}</select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field"><label class="required">Condition</label><input type="text" name="condition" required placeholder="e.g., Hypertension, Diabetes Type 2"></div>
+                    <div class="form-field"><label>Diagnosis Date</label><input type="date" name="diagnosis_date"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field"><label class="required">Status</label>
+                        <select name="status" required><option value="Active">Active</option><option value="Resolved">Resolved</option><option value="Chronic">Chronic</option></select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field full-width"><label>Notes</label><textarea name="notes" rows="3" placeholder="Additional notes or details..."></textarea></div>
+                </div>
+                <div class="submit-row">
+                    <div class="buttons-right"><a href="{% url 'medical_history_list' %}" class="button-secondary">Cancel</a><button type="submit" class="button-primary">Create Record</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<p style="margin-top: 20px; font-size: 12px; color: #666;"><strong>Note:</strong> You can also use the <a href="/admin/healthcare/medicalhistory/add/">Django Admin Panel</a> to create medical history records.</p>
+{% endblock %}
