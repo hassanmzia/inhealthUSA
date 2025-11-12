@@ -1,0 +1,107 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Payment History - {{ patient.full_name }} - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo; Payment History{% endblock %}
+
+{% block content %}
+<style>
+.detail-header{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.detail-header h1{margin:0;font-size:28px;font-weight:300}
+.detail-header .meta{font-size:13px;color:#666;margin-top:8px}
+.detail-header .actions{display:flex;gap:10px}
+.payment-card{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:20px;margin-bottom:15px;transition:box-shadow 0.2s;display:flex;justify-content:space-between;align-items:center}
+.payment-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.payment-info{flex:1}
+.payment-header{display:flex;align-items:center;gap:15px;margin-bottom:10px}
+.payment-amount{font-size:24px;font-weight:700;color:#5cb85c}
+.payment-id{font-size:14px;color:#666;font-family:monospace}
+.payment-details{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;font-size:13px}
+.payment-detail{display:flex;flex-direction:column;gap:3px}
+.detail-label{font-size:11px;font-weight:600;text-transform:uppercase;color:#666}
+.detail-value{font-weight:500;color:var(--body-fg)}
+.payment-actions{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.status-badge{padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600}
+.status-completed{background:#d1ecf1;color:#0c5460}
+.status-pending{background:#fff3cd;color:#856404}
+.status-failed{background:#f8d7da;color:#721c24}
+.status-refunded{background:#e7e7ff;color:#4a4aff}
+.summary-card{background:linear-gradient(135deg,#5cb85c 0%,#449d44 100%);color:white;border-radius:4px;padding:25px;margin-bottom:20px}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.summary-item{text-align:center}
+.summary-label{font-size:12px;opacity:0.9;margin-bottom:5px}
+.summary-value{font-size:28px;font-weight:700}
+</style>
+
+<div class="detail-header">
+    <div>
+        <h1>Payment History</h1>
+        <div class="meta"><strong>Patient:</strong> {{ patient.full_name }} | <strong>Patient ID:</strong> {{ patient.patient_id }}</div>
+    </div>
+    <div class="actions">
+        <a href="{% url 'patient_detail' patient.patient_id %}" class="button">Back to Patient</a>
+    </div>
+</div>
+
+<!-- Payment Summary -->
+{% if payments %}
+<div class="summary-card">
+    <div class="summary-grid">
+        <div class="summary-item">
+            <div class="summary-label">Total Payments</div>
+            <div class="summary-value">{{ payments|length }}</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-label">Total Amount Paid</div>
+            <div class="summary-value">${{ total_paid|floatformat:2|default:"0.00" }}</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-label">Last Payment</div>
+            <div class="summary-value" style="font-size:18px">{{ payments.0.payment_date|date:"M d, Y" }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment List -->
+{% for payment in payments %}
+<div class="payment-card">
+    <div class="payment-info">
+        <div class="payment-header">
+            <div class="payment-amount">${{ payment.amount|floatformat:2 }}</div>
+            <div class="payment-id">Transaction: {{ payment.transaction_id|default:"N/A" }}</div>
+        </div>
+        <div class="payment-details">
+            <div class="payment-detail">
+                <span class="detail-label">Payment Date</span>
+                <span class="detail-value">{{ payment.payment_date|date:"F d, Y" }}</span>
+            </div>
+            <div class="payment-detail">
+                <span class="detail-label">Payment Method</span>
+                <span class="detail-value">{{ payment.payment_method }}</span>
+            </div>
+            <div class="payment-detail">
+                <span class="detail-label">Invoice</span>
+                <span class="detail-value">
+                    {% if payment.billing %}
+                        <a href="{% url 'patient_billing_detail' patient.patient_id payment.billing.billing_id %}">Invoice #{{ payment.billing.billing_id }}</a>
+                    {% else %}
+                        —
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="payment-actions">
+        <span class="status-badge status-{{ payment.status|lower }}">{{ payment.status }}</span>
+        <a href="{% url 'patient_payment_detail' patient.patient_id payment.payment_id %}" class="button">View Receipt</a>
+    </div>
+</div>
+{% endfor %}
+
+{% else %}
+<div style="background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:40px;text-align:center">
+    <div style="font-size:48px;color:#ccc;margin-bottom:15px">💳</div>
+    <h3 style="color:#666;margin-bottom:10px">No Payment Records</h3>
+    <p style="color:#999">No payments have been recorded for this patient.</p>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -3,13 +3,30 @@
 {% block title %}Dr. {{ physician.full_name }} - InHealth EHR{% endblock %}
 
 {% block breadcrumbs %}
-&rsaquo; <a href="{% url 'physician_list' %}">Physicians</a>
+{% if user_role != 'doctor' and user_role != 'patient' %}&rsaquo; <a href="{% url 'physician_list' %}">Physicians</a>{% endif %}
 &rsaquo; Dr. {{ physician.full_name }}
 {% endblock %}
 
 {% block content %}
-<h1>Dr. {{ physician.full_name }}</h1>
-<p style="color: #666; margin-top: 5px; margin-bottom: 20px;">{{ physician.specialty|default:"General Practice" }}</p>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1 style="margin: 0;">Dr. {{ physician.full_name }}</h1>
+        <p style="color: #666; margin-top: 5px; margin-bottom: 5px;">{{ physician.specialty|default:"General Practice" }}</p>
+        <p style="color: #666; font-size: 13px; margin: 0;">
+            <strong>Provider ID:</strong> {{ physician.provider_id }}
+            {% if user_role == 'patient' %} | <strong>Viewing as:</strong> Patient
+            {% elif user_role == 'doctor' %} | <strong>Viewing as:</strong> Doctor
+            {% elif user_role == 'nurse' %} | <strong>Viewing as:</strong> Nurse
+            {% else %} | <strong>Viewing as:</strong> Administrator
+            {% endif %}
+        </p>
+    </div>
+    {% if can_edit %}
+    <div>
+        <a href="#" class="button" style="color: white;">Edit Physician</a>
+    </div>
+    {% endif %}
+</div>
 
 <!-- Physician Information -->
 <div class="module">

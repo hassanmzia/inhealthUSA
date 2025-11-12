@@ -1,0 +1,152 @@
+{% extends 'healthcare/base.html' %}
+{% load static %}
+
+{% block title %}IoT Medical Devices - {{ patient.full_name }} - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'patient_detail' patient.patient_id %}"
+                   class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <h1 class="text-3xl font-bold text-gray-900">IoT Medical Devices</h1>
+            </div>
+            <p class="mt-2 text-sm text-gray-700">
+                Patient: <span class="font-medium">{{ patient.full_name }}</span>
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'patient_detail' patient.patient_id %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add New Device
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
+                <p class="text-green-800">{{ message }}</p>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Devices Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for device in devices %}
+            <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden border-2 border-transparent hover:border-indigo-300">
+                <div class="p-6">
+                    <!-- Device Header -->
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-gray-900 mb-1">{{ device.device_name }}</h3>
+                            <p class="text-sm text-gray-600">{{ device.device_type }}</p>
+                        </div>
+                        <div class="ml-3">
+                            {% if device.status == 'Active' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="w-2 h-2 bg-green-600 rounded-full mr-2"></span>
+                                    Active
+                                </span>
+                            {% elif device.status == 'Inactive' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    Inactive
+                                </span>
+                            {% elif device.status == 'Maintenance' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Maintenance
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Retired
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Device ID -->
+                    <div class="mb-4 pb-4 border-b border-gray-200">
+                        <p class="text-xs text-gray-500 mb-1">Device ID</p>
+                        <p class="text-sm font-mono text-gray-900">{{ device.device_unique_id }}</p>
+                    </div>
+
+                    <!-- Battery Level -->
+                    {% if device.battery_level is not None %}
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between mb-1">
+                                <p class="text-xs text-gray-600 font-medium">Battery Level</p>
+                                <p class="text-xs font-semibold {% if device.battery_color == 'green' %}text-green-600{% elif device.battery_color == 'yellow' %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                    {{ device.battery_level }}%
+                                </p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="h-2 rounded-full {% if device.battery_color == 'green' %}bg-green-500{% elif device.battery_color == 'yellow' %}bg-yellow-500{% else %}bg-red-500{% endif %}"
+                                     style="width: {{ device.battery_level }}%"></div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Capabilities -->
+                    {% if device.capabilities_list %}
+                        <div class="mb-4">
+                            <p class="text-xs text-gray-600 font-medium mb-2">Capabilities</p>
+                            <div class="flex flex-wrap gap-1">
+                                {% for capability in device.capabilities_list %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                        {{ capability }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Last Sync -->
+                    {% if device.last_sync %}
+                        <div class="mb-4">
+                            <p class="text-xs text-gray-500">
+                                Last synced: <span class="font-medium text-gray-700">{{ device.last_sync|timesince }} ago</span>
+                            </p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <a href="{% url 'patient_device_detail' patient.patient_id device.device_id %}"
+                           class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                            View Details
+                            <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-span-full">
+                <div class="text-center py-12 bg-gray-50 rounded-lg">
+                    <div class="mx-auto h-16 w-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                        <svg class="h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No devices registered</h3>
+                    <p class="text-gray-600 mb-4">This patient doesn't have any IoT medical devices registered yet.</p>
+                    <a href="{% url 'patient_detail' patient.patient_id %}"
+                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                        Add First Device
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

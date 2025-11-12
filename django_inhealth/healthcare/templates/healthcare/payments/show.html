@@ -1,0 +1,157 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Payment Receipt - {{ patient.full_name }} - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo; <a href="{% url 'patient_payment_list' patient.patient_id %}">Payments</a> &rsaquo; Receipt #{{ payment.payment_id }}{% endblock %}
+
+{% block content %}
+<style>
+.detail-header{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.detail-header h1{margin:0;font-size:28px;font-weight:300}
+.detail-header .meta{font-size:13px;color:#666;margin-top:8px}
+.detail-header .actions{display:flex;gap:10px}
+.receipt-container{background:white;border:2px solid var(--hairline-color);border-radius:4px;padding:40px;margin-bottom:20px}
+.receipt-header{text-align:center;padding-bottom:30px;border-bottom:2px solid var(--hairline-color);margin-bottom:30px}
+.receipt-title{font-size:32px;font-weight:700;color:var(--body-fg);margin-bottom:10px}
+.receipt-subtitle{font-size:14px;color:#666;text-transform:uppercase;letter-spacing:1px}
+.receipt-amount{text-align:center;padding:30px 0;margin:30px 0;border-top:2px solid var(--hairline-color);border-bottom:2px solid var(--hairline-color)}
+.amount-label{font-size:14px;color:#666;margin-bottom:10px;text-transform:uppercase}
+.amount-value{font-size:48px;font-weight:700;color:#5cb85c}
+.info-module{background:white;border:1px solid var(--hairline-color);border-radius:4px;margin-bottom:20px;overflow:hidden}
+.info-module h2{margin:0;padding:12px 20px;font-weight:500;font-size:15px;background:var(--primary);color:var(--header-link-color)}
+.info-module .content{padding:0}
+.info-module dl{margin:0}
+.info-module dl>div{display:grid;grid-template-columns:200px 1fr;gap:20px;padding:12px 20px;border-bottom:1px solid var(--hairline-color)}
+.info-module dl>div:nth-child(even){background:var(--darkened-bg)}
+.info-module dl>div:last-child{border-bottom:none}
+.info-module dt{font-size:13px;font-weight:600;color:#666}
+.info-module dd{font-size:13px;color:var(--body-fg);margin:0}
+.status-badge{padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600}
+.status-completed{background:#d1ecf1;color:#0c5460}
+.status-pending{background:#fff3cd;color:#856404}
+.status-failed{background:#f8d7da;color:#721c24}
+.status-refunded{background:#e7e7ff;color:#4a4aff}
+.receipt-footer{text-align:center;padding-top:30px;border-top:2px solid var(--hairline-color);margin-top:30px;color:#999;font-size:12px}
+</style>
+
+<div class="detail-header">
+    <div>
+        <h1>Payment Receipt</h1>
+        <div class="meta">
+            <strong>Patient:</strong> {{ patient.full_name }} |
+            <strong>Receipt #:</strong> {{ payment.payment_id }} |
+            <span class="status-badge status-{{ payment.status|lower }}">{{ payment.status }}</span>
+        </div>
+    </div>
+    <div class="actions">
+        <a href="{% url 'patient_payment_list' patient.patient_id %}" class="button">Back to Payments</a>
+        <a href="#" class="button" style="color:white" onclick="window.print()">Print Receipt</a>
+    </div>
+</div>
+
+<!-- Receipt -->
+<div class="receipt-container">
+    <div class="receipt-header">
+        <div class="receipt-title">PAYMENT RECEIPT</div>
+        <div class="receipt-subtitle">InHealth EHR System</div>
+    </div>
+
+    <div class="receipt-amount">
+        <div class="amount-label">Amount Paid</div>
+        <div class="amount-value">${{ payment.amount|floatformat:2 }}</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:30px">
+        <div>
+            <h3 style="font-size:14px;font-weight:600;color:#666;margin-bottom:15px;text-transform:uppercase">Patient Information</h3>
+            <p style="margin:5px 0"><strong>Name:</strong> {{ patient.full_name }}</p>
+            <p style="margin:5px 0"><strong>Patient ID:</strong> {{ patient.patient_id }}</p>
+            {% if patient.email %}
+            <p style="margin:5px 0"><strong>Email:</strong> {{ patient.email }}</p>
+            {% endif %}
+            {% if patient.phone %}
+            <p style="margin:5px 0"><strong>Phone:</strong> {{ patient.phone }}</p>
+            {% endif %}
+        </div>
+        <div>
+            <h3 style="font-size:14px;font-weight:600;color:#666;margin-bottom:15px;text-transform:uppercase">Payment Details</h3>
+            <p style="margin:5px 0"><strong>Receipt #:</strong> {{ payment.payment_id }}</p>
+            <p style="margin:5px 0"><strong>Payment Date:</strong> {{ payment.payment_date|date:"F d, Y" }}</p>
+            <p style="margin:5px 0"><strong>Payment Method:</strong> {{ payment.payment_method }}</p>
+            {% if payment.transaction_id %}
+            <p style="margin:5px 0"><strong>Transaction ID:</strong> {{ payment.transaction_id }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if payment.billing %}
+    <div style="background:var(--darkened-bg);padding:20px;border-radius:4px;margin-bottom:30px">
+        <h3 style="font-size:14px;font-weight:600;color:#666;margin-bottom:10px">Applied to Invoice</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+                <p style="margin:5px 0"><strong>Invoice #{{ payment.billing.billing_id }}</strong></p>
+                <p style="margin:5px 0;font-size:12px;color:#666">Date: {{ payment.billing.billing_date|date:"F d, Y" }}</p>
+            </div>
+            <a href="{% url 'patient_billing_detail' patient.patient_id payment.billing.billing_id %}" class="button">View Invoice</a>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if payment.notes %}
+    <div style="margin-bottom:30px">
+        <h3 style="font-size:14px;font-weight:600;color:#666;margin-bottom:10px">Notes</h3>
+        <p style="color:var(--body-fg)">{{ payment.notes }}</p>
+    </div>
+    {% endif %}
+
+    <div class="receipt-footer">
+        <p>This is an official payment receipt from InHealth EHR System</p>
+        <p>For questions regarding this payment, please contact our billing department</p>
+        <p style="margin-top:15px">Receipt generated on {{ payment.created_at|date:"F d, Y h:i A"|default:"—" }}</p>
+    </div>
+</div>
+
+<!-- Additional Payment Information -->
+<div class="info-module">
+    <h2>Complete Payment Information</h2>
+    <div class="content">
+        <dl>
+            <div>
+                <dt>Payment ID</dt>
+                <dd>{{ payment.payment_id }}</dd>
+            </div>
+            <div>
+                <dt>Payment Date</dt>
+                <dd>{{ payment.payment_date|date:"F d, Y" }}</dd>
+            </div>
+            <div>
+                <dt>Amount</dt>
+                <dd style="font-weight:700;color:#5cb85c">${{ payment.amount|floatformat:2 }}</dd>
+            </div>
+            <div>
+                <dt>Payment Method</dt>
+                <dd>{{ payment.payment_method }}</dd>
+            </div>
+            {% if payment.transaction_id %}
+            <div>
+                <dt>Transaction ID</dt>
+                <dd style="font-family:monospace">{{ payment.transaction_id }}</dd>
+            </div>
+            {% endif %}
+            <div>
+                <dt>Status</dt>
+                <dd><span class="status-badge status-{{ payment.status|lower }}">{{ payment.status }}</span></dd>
+            </div>
+            {% if payment.billing %}
+            <div>
+                <dt>Related Invoice</dt>
+                <dd><a href="{% url 'patient_billing_detail' patient.patient_id payment.billing.billing_id %}">Invoice #{{ payment.billing.billing_id }}</a></dd>
+            </div>
+            {% endif %}
+            <div>
+                <dt>Recorded At</dt>
+                <dd>{{ payment.created_at|date:"F d, Y h:i A"|default:"—" }}</dd>
+            </div>
+        </dl>
+    </div>
+</div>
+
+{% endblock %}

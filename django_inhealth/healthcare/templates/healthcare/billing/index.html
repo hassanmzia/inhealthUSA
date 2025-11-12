@@ -1,0 +1,123 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Billing Information - {{ patient.full_name }} - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo; Billing Information{% endblock %}
+
+{% block content %}
+<style>
+.detail-header{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.detail-header h1{margin:0;font-size:28px;font-weight:300}
+.detail-header .meta{font-size:13px;color:#666;margin-top:8px}
+.detail-header .actions{display:flex;gap:10px}
+.billing-card{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:20px;margin-bottom:20px;transition:box-shadow 0.2s}
+.billing-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.billing-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:15px;padding-bottom:15px;border-bottom:2px solid var(--hairline-color)}
+.billing-number{font-size:18px;font-weight:600;color:var(--body-fg)}
+.billing-date{font-size:13px;color:#666}
+.status-badge{padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600;display:inline-block}
+.status-pending{background:#fff3cd;color:#856404}
+.status-paid{background:#d1ecf1;color:#0c5460}
+.status-overdue{background:#f8d7da;color:#721c24}
+.status-partial{background:#e7e7ff;color:#4a4aff}
+.billing-details{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.billing-details .detail-item{display:flex;flex-direction:column;gap:3px}
+.billing-details .detail-label{font-size:11px;font-weight:600;text-transform:uppercase;color:#666}
+.billing-details .detail-value{font-size:14px;font-weight:500;color:var(--body-fg)}
+.billing-summary{display:flex;justify-content:space-between;align-items:center;padding-top:15px;border-top:2px solid var(--hairline-color);margin-top:15px}
+.amount-label{font-size:13px;color:#666}
+.amount-value{font-size:20px;font-weight:700}
+.amount-due{color:#d9534f}
+.amount-paid{color:#5cb85c}
+</style>
+
+<div class="detail-header">
+    <div>
+        <h1>Billing Information</h1>
+        <div class="meta"><strong>Patient:</strong> {{ patient.full_name }} | <strong>Patient ID:</strong> {{ patient.patient_id }}</div>
+    </div>
+    <div class="actions">
+        <a href="{% url 'patient_detail' patient.patient_id %}" class="button">Back to Patient</a>
+    </div>
+</div>
+
+{% if billings %}
+    {% for billing in billings %}
+    <div class="billing-card">
+        <div class="billing-header">
+            <div>
+                <div class="billing-number">Invoice #{{ billing.billing_id }}</div>
+                <div class="billing-date">Date: {{ billing.billing_date|date:"F d, Y" }}</div>
+                {% if billing.encounter %}
+                    <div class="billing-date">Encounter: {{ billing.encounter.encounter_date|date:"F d, Y" }}</div>
+                {% endif %}
+            </div>
+            <div>
+                <span class="status-badge status-{{ billing.status|lower }}">{{ billing.status }}</span>
+            </div>
+        </div>
+
+        <div class="billing-details">
+            <div class="detail-item">
+                <span class="detail-label">Total Amount</span>
+                <span class="detail-value">${{ billing.total_amount|floatformat:2 }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Amount Paid</span>
+                <span class="detail-value">${{ billing.amount_paid|floatformat:2 }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Insurance Coverage</span>
+                <span class="detail-value">${{ billing.insurance_coverage|floatformat:2|default:"0.00" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Amount Due</span>
+                <span class="detail-value" style="color:#d9534f;font-weight:700">${{ billing.amount_due|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        {% if billing.billing_items.all %}
+        <div style="margin-top:15px">
+            <table style="width:100%;font-size:13px">
+                <thead style="background:var(--darkened-bg)">
+                    <tr>
+                        <th style="padding:8px;text-align:left">Service/Item</th>
+                        <th style="padding:8px;text-align:center">Quantity</th>
+                        <th style="padding:8px;text-align:right">Unit Price</th>
+                        <th style="padding:8px;text-align:right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in billing.billing_items.all %}
+                    <tr style="border-bottom:1px solid var(--hairline-color)">
+                        <td style="padding:8px">{{ item.description }}</td>
+                        <td style="padding:8px;text-align:center">{{ item.quantity }}</td>
+                        <td style="padding:8px;text-align:right">${{ item.unit_price|floatformat:2 }}</td>
+                        <td style="padding:8px;text-align:right;font-weight:600">${{ item.total_price|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <div class="billing-summary">
+            <a href="{% url 'patient_billing_detail' patient.patient_id billing.billing_id %}" class="button" style="color:white">View Details</a>
+            <div>
+                {% if billing.amount_due > 0 %}
+                    <span class="amount-label">Amount Due: </span>
+                    <span class="amount-value amount-due">${{ billing.amount_due|floatformat:2 }}</span>
+                {% else %}
+                    <span class="amount-value amount-paid">Fully Paid</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div style="background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:40px;text-align:center">
+        <div style="font-size:48px;color:#ccc;margin-bottom:15px">💵</div>
+        <h3 style="color:#666;margin-bottom:10px">No Billing Records</h3>
+        <p style="color:#999">No billing information found for this patient.</p>
+    </div>
+{% endif %}
+
+{% endblock %}
