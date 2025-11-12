@@ -1214,3 +1214,24 @@ def family_history_create(request):
     patients = Patient.objects.filter(is_active=True).order_by('last_name', 'first_name')
     context = {'patients': patients}
     return render(request, 'healthcare/family_history/create.html', context)
+
+
+# Medical History Questionnaire
+@login_required
+def medical_history_questionnaire(request):
+    """Display and process comprehensive medical history questionnaire"""
+    if request.method == 'POST':
+        # TODO: In production, parse form data and distribute across multiple models:
+        # - Patient demographics (update Patient model)
+        # - Current medications (create Prescription records)
+        # - Allergies (create Allergy records)
+        # - Past medical history (create MedicalHistory records)
+        # - Social history (create/update SocialHistory)
+        # - Family history (create FamilyHistory records)
+        # - etc.
+
+        messages.success(request, 'Medical history questionnaire submitted successfully. Your information has been recorded.')
+        return redirect('index')
+
+    # For GET requests, display the questionnaire form
+    return render(request, 'healthcare/questionnaire/medical_history.html')

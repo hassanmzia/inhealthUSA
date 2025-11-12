@@ -1,0 +1,1208 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Medical History Questionnaire - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; Medical History Questionnaire{% endblock %}
+{% block content %}
+
+{% include 'healthcare/includes/form_styles.html' %}
+
+<style>
+    .questionnaire-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .questionnaire-header {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 30px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .questionnaire-header h1 {
+        margin: 0 0 10px 0;
+        font-size: 32px;
+        font-weight: 300;
+        color: var(--primary);
+    }
+
+    .questionnaire-header .subtitle {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .progress-bar {
+        background: #e9ecef;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 20px;
+    }
+
+    .progress-fill {
+        background: var(--primary);
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    .section-card {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .section-header {
+        background: var(--primary);
+        color: var(--header-link-color);
+        padding: 15px 20px;
+        font-size: 18px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-number {
+        background: rgba(255,255,255,0.2);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    .section-content {
+        padding: 25px;
+    }
+
+    .question-group {
+        margin-bottom: 25px;
+        padding-bottom: 25px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .question-group:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .question-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--body-fg);
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .checkbox-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+    }
+
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+
+    .checkbox-item:hover {
+        background: var(--darkened-bg);
+    }
+
+    .checkbox-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .checkbox-item label {
+        cursor: pointer;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .radio-group {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .radio-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .radio-item input[type="radio"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .radio-item label {
+        cursor: pointer;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .text-input,
+    .textarea-input,
+    .select-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+    }
+
+    .text-input:focus,
+    .textarea-input:focus,
+    .select-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(65, 118, 144, 0.1);
+    }
+
+    .textarea-input {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .input-hint {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        font-style: italic;
+    }
+
+    .yes-no-group {
+        display: flex;
+        gap: 30px;
+    }
+
+    .submit-section {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 25px;
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .submit-button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 15px 50px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .submit-button:hover {
+        background: #35606f;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .required-mark {
+        color: #dc3545;
+        margin-left: 3px;
+    }
+</style>
+
+<div class="questionnaire-container">
+    <div class="questionnaire-header">
+        <h1>Comprehensive Medical History Questionnaire</h1>
+        <p class="subtitle">Please complete all sections to the best of your ability. This information helps us provide you with the best possible care.</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <form method="POST" id="questionnaire-form">
+        {% csrf_token %}
+
+        <!-- Section 1: Patient Demographics -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <div>Patient Demographics</div>
+            </div>
+            <div class="section-content">
+                <div class="question-group">
+                    <label class="question-label">Full Name <span class="required-mark">*</span></label>
+                    <input type="text" name="full_name" class="text-input" required placeholder="First Middle Last">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Date of Birth <span class="required-mark">*</span></label>
+                    <input type="date" name="date_of_birth" class="text-input" required>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Gender <span class="required-mark">*</span></label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="gender" value="Male" id="gender-male" required>
+                            <label for="gender-male">Male</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="gender" value="Female" id="gender-female">
+                            <label for="gender-female">Female</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="gender" value="Other" id="gender-other">
+                            <label for="gender-other">Other</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Contact Phone Number <span class="required-mark">*</span></label>
+                    <input type="tel" name="phone" class="text-input" required placeholder="(XXX) XXX-XXXX">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Email Address</label>
+                    <input type="email" name="email" class="text-input" placeholder="your.email@example.com">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Emergency Contact Name <span class="required-mark">*</span></label>
+                    <input type="text" name="emergency_contact_name" class="text-input" required>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Emergency Contact Phone <span class="required-mark">*</span></label>
+                    <input type="tel" name="emergency_contact_phone" class="text-input" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Current Medications -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <div>Current Medications</div>
+            </div>
+            <div class="section-content">
+                <div class="question-group">
+                    <label class="question-label">Are you currently taking any medications?</label>
+                    <div class="yes-no-group">
+                        <div class="radio-item">
+                            <input type="radio" name="taking_medications" value="yes" id="meds-yes">
+                            <label for="meds-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="taking_medications" value="no" id="meds-no">
+                            <label for="meds-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">List all current medications (include dosage and frequency)</label>
+                    <textarea name="current_medications" class="textarea-input" rows="6" placeholder="Example:&#10;- Lisinopril 10mg, once daily&#10;- Metformin 500mg, twice daily&#10;- Aspirin 81mg, once daily"></textarea>
+                    <div class="input-hint">Include prescription medications, over-the-counter drugs, vitamins, and supplements</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Allergies -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">3</div>
+                <div>Allergies</div>
+            </div>
+            <div class="section-content">
+                <div class="question-group">
+                    <label class="question-label">Do you have any drug allergies?</label>
+                    <div class="yes-no-group">
+                        <div class="radio-item">
+                            <input type="radio" name="has_drug_allergies" value="yes" id="drug-allergy-yes">
+                            <label for="drug-allergy-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_drug_allergies" value="no" id="drug-allergy-no">
+                            <label for="drug-allergy-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">List all drug allergies and reactions</label>
+                    <textarea name="drug_allergies" class="textarea-input" placeholder="Example:&#10;- Penicillin: Rash, hives&#10;- Sulfa drugs: Difficulty breathing"></textarea>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Do you have any food allergies?</label>
+                    <div class="yes-no-group">
+                        <div class="radio-item">
+                            <input type="radio" name="has_food_allergies" value="yes" id="food-allergy-yes">
+                            <label for="food-allergy-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_food_allergies" value="no" id="food-allergy-no">
+                            <label for="food-allergy-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">List all food allergies</label>
+                    <textarea name="food_allergies" class="textarea-input" placeholder="Example: Peanuts, shellfish, eggs"></textarea>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Other allergies (environmental, latex, etc.)</label>
+                    <textarea name="other_allergies" class="textarea-input" placeholder="Pollen, dust, pet dander, latex, etc."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Past Medical History -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">4</div>
+                <div>Past Medical History</div>
+            </div>
+            <div class="section-content">
+                <div class="question-group">
+                    <label class="question-label">Have you been diagnosed with any of the following conditions? (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="diabetes" id="cond-diabetes">
+                            <label for="cond-diabetes">Diabetes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="hypertension" id="cond-hypertension">
+                            <label for="cond-hypertension">Hypertension</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="heart_disease" id="cond-heart">
+                            <label for="cond-heart">Heart Disease</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="stroke" id="cond-stroke">
+                            <label for="cond-stroke">Stroke</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="asthma" id="cond-asthma">
+                            <label for="cond-asthma">Asthma</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="copd" id="cond-copd">
+                            <label for="cond-copd">COPD</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="cancer" id="cond-cancer">
+                            <label for="cond-cancer">Cancer</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="kidney_disease" id="cond-kidney">
+                            <label for="cond-kidney">Kidney Disease</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="liver_disease" id="cond-liver">
+                            <label for="cond-liver">Liver Disease</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="thyroid_disorder" id="cond-thyroid">
+                            <label for="cond-thyroid">Thyroid Disorder</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="arthritis" id="cond-arthritis">
+                            <label for="cond-arthritis">Arthritis</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="depression" id="cond-depression">
+                            <label for="cond-depression">Depression</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="anxiety" id="cond-anxiety">
+                            <label for="cond-anxiety">Anxiety</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="seizures" id="cond-seizures">
+                            <label for="cond-seizures">Seizures/Epilepsy</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="blood_clots" id="cond-clots">
+                            <label for="cond-clots">Blood Clots</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="anemia" id="cond-anemia">
+                            <label for="cond-anemia">Anemia</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="hiv_aids" id="cond-hiv">
+                            <label for="cond-hiv">HIV/AIDS</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="hepatitis" id="cond-hepatitis">
+                            <label for="cond-hepatitis">Hepatitis</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="tuberculosis" id="cond-tb">
+                            <label for="cond-tb">Tuberculosis</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="conditions" value="osteoporosis" id="cond-osteo">
+                            <label for="cond-osteo">Osteoporosis</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Other medical conditions not listed above</label>
+                    <textarea name="other_conditions" class="textarea-input" placeholder="List any other medical conditions, with approximate dates of diagnosis if known"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Surgical History -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">5</div>
+                <div>Surgical History</div>
+            </div>
+            <div class="section-content">
+                <div class="question-group">
+                    <label class="question-label">Have you had any surgeries or procedures?</label>
+                    <div class="yes-no-group">
+                        <div class="radio-item">
+                            <input type="radio" name="has_surgeries" value="yes" id="surgery-yes">
+                            <label for="surgery-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_surgeries" value="no" id="surgery-no">
+                            <label for="surgery-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">List all surgeries and procedures (include dates)</label>
+                    <textarea name="surgeries" class="textarea-input" rows="6" placeholder="Example:&#10;- Appendectomy (2015)&#10;- Knee arthroscopy (2018)&#10;- Cholecystectomy (2020)"></textarea>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Have you ever had complications from surgery or anesthesia?</label>
+                    <div class="yes-no-group">
+                        <div class="radio-item">
+                            <input type="radio" name="surgery_complications" value="yes" id="surg-comp-yes">
+                            <label for="surg-comp-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="surgery_complications" value="no" id="surg-comp-no">
+                            <label for="surg-comp-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">If yes, please describe</label>
+                    <textarea name="surgery_complications_details" class="textarea-input"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6: Family History -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">6</div>
+                <div>Family History</div>
+            </div>
+            <div class="section-content">
+                <div class="question-group">
+                    <label class="question-label">Have any of your blood relatives been diagnosed with the following? (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="family_conditions" value="heart_disease" id="fam-heart">
+                            <label for="fam-heart">Heart Disease</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="family_conditions" value="diabetes" id="fam-diabetes">
+                            <label for="fam-diabetes">Diabetes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="family_conditions" value="cancer" id="fam-cancer">
+                            <label for="fam-cancer">Cancer</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="family_conditions" value="stroke" id="fam-stroke">
+                            <label for="fam-stroke">Stroke</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="family_conditions" value="hypertension" id="fam-hyper">
+                            <label for="fam-hyper">Hypertension</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="family_conditions" value="kidney_disease" id="fam-kidney">
+                            <label for="fam-kidney">Kidney Disease</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="family_conditions" value="mental_illness" id="fam-mental">
+                            <label for="fam-mental">Mental Illness</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="family_conditions" value="substance_abuse" id="fam-substance">
+                            <label for="fam-substance">Substance Abuse</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="family_conditions" value="alzheimers" id="fam-alzheimers">
+                            <label for="fam-alzheimers">Alzheimer's</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="family_conditions" value="blood_disorders" id="fam-blood">
+                            <label for="fam-blood">Blood Disorders</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Please provide details about family medical history</label>
+                    <textarea name="family_history_details" class="textarea-input" rows="6" placeholder="Specify which family member (mother, father, sibling, etc.) and what condition. Include age at diagnosis if known."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 7: Social History -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">7</div>
+                <div>Social History</div>
+            </div>
+            <div class="section-content">
+                <div class="question-group">
+                    <label class="question-label">Smoking Status</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="smoking_status" value="never" id="smoke-never">
+                            <label for="smoke-never">Never Smoked</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="smoking_status" value="former" id="smoke-former">
+                            <label for="smoke-former">Former Smoker</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="smoking_status" value="current" id="smoke-current">
+                            <label for="smoke-current">Current Smoker</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">If current or former smoker, how many packs per day and for how many years?</label>
+                    <input type="text" name="smoking_details" class="text-input" placeholder="Example: 1 pack per day for 15 years">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Alcohol Use</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="alcohol_use" value="none" id="alcohol-none">
+                            <label for="alcohol-none">None</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="alcohol_use" value="occasional" id="alcohol-occasional">
+                            <label for="alcohol-occasional">Occasional</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="alcohol_use" value="moderate" id="alcohol-moderate">
+                            <label for="alcohol-moderate">Moderate</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="alcohol_use" value="heavy" id="alcohol-heavy">
+                            <label for="alcohol-heavy">Heavy</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">How many drinks per week?</label>
+                    <input type="number" name="drinks_per_week" class="text-input" min="0" placeholder="Number of drinks">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Do you use recreational drugs?</label>
+                    <div class="yes-no-group">
+                        <div class="radio-item">
+                            <input type="radio" name="drug_use" value="yes" id="drugs-yes">
+                            <label for="drugs-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="drug_use" value="no" id="drugs-no">
+                            <label for="drugs-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">If yes, please specify</label>
+                    <textarea name="drug_use_details" class="textarea-input"></textarea>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Occupation</label>
+                    <input type="text" name="occupation" class="text-input" placeholder="Current or most recent occupation">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Marital Status</label>
+                    <select name="marital_status" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="single">Single</option>
+                        <option value="married">Married</option>
+                        <option value="divorced">Divorced</option>
+                        <option value="widowed">Widowed</option>
+                        <option value="separated">Separated</option>
+                        <option value="domestic_partner">Domestic Partner</option>
+                    </select>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Do you exercise regularly?</label>
+                    <div class="yes-no-group">
+                        <div class="radio-item">
+                            <input type="radio" name="exercise" value="yes" id="exercise-yes">
+                            <label for="exercise-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="exercise" value="no" id="exercise-no">
+                            <label for="exercise-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">If yes, what type and how often?</label>
+                    <input type="text" name="exercise_details" class="text-input" placeholder="Example: Walking 30 minutes, 5 days per week">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">How would you describe your diet?</label>
+                    <select name="diet" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="excellent">Excellent</option>
+                        <option value="good">Good</option>
+                        <option value="fair">Fair</option>
+                        <option value="poor">Poor</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 8: Review of Systems -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">8</div>
+                <div>Review of Systems - Current Symptoms</div>
+            </div>
+            <div class="section-content">
+                <p style="margin-bottom: 20px; color: #666;">Check all symptoms you are currently experiencing or have experienced recently:</p>
+
+                <div class="question-group">
+                    <label class="question-label">General</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_general" value="fever" id="sym-fever">
+                            <label for="sym-fever">Fever/Chills</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_general" value="weight_loss" id="sym-weight-loss">
+                            <label for="sym-weight-loss">Weight Loss</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_general" value="weight_gain" id="sym-weight-gain">
+                            <label for="sym-weight-gain">Weight Gain</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_general" value="fatigue" id="sym-fatigue">
+                            <label for="sym-fatigue">Fatigue</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_general" value="weakness" id="sym-weakness">
+                            <label for="sym-weakness">Weakness</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_general" value="night_sweats" id="sym-sweats">
+                            <label for="sym-sweats">Night Sweats</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Eyes</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_eyes" value="vision_changes" id="sym-vision">
+                            <label for="sym-vision">Vision Changes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_eyes" value="eye_pain" id="sym-eye-pain">
+                            <label for="sym-eye-pain">Eye Pain</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_eyes" value="double_vision" id="sym-double">
+                            <label for="sym-double">Double Vision</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_eyes" value="blurred_vision" id="sym-blurred">
+                            <label for="sym-blurred">Blurred Vision</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Ears, Nose, Throat</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_ent" value="hearing_loss" id="sym-hearing">
+                            <label for="sym-hearing">Hearing Loss</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_ent" value="ear_pain" id="sym-ear-pain">
+                            <label for="sym-ear-pain">Ear Pain</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_ent" value="tinnitus" id="sym-tinnitus">
+                            <label for="sym-tinnitus">Ringing in Ears</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_ent" value="congestion" id="sym-congestion">
+                            <label for="sym-congestion">Nasal Congestion</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_ent" value="sore_throat" id="sym-throat">
+                            <label for="sym-throat">Sore Throat</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_ent" value="hoarseness" id="sym-hoarse">
+                            <label for="sym-hoarse">Hoarseness</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Cardiovascular</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_cardiac" value="chest_pain" id="sym-chest">
+                            <label for="sym-chest">Chest Pain</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_cardiac" value="palpitations" id="sym-palpitations">
+                            <label for="sym-palpitations">Palpitations</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_cardiac" value="irregular_heartbeat" id="sym-irregular">
+                            <label for="sym-irregular">Irregular Heartbeat</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_cardiac" value="swelling" id="sym-swelling">
+                            <label for="sym-swelling">Leg Swelling</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Respiratory</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_respiratory" value="shortness_breath" id="sym-sob">
+                            <label for="sym-sob">Shortness of Breath</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_respiratory" value="cough" id="sym-cough">
+                            <label for="sym-cough">Cough</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_respiratory" value="wheezing" id="sym-wheeze">
+                            <label for="sym-wheeze">Wheezing</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_respiratory" value="coughing_blood" id="sym-hemoptysis">
+                            <label for="sym-hemoptysis">Coughing Blood</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Gastrointestinal</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_gi" value="nausea" id="sym-nausea">
+                            <label for="sym-nausea">Nausea</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_gi" value="vomiting" id="sym-vomiting">
+                            <label for="sym-vomiting">Vomiting</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_gi" value="diarrhea" id="sym-diarrhea">
+                            <label for="sym-diarrhea">Diarrhea</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_gi" value="constipation" id="sym-constipation">
+                            <label for="sym-constipation">Constipation</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_gi" value="abdominal_pain" id="sym-abd-pain">
+                            <label for="sym-abd-pain">Abdominal Pain</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_gi" value="blood_stool" id="sym-blood-stool">
+                            <label for="sym-blood-stool">Blood in Stool</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_gi" value="heartburn" id="sym-heartburn">
+                            <label for="sym-heartburn">Heartburn</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Genitourinary</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_gu" value="painful_urination" id="sym-dysuria">
+                            <label for="sym-dysuria">Painful Urination</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_gu" value="frequent_urination" id="sym-frequency">
+                            <label for="sym-frequency">Frequent Urination</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_gu" value="blood_urine" id="sym-hematuria">
+                            <label for="sym-hematuria">Blood in Urine</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_gu" value="incontinence" id="sym-incontinence">
+                            <label for="sym-incontinence">Incontinence</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Musculoskeletal</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_musculo" value="joint_pain" id="sym-joint">
+                            <label for="sym-joint">Joint Pain</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_musculo" value="muscle_pain" id="sym-muscle">
+                            <label for="sym-muscle">Muscle Pain</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_musculo" value="back_pain" id="sym-back">
+                            <label for="sym-back">Back Pain</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_musculo" value="stiffness" id="sym-stiff">
+                            <label for="sym-stiff">Stiffness</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_musculo" value="swelling_joints" id="sym-joint-swell">
+                            <label for="sym-joint-swell">Joint Swelling</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Skin</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_skin" value="rash" id="sym-rash">
+                            <label for="sym-rash">Rash</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_skin" value="itching" id="sym-itch">
+                            <label for="sym-itch">Itching</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_skin" value="lumps" id="sym-lumps">
+                            <label for="sym-lumps">Lumps/Bumps</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_skin" value="color_changes" id="sym-color">
+                            <label for="sym-color">Color Changes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_skin" value="bruising" id="sym-bruising">
+                            <label for="sym-bruising">Easy Bruising</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Neurological</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_neuro" value="headaches" id="sym-headache">
+                            <label for="sym-headache">Headaches</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_neuro" value="dizziness" id="sym-dizzy">
+                            <label for="sym-dizzy">Dizziness</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_neuro" value="numbness" id="sym-numbness">
+                            <label for="sym-numbness">Numbness/Tingling</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_neuro" value="seizures_sym" id="sym-seizures">
+                            <label for="sym-seizures">Seizures</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_neuro" value="tremors" id="sym-tremors">
+                            <label for="sym-tremors">Tremors</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_neuro" value="memory_loss" id="sym-memory">
+                            <label for="sym-memory">Memory Loss</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Psychiatric</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_psych" value="depression_sym" id="sym-depress">
+                            <label for="sym-depress">Depression</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_psych" value="anxiety_sym" id="sym-anxiety">
+                            <label for="sym-anxiety">Anxiety</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_psych" value="mood_changes" id="sym-mood">
+                            <label for="sym-mood">Mood Changes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_psych" value="sleep_problems" id="sym-sleep">
+                            <label for="sym-sleep">Sleep Problems</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_psych" value="stress" id="sym-stress">
+                            <label for="sym-stress">Excessive Stress</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Endocrine</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_endo" value="excessive_thirst" id="sym-thirst">
+                            <label for="sym-thirst">Excessive Thirst</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_endo" value="excessive_hunger" id="sym-hunger">
+                            <label for="sym-hunger">Excessive Hunger</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_endo" value="heat_intolerance" id="sym-heat">
+                            <label for="sym-heat">Heat Intolerance</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="symptoms_endo" value="cold_intolerance" id="sym-cold">
+                            <label for="sym-cold">Cold Intolerance</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 9: Immunizations -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">9</div>
+                <div>Immunization History</div>
+            </div>
+            <div class="section-content">
+                <div class="question-group">
+                    <label class="question-label">Are you up to date with the following immunizations? (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="immunizations" value="flu" id="imm-flu">
+                            <label for="imm-flu">Influenza (Flu Shot)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="immunizations" value="tetanus" id="imm-tetanus">
+                            <label for="imm-tetanus">Tetanus (Td/Tdap)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="immunizations" value="pneumonia" id="imm-pneumonia">
+                            <label for="imm-pneumonia">Pneumonia</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="immunizations" value="shingles" id="imm-shingles">
+                            <label for="imm-shingles">Shingles</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="immunizations" value="covid19" id="imm-covid">
+                            <label for="imm-covid">COVID-19</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="immunizations" value="hepatitis_b" id="imm-hepb">
+                            <label for="imm-hepb">Hepatitis B</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="immunizations" value="mmr" id="imm-mmr">
+                            <label for="imm-mmr">MMR (Measles, Mumps, Rubella)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Additional immunization information or dates</label>
+                    <textarea name="immunization_details" class="textarea-input" placeholder="List dates of recent immunizations if known"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 10: Women's Health (if applicable) -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">10</div>
+                <div>Women's Health (If Applicable)</div>
+            </div>
+            <div class="section-content">
+                <div class="question-group">
+                    <label class="question-label">Are you currently pregnant?</label>
+                    <div class="yes-no-group">
+                        <div class="radio-item">
+                            <input type="radio" name="pregnant" value="yes" id="pregnant-yes">
+                            <label for="pregnant-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="pregnant" value="no" id="pregnant-no">
+                            <label for="pregnant-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="pregnant" value="na" id="pregnant-na">
+                            <label for="pregnant-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Date of last menstrual period</label>
+                    <input type="date" name="last_menstrual_period" class="text-input">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Number of pregnancies</label>
+                    <input type="number" name="pregnancies" class="text-input" min="0">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Number of live births</label>
+                    <input type="number" name="live_births" class="text-input" min="0">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Date of last mammogram</label>
+                    <input type="date" name="last_mammogram" class="text-input">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Date of last Pap smear</label>
+                    <input type="date" name="last_pap_smear" class="text-input">
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 11: Additional Information -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">11</div>
+                <div>Additional Information</div>
+            </div>
+            <div class="section-content">
+                <div class="question-group">
+                    <label class="question-label">Primary reason for today's visit</label>
+                    <textarea name="visit_reason" class="textarea-input" rows="4" placeholder="Please describe your main concern or reason for seeking medical care today"></textarea>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Is there anything else you would like us to know about your health?</label>
+                    <textarea name="additional_info" class="textarea-input" rows="4" placeholder="Any other medical information, concerns, or questions"></textarea>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">List your healthcare providers (if any)</label>
+                    <textarea name="other_providers" class="textarea-input" placeholder="Primary care doctor, specialists, therapists, etc. Include names and contact information if available"></textarea>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">Preferred pharmacy</label>
+                    <input type="text" name="preferred_pharmacy" class="text-input" placeholder="Pharmacy name and location">
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Section -->
+        <div class="submit-section">
+            <p style="margin-bottom: 20px; color: #666;">
+                By submitting this form, I certify that the information provided is accurate and complete to the best of my knowledge.
+            </p>
+            <button type="submit" class="submit-button">Submit Medical History Questionnaire</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Simple progress tracking
+    const form = document.getElementById('questionnaire-form');
+    const progressFill = document.getElementById('progress-fill');
+    const sections = document.querySelectorAll('.section-card');
+
+    function updateProgress() {
+        const inputs = form.querySelectorAll('input, textarea, select');
+        let filled = 0;
+        let total = 0;
+
+        inputs.forEach(input => {
+            if (input.type === 'checkbox' || input.type === 'radio') {
+                // Count groups instead of individual items
+                return;
+            }
+            total++;
+            if (input.value.trim() !== '') {
+                filled++;
+            }
+        });
+
+        const percentage = total > 0 ? (filled / total) * 100 : 0;
+        progressFill.style.width = percentage + '%';
+    }
+
+    // Update progress on any input change
+    form.addEventListener('change', updateProgress);
+    form.addEventListener('input', updateProgress);
+
+    // Initial progress
+    updateProgress();
+</script>
+
+{% endblock %}
