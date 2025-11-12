@@ -8,7 +8,8 @@ from django.utils import timezone
 from .models import (
     Hospital, Patient, Provider, Encounter, VitalSign, Diagnosis,
     Prescription, Department, Allergy, MedicalHistory, SocialHistory,
-    FamilyHistory, LabTest, Message, Notification
+    FamilyHistory, LabTest, Message, Notification, InsuranceInformation,
+    Billing, BillingItem, Payment, Device
 )
 from .forms import UserRegistrationForm
 
@@ -1470,3 +1471,270 @@ def payment_history(request):
 
     # For now, render with sample data shown in template
     return render(request, 'healthcare/payment_history.html')
+
+
+# Billing Information
+@login_required
+def patient_billing_list(request, patient_id):
+    """Display billing information and invoices for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    # Get all billings for the patient
+    billings = Billing.objects.filter(patient=patient).prefetch_related('billing_items', 'payments', 'encounter').order_by('-billing_date')
+
+    # Calculate summary statistics
+    total_billed = sum(b.total_amount for b in billings)
+    total_paid = sum(b.amount_paid for b in billings)
+    total_due = sum(b.amount_due for b in billings)
+
+    context = {
+        'patient': patient,
+        'billings': billings,
+        'total_billed': total_billed,
+        'total_paid': total_paid,
+        'total_due': total_due,
+    }
+
+    return render(request, 'healthcare/billing/index.html', context)
+
+
+@login_required
+def patient_billing_detail(request, patient_id, billing_id):
+    """Display detailed invoice view"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    billing = get_object_or_404(Billing, billing_id=billing_id, patient=patient)
+    billing_items = billing.billing_items.all()
+    payments = billing.payments.all()
+
+    context = {
+        'patient': patient,
+        'billing': billing,
+        'billing_items': billing_items,
+        'payments': payments,
+    }
+
+    return render(request, 'healthcare/billing/show.html', context)
+
+
+# Payment Information
+@login_required
+def patient_payment_list(request, patient_id):
+    """Display payment history for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    # Get all payments for the patient
+    payments = Payment.objects.filter(patient=patient).select_related('billing').order_by('-payment_date')
+
+    # Calculate statistics
+    completed_payments = payments.filter(status='Completed')
+    stats = {
+        'total_payments': sum(p.amount for p in completed_payments),
+        'payment_count': completed_payments.count(),
+        'pending_payments': sum(p.amount for p in payments.filter(status='Pending')),
+        'last_payment_date': completed_payments.first().payment_date if completed_payments.exists() else None,
+    }
+
+    context = {
+        'patient': patient,
+        'payments': payments,
+        'stats': stats,
+    }
+
+    return render(request, 'healthcare/payments/index.html', context)
+
+
+@login_required
+def patient_payment_detail(request, patient_id, payment_id):
+    """Display payment receipt"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    payment = get_object_or_404(Payment, payment_id=payment_id, patient=patient)
+
+    context = {
+        'patient': patient,
+        'payment': payment,
+    }
+
+    return render(request, 'healthcare/payments/show.html', context)
+
+
+# Insurance Information
+@login_required
+def patient_insurance_list(request, patient_id):
+    """Display insurance information for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    # Get all insurance policies
+    insurances = patient.insurance_policies.all().order_by('-is_primary', '-effective_date')
+    primary_insurance = insurances.filter(is_primary=True).first()
+    secondary_insurances = insurances.filter(is_primary=False)
+
+    context = {
+        'patient': patient,
+        'insurances': insurances,
+        'primary_insurance': primary_insurance,
+        'secondary_insurances': secondary_insurances,
+    }
+
+    return render(request, 'healthcare/insurance/index.html', context)
+
+
+@login_required
+def patient_insurance_detail(request, patient_id, insurance_id):
+    """Display detailed insurance policy view"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    insurance = get_object_or_404(InsuranceInformation, insurance_id=insurance_id, patient=patient)
+
+    context = {
+        'patient': patient,
+        'insurance': insurance,
+    }
+
+    return render(request, 'healthcare/insurance/show.html', context)
+
+
+# Device Management
+@login_required
+def patient_device_list(request, patient_id):
+    """Display devices for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    devices = patient.devices.all().order_by('-created_at')
+
+    context = {
+        'patient': patient,
+        'devices': devices,
+    }
+
+    return render(request, 'healthcare/devices/index.html', context)
+
+
+@login_required
+def patient_device_detail(request, patient_id, device_id):
+    """Display device details"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    device = get_object_or_404(Device, device_id=device_id, patient=patient)
+
+    context = {
+        'patient': patient,
+        'device': device,
+    }
+
+    return render(request, 'healthcare/devices/show.html', context)
+
+
+# Messaging Views
+@login_required
+def message_inbox(request):
+    """Display inbox messages for the logged-in user"""
+    messages_list = request.user.received_messages.all().order_by('-created_at')
+
+    context = {
+        'messages': messages_list,
+        'unread_count': messages_list.filter(is_read=False).count(),
+    }
+
+    return render(request, 'healthcare/messages/inbox.html', context)
+
+
+@login_required
+def message_sent(request):
+    """Display sent messages for the logged-in user"""
+    messages_list = request.user.sent_messages.all().order_by('-created_at')
+
+    context = {
+        'messages': messages_list,
+    }
+
+    return render(request, 'healthcare/messages/sent.html', context)
+
+
+@login_required
+def message_compose(request):
+    """Compose a new message"""
+    from django.contrib.auth.models import User
+
+    # Get potential recipients (all users except current user)
+    potential_recipients = User.objects.exclude(id=request.user.id).order_by('last_name', 'first_name')
+
+    # Check if this is a reply
+    reply_to_id = request.GET.get('reply_to')
+    reply_to_message = None
+    if reply_to_id:
+        reply_to_message = get_object_or_404(Message, message_id=reply_to_id)
+
+    if request.method == 'POST':
+        recipient_id = request.POST.get('recipient_id')
+        subject = request.POST.get('subject')
+        body = request.POST.get('body')
+        parent_message_id = request.POST.get('parent_message_id')
+
+        # Validate required fields
+        if not recipient_id or not subject or not body:
+            messages.error(request, 'All fields are required.')
+            return redirect('message_compose')
+
+        try:
+            recipient = User.objects.get(id=recipient_id)
+
+            # Create message
+            message = Message.objects.create(
+                sender=request.user,
+                recipient=recipient,
+                subject=subject,
+                body=body,
+                parent_message=Message.objects.get(message_id=parent_message_id) if parent_message_id else None
+            )
+
+            messages.success(request, 'Message sent successfully!')
+            return redirect('message_sent')
+        except User.DoesNotExist:
+            messages.error(request, 'Invalid recipient.')
+            return redirect('message_compose')
+
+    context = {
+        'recipients': potential_recipients,
+        'reply_to': reply_to_message,
+    }
+
+    return render(request, 'healthcare/messages/compose.html', context)
+
+
+@login_required
+def message_show(request, message_id):
+    """Display a specific message"""
+    message = get_object_or_404(Message, message_id=message_id)
+
+    # Check if user has access to this message
+    if message.sender != request.user and message.recipient != request.user:
+        messages.error(request, 'You do not have permission to view this message.')
+        return redirect('message_inbox')
+
+    # Mark as read if user is the recipient
+    if message.recipient == request.user and not message.is_read:
+        message.is_read = True
+        message.read_at = timezone.now()
+        message.save()
+
+    context = {
+        'message': message,
+        'replies': message.replies.all().order_by('created_at'),
+    }
+
+    return render(request, 'healthcare/messages/show.html', context)
+
+
+@login_required
+def message_delete(request, message_id):
+    """Delete a message (only sender can delete)"""
+    message = get_object_or_404(Message, message_id=message_id)
+
+    # Only sender can delete
+    if message.sender != request.user:
+        messages.error(request, 'You can only delete messages you sent.')
+        return redirect('message_inbox')
+
+    if request.method == 'POST':
+        message.delete()
+        messages.success(request, 'Message deleted successfully!')
+        return redirect('message_sent')
+
+    return redirect('message_show', message_id=message_id)

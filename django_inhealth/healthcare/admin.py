@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Hospital, UserProfile, Patient, Department, Provider, Encounter, VitalSign,
     Diagnosis, Prescription, Allergy, MedicalHistory, SocialHistory, FamilyHistory,
-    Message, LabTest, Notification
+    Message, LabTest, Notification, InsuranceInformation, Billing, BillingItem, Payment, Device
 )
 
 
@@ -138,3 +138,54 @@ class NotificationAdmin(admin.ModelAdmin):
     search_fields = ['user__username', 'title', 'message']
     date_hierarchy = 'created_at'
     raw_id_fields = ['user']
+
+
+@admin.register(InsuranceInformation)
+class InsuranceInformationAdmin(admin.ModelAdmin):
+    list_display = ['insurance_id', 'patient', 'provider_name', 'policy_number', 'is_primary', 'effective_date', 'termination_date']
+    list_filter = ['is_primary', 'effective_date', 'termination_date']
+    search_fields = ['provider_name', 'policy_number', 'patient__first_name', 'patient__last_name']
+    date_hierarchy = 'effective_date'
+    raw_id_fields = ['patient']
+
+
+class BillingItemInline(admin.TabularInline):
+    model = BillingItem
+    extra = 1
+    fields = ['service_code', 'service_description', 'quantity', 'unit_price', 'total_price']
+
+
+@admin.register(Billing)
+class BillingAdmin(admin.ModelAdmin):
+    list_display = ['billing_id', 'invoice_number', 'patient', 'billing_date', 'total_amount', 'amount_paid', 'amount_due', 'status']
+    list_filter = ['status', 'billing_date', 'due_date']
+    search_fields = ['invoice_number', 'patient__first_name', 'patient__last_name']
+    date_hierarchy = 'billing_date'
+    raw_id_fields = ['patient', 'encounter']
+    inlines = [BillingItemInline]
+
+
+@admin.register(BillingItem)
+class BillingItemAdmin(admin.ModelAdmin):
+    list_display = ['item_id', 'billing', 'service_code', 'service_description', 'quantity', 'unit_price', 'total_price']
+    search_fields = ['service_code', 'service_description']
+    raw_id_fields = ['billing']
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ['payment_id', 'patient', 'payment_date', 'amount', 'payment_method', 'status', 'transaction_id']
+    list_filter = ['status', 'payment_method', 'payment_date']
+    search_fields = ['patient__first_name', 'patient__last_name', 'transaction_id']
+    date_hierarchy = 'payment_date'
+    raw_id_fields = ['patient', 'billing']
+
+
+@admin.register(Device)
+class DeviceAdmin(admin.ModelAdmin):
+    list_display = ['device_id', 'patient', 'device_name', 'device_type', 'device_unique_id', 'status', 'battery_level', 'last_sync']
+    list_filter = ['device_type', 'status', 'registration_date']
+    search_fields = ['device_name', 'device_unique_id', 'patient__first_name', 'patient__last_name', 'manufacturer']
+    date_hierarchy = 'registration_date'
+    raw_id_fields = ['patient']
+    readonly_fields = ['created_at', 'updated_at']

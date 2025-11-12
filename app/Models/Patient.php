@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Patient extends Model
 {
@@ -115,6 +116,68 @@ class Patient extends Model
     public function familyHistory(): HasMany
     {
         return $this->hasMany(FamilyHistory::class, 'patient_id', 'patient_id');
+    }
+
+    /**
+     * Get the patient's billings
+     */
+    public function billings(): HasMany
+    {
+        return $this->hasMany(Billing::class, 'patient_id', 'patient_id');
+    }
+
+    /**
+     * Get the patient's payments
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'patient_id', 'patient_id');
+    }
+
+    /**
+     * Get the patient's devices
+     */
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class, 'patient_id', 'patient_id');
+    }
+
+    /**
+     * Get messages sent by the patient
+     */
+    public function sentMessages(): MorphMany
+    {
+        return $this->morphMany(Message::class, 'sender');
+    }
+
+    /**
+     * Get messages received by the patient
+     */
+    public function receivedMessages(): MorphMany
+    {
+        return $this->morphMany(Message::class, 'recipient');
+    }
+
+    /**
+     * Get all messages (sent and received)
+     */
+    public function messages()
+    {
+        return Message::where(function($query) {
+            $query->where('sender_type', self::class)
+                  ->where('sender_id', $this->patient_id);
+        })->orWhere(function($query) {
+            $query->where('recipient_type', self::class)
+                  ->where('recipient_id', $this->patient_id);
+        })->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get unread messages count
+     */
+    public function getUnreadMessagesCountAttribute(): int
+    {
+        return $this->receivedMessages()->unread()->count();
     }
 
     /**

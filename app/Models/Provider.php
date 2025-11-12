@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Provider extends Model
 {
@@ -44,6 +45,44 @@ class Provider extends Model
     public function encounters(): HasMany
     {
         return $this->hasMany(Encounter::class, 'provider_id', 'provider_id');
+    }
+
+    /**
+     * Get messages sent by the provider
+     */
+    public function sentMessages(): MorphMany
+    {
+        return $this->morphMany(Message::class, 'sender');
+    }
+
+    /**
+     * Get messages received by the provider
+     */
+    public function receivedMessages(): MorphMany
+    {
+        return $this->morphMany(Message::class, 'recipient');
+    }
+
+    /**
+     * Get all messages (sent and received)
+     */
+    public function messages()
+    {
+        return Message::where(function($query) {
+            $query->where('sender_type', self::class)
+                  ->where('sender_id', $this->provider_id);
+        })->orWhere(function($query) {
+            $query->where('recipient_type', self::class)
+                  ->where('recipient_id', $this->provider_id);
+        })->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get unread messages count
+     */
+    public function getUnreadMessagesCountAttribute(): int
+    {
+        return $this->receivedMessages()->unread()->count();
     }
 
     /**

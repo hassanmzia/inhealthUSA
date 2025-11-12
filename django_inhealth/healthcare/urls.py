@@ -86,6 +86,22 @@ urlpatterns = [
     path('family-history/create/', views.family_history_create, name='family_history_create'),
     path('family-history/<int:family_history_id>/', views.family_history_detail, name='family_history_detail'),
 
+    # Patient Billing URLs
+    path('patients/<int:patient_id>/billing/', views.patient_billing_list, name='patient_billing_list'),
+    path('patients/<int:patient_id>/billing/<int:billing_id>/', views.patient_billing_detail, name='patient_billing_detail'),
+
+    # Patient Payment URLs
+    path('patients/<int:patient_id>/payments/', views.patient_payment_list, name='patient_payment_list'),
+    path('patients/<int:patient_id>/payments/<int:payment_id>/', views.patient_payment_detail, name='patient_payment_detail'),
+
+    # Patient Insurance URLs
+    path('patients/<int:patient_id>/insurance/', views.patient_insurance_list, name='patient_insurance_list'),
+    path('patients/<int:patient_id>/insurance/<int:insurance_id>/', views.patient_insurance_detail, name='patient_insurance_detail'),
+
+    # Patient Device URLs
+    path('patients/<int:patient_id>/devices/', views.patient_device_list, name='patient_device_list'),
+    path('patients/<int:patient_id>/devices/<int:device_id>/', views.patient_device_detail, name='patient_device_detail'),
+
     # Medical History Questionnaire
     path('questionnaire/medical-history/', views.medical_history_questionnaire, name='medical_history_questionnaire'),
 
@@ -98,12 +114,19 @@ urlpatterns = [
     # Allergies Questionnaire
     path('questionnaire/allergies/', views.allergies_questionnaire, name='allergies_questionnaire'),
 
-    # Insurance Information
+    # Insurance Information (Generic)
     path('insurance/', views.insurance_information, name='insurance_information'),
 
-    # Billing Information
+    # Billing Information (Generic)
     path('billing/', views.billing_information, name='billing_information'),
 
-    # Payment History
+    # Payment History (Generic)
     path('payment-history/', views.payment_history, name='payment_history'),
+
+    # Message URLs
+    path('messages/inbox/', views.message_inbox, name='message_inbox'),
+    path('messages/sent/', views.message_sent, name='message_sent'),
+    path('messages/compose/', views.message_compose, name='message_compose'),
+    path('messages/<int:message_id>/', views.message_show, name='message_show'),
+    path('messages/<int:message_id>/delete/', views.message_delete, name='message_delete'),
 ]

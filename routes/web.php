@@ -7,6 +7,11 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\VitalSignController;
 use App\Http\Controllers\DiagnosisController;
 use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\BillingController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\InsuranceController;
+use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -74,6 +79,60 @@ Route::post('appointments/{encounter}/prescriptions', [PrescriptionController::c
     ->name('prescriptions.store.appointment');
 Route::post('prescriptions/{prescription}/discontinue', [PrescriptionController::class, 'discontinue'])
     ->name('prescriptions.discontinue');
+
+// Billing Routes
+Route::get('patients/{patient}/billing', [BillingController::class, 'index'])
+    ->name('billing.index');
+Route::get('patients/{patient}/billing/{billing}', [BillingController::class, 'show'])
+    ->name('billing.show');
+
+// Payment Routes
+Route::get('patients/{patient}/payments', [PaymentController::class, 'index'])
+    ->name('payments.index');
+Route::get('patients/{patient}/payments/{payment}', [PaymentController::class, 'show'])
+    ->name('payments.show');
+
+// Insurance Routes
+Route::get('patients/{patient}/insurance', [InsuranceController::class, 'index'])
+    ->name('insurance.index');
+Route::get('patients/{patient}/insurance/{insurance}', [InsuranceController::class, 'show'])
+    ->name('insurance.show');
+
+// Device Routes
+Route::get('patients/{patient}/devices', [DeviceController::class, 'index'])
+    ->name('devices.index');
+Route::get('patients/{patient}/devices/create', [DeviceController::class, 'create'])
+    ->name('devices.create');
+Route::post('patients/{patient}/devices', [DeviceController::class, 'store'])
+    ->name('devices.store');
+Route::get('patients/{patient}/devices/{device}', [DeviceController::class, 'show'])
+    ->name('devices.show');
+Route::get('patients/{patient}/devices/{device}/edit', [DeviceController::class, 'edit'])
+    ->name('devices.edit');
+Route::put('patients/{patient}/devices/{device}', [DeviceController::class, 'update'])
+    ->name('devices.update');
+Route::delete('patients/{patient}/devices/{device}', [DeviceController::class, 'destroy'])
+    ->name('devices.destroy');
+
+// Message Routes (for both patients and providers)
+Route::get('{userType}/{userId}/messages/inbox', [MessageController::class, 'inbox'])
+    ->name('messages.inbox')
+    ->where(['userType' => 'patient|provider', 'userId' => '[0-9]+']);
+Route::get('{userType}/{userId}/messages/sent', [MessageController::class, 'sent'])
+    ->name('messages.sent')
+    ->where(['userType' => 'patient|provider', 'userId' => '[0-9]+']);
+Route::get('{userType}/{userId}/messages/compose', [MessageController::class, 'compose'])
+    ->name('messages.compose')
+    ->where(['userType' => 'patient|provider', 'userId' => '[0-9]+']);
+Route::post('{userType}/{userId}/messages', [MessageController::class, 'store'])
+    ->name('messages.store')
+    ->where(['userType' => 'patient|provider', 'userId' => '[0-9]+']);
+Route::get('{userType}/{userId}/messages/{message}', [MessageController::class, 'show'])
+    ->name('messages.show')
+    ->where(['userType' => 'patient|provider', 'userId' => '[0-9]+']);
+Route::delete('{userType}/{userId}/messages/{message}', [MessageController::class, 'destroy'])
+    ->name('messages.destroy')
+    ->where(['userType' => 'patient|provider', 'userId' => '[0-9]+']);
 
 // API Routes (for frontend AJAX calls)
 Route::prefix('api')->group(function () {

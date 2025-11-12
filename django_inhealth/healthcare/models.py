@@ -470,3 +470,179 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.get_full_name()}: {self.title}"
+
+
+class InsuranceInformation(models.Model):
+    """Insurance Information model"""
+    insurance_id = models.AutoField(primary_key=True)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='insurance_policies')
+    provider_name = models.CharField(max_length=200)
+    plan_type = models.CharField(max_length=100, blank=True, null=True)
+    policy_number = models.CharField(max_length=100)
+    group_number = models.CharField(max_length=100, blank=True, null=True)
+    subscriber_name = models.CharField(max_length=200)
+    subscriber_relationship = models.CharField(max_length=50, choices=[
+        ('Self', 'Self'),
+        ('Spouse', 'Spouse'),
+        ('Parent', 'Parent'),
+        ('Child', 'Child'),
+        ('Other', 'Other'),
+    ])
+    effective_date = models.DateField()
+    termination_date = models.DateField(blank=True, null=True)
+    is_primary = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'insurance_information'
+        ordering = ['-is_primary', '-effective_date']
+
+    def __str__(self):
+        return f"{self.provider_name} - {self.policy_number} ({'Primary' if self.is_primary else 'Secondary'})"
+
+
+class Billing(models.Model):
+    """Billing model for patient invoices"""
+    billing_id = models.AutoField(primary_key=True)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='billings')
+    encounter = models.ForeignKey(Encounter, on_delete=models.SET_NULL, null=True, blank=True, related_name='billings')
+    invoice_number = models.CharField(max_length=50, unique=True)
+    billing_date = models.DateField()
+    due_date = models.DateField()
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    amount_due = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, default='Pending', choices=[
+        ('Pending', 'Pending'),
+        ('Paid', 'Paid'),
+        ('Partial', 'Partial'),
+        ('Overdue', 'Overdue'),
+        ('Cancelled', 'Cancelled'),
+    ])
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'billings'
+        ordering = ['-billing_date']
+
+    def __str__(self):
+        return f"Invoice #{self.invoice_number} - {self.patient.full_name} - ${self.total_amount}"
+
+
+class BillingItem(models.Model):
+    """Billing Item model for individual service charges"""
+    item_id = models.AutoField(primary_key=True)
+    billing = models.ForeignKey(Billing, on_delete=models.CASCADE, related_name='billing_items')
+    service_code = models.CharField(max_length=50)
+    service_description = models.CharField(max_length=255)
+    quantity = models.IntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'billing_items'
+        ordering = ['item_id']
+
+    def __str__(self):
+        return f"{self.service_code} - {self.service_description} - ${self.total_price}"
+
+
+class Payment(models.Model):
+    """Payment model for tracking patient payments"""
+    payment_id = models.AutoField(primary_key=True)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='payments')
+    billing = models.ForeignKey(Billing, on_delete=models.SET_NULL, null=True, blank=True, related_name='payments')
+    payment_date = models.DateTimeField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = models.CharField(max_length=50, default='Cash', choices=[
+        ('Cash', 'Cash'),
+        ('Credit Card', 'Credit Card'),
+        ('Debit Card', 'Debit Card'),
+        ('Check', 'Check'),
+        ('Bank Transfer', 'Bank Transfer'),
+        ('Insurance', 'Insurance'),
+        ('Other', 'Other'),
+    ])
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=20, default='Completed', choices=[
+        ('Completed', 'Completed'),
+        ('Pending', 'Pending'),
+        ('Failed', 'Failed'),
+        ('Refunded', 'Refunded'),
+    ])
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'payments'
+        ordering = ['-payment_date']
+
+    def __str__(self):
+        return f"Payment #{self.payment_id} - {self.patient.full_name} - ${self.amount} ({self.status})"
+
+
+class Device(models.Model):
+    """IoT Medical Device model for patient vital monitoring"""
+    DEVICE_TYPES = [
+        ('Watch', 'Watch'),
+        ('Ring', 'Ring'),
+        ('EarClip', 'EarClip'),
+        ('Adapter', 'Adapter'),
+        ('PulseGlucometer', 'PulseGlucometer'),
+    ]
+
+    STATUS_CHOICES = [
+        ('Active', 'Active'),
+        ('Inactive', 'Inactive'),
+        ('Maintenance', 'Maintenance'),
+        ('Retired', 'Retired'),
+    ]
+
+    device_id = models.AutoField(primary_key=True)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='devices')
+    device_unique_id = models.CharField(max_length=255, unique=True)
+    device_type = models.CharField(max_length=20, choices=DEVICE_TYPES)
+    device_name = models.CharField(max_length=200)
+    manufacturer = models.CharField(max_length=200, blank=True, null=True)
+    model_number = models.CharField(max_length=100, blank=True, null=True)
+    firmware_version = models.CharField(max_length=50, blank=True, null=True)
+    capabilities = models.JSONField(blank=True, null=True)  # List of capabilities
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
+    battery_level = models.IntegerField(blank=True, null=True)  # 0-100 percentage
+    last_sync = models.DateTimeField(blank=True, null=True)
+    registration_date = models.DateField()
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'devices'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.device_name} ({self.device_type}) - {self.patient.full_name}"
+
+    @property
+    def battery_color(self):
+        """Get battery status color"""
+        if self.battery_level is None:
+            return 'gray'
+        if self.battery_level >= 70:
+            return 'green'
+        if self.battery_level >= 30:
+            return 'yellow'
+        return 'red'
+
+    @property
+    def capabilities_list(self):
+        """Get capabilities as a list"""
+        if isinstance(self.capabilities, list):
+            return self.capabilities
+        return []
