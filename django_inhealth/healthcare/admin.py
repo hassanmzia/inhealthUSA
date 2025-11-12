@@ -1,9 +1,39 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
 from .models import (
     Hospital, UserProfile, Patient, Department, Provider, Encounter, VitalSign,
     Diagnosis, Prescription, Allergy, MedicalHistory, SocialHistory, FamilyHistory,
     Message, LabTest, Notification, InsuranceInformation, Billing, BillingItem, Payment, Device
 )
+
+
+# Inline for UserProfile in User admin
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = 'User Profile'
+    fk_name = 'user'
+    fields = ['role', 'phone', 'date_of_birth']
+
+
+# Custom User Admin with UserProfile inline
+class CustomUserAdmin(BaseUserAdmin):
+    inlines = [UserProfileInline]
+    list_display = ['username', 'email', 'first_name', 'last_name', 'get_role', 'is_staff', 'is_active']
+    search_fields = ['username', 'first_name', 'last_name', 'email']
+
+    def get_role(self, obj):
+        try:
+            return obj.profile.get_role_display()
+        except UserProfile.DoesNotExist:
+            return 'No Profile'
+    get_role.short_description = 'Role'
+
+
+# Unregister the default User admin and register our custom one
+admin.site.unregister(User)
+admin.site.register(User, CustomUserAdmin)
 
 
 @admin.register(Hospital)
@@ -24,11 +54,35 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Patient)
 class PatientAdmin(admin.ModelAdmin):
-    list_display = ['patient_id', 'full_name', 'primary_doctor', 'date_of_birth', 'gender', 'phone', 'is_active']
+    list_display = ['patient_id', 'full_name', 'user', 'primary_doctor', 'date_of_birth', 'gender', 'phone', 'is_active']
     list_filter = ['gender', 'is_active', 'primary_doctor']
-    search_fields = ['first_name', 'last_name', 'ssn', 'email']
+    search_fields = ['first_name', 'last_name', 'ssn', 'email', 'user__username', 'user__email']
     ordering = ['last_name', 'first_name']
-    raw_id_fields = ['user', 'primary_doctor']
+    autocomplete_fields = ['user', 'primary_doctor']
+    fieldsets = (
+        ('User Account Link', {
+            'fields': ('user',),
+            'description': 'Link this patient to a User account. The user\'s role should be set to "Patient" in User Profiles.'
+        }),
+        ('Patient Information', {
+            'fields': ('first_name', 'middle_name', 'last_name', 'date_of_birth', 'gender', 'ssn')
+        }),
+        ('Contact Information', {
+            'fields': ('email', 'phone', 'address', 'city', 'state', 'zip_code')
+        }),
+        ('Medical Information', {
+            'fields': ('primary_doctor',)
+        }),
+        ('Emergency Contact', {
+            'fields': ('emergency_contact_name', 'emergency_contact_phone')
+        }),
+        ('Insurance Information', {
+            'fields': ('insurance_provider', 'insurance_policy_number')
+        }),
+        ('Status', {
+            'fields': ('is_active',)
+        }),
+    )
 
 
 @admin.register(Department)
@@ -41,10 +95,28 @@ class DepartmentAdmin(admin.ModelAdmin):
 
 @admin.register(Provider)
 class ProviderAdmin(admin.ModelAdmin):
-    list_display = ['provider_id', 'full_name', 'hospital', 'specialty', 'npi', 'email', 'is_active']
+    list_display = ['provider_id', 'full_name', 'user', 'hospital', 'specialty', 'npi', 'email', 'is_active']
     list_filter = ['specialty', 'is_active', 'department', 'hospital']
-    search_fields = ['first_name', 'last_name', 'npi', 'license_number']
-    raw_id_fields = ['user', 'hospital', 'department']
+    search_fields = ['first_name', 'last_name', 'npi', 'license_number', 'user__username', 'user__email']
+    autocomplete_fields = ['user', 'hospital', 'department']
+    fieldsets = (
+        ('User Account Link', {
+            'fields': ('user',),
+            'description': 'Link this provider to a User account. The user\'s role should be set to "Doctor" in User Profiles.'
+        }),
+        ('Provider Information', {
+            'fields': ('first_name', 'last_name', 'npi', 'specialty', 'license_number')
+        }),
+        ('Organization', {
+            'fields': ('hospital', 'department')
+        }),
+        ('Contact Information', {
+            'fields': ('email', 'phone')
+        }),
+        ('Status', {
+            'fields': ('is_active',)
+        }),
+    )
 
 
 @admin.register(Encounter)
