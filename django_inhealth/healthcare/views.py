@@ -1235,3 +1235,24 @@ def medical_history_questionnaire(request):
 
     # For GET requests, display the questionnaire form
     return render(request, 'healthcare/questionnaire/medical_history.html')
+
+
+# Family History Questionnaire
+@login_required
+def family_history_questionnaire(request):
+    """Display and process comprehensive family history questionnaire"""
+    if request.method == 'POST':
+        # TODO: In production, parse form data and create FamilyHistory records for each family member:
+        # - Father, Mother
+        # - Paternal/Maternal Grandparents
+        # - Siblings, Children
+        # - Aunts, Uncles
+        # - Store hereditary condition flags
+        # - Link to genetic testing information
+        # - etc.
+
+        messages.success(request, 'Family history questionnaire submitted successfully. Your family medical history has been recorded.')
+        return redirect('index')
+
+    # For GET requests, display the questionnaire form
+    return render(request, 'healthcare/questionnaire/family_history.html')

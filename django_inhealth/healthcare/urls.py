@@ -88,4 +88,7 @@ urlpatterns = [
 
     # Medical History Questionnaire
     path('questionnaire/medical-history/', views.medical_history_questionnaire, name='medical_history_questionnaire'),
+
+    # Family History Questionnaire
+    path('questionnaire/family-history/', views.family_history_questionnaire, name='family_history_questionnaire'),
 ]
