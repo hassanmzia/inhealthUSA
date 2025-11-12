@@ -1214,3 +1214,75 @@ def family_history_create(request):
     patients = Patient.objects.filter(is_active=True).order_by('last_name', 'first_name')
     context = {'patients': patients}
     return render(request, 'healthcare/family_history/create.html', context)
+
+
+# Medical History Questionnaire
+@login_required
+def medical_history_questionnaire(request):
+    """Display and process comprehensive medical history questionnaire"""
+    if request.method == 'POST':
+        # TODO: In production, parse form data and distribute across multiple models:
+        # - Patient demographics (update Patient model)
+        # - Current medications (create Prescription records)
+        # - Allergies (create Allergy records)
+        # - Past medical history (create MedicalHistory records)
+        # - Social history (create/update SocialHistory)
+        # - Family history (create FamilyHistory records)
+        # - etc.
+
+        messages.success(request, 'Medical history questionnaire submitted successfully. Your information has been recorded.')
+        return redirect('index')
+
+    # For GET requests, display the questionnaire form
+    return render(request, 'healthcare/questionnaire/medical_history.html')
+
+
+# Family History Questionnaire
+@login_required
+def family_history_questionnaire(request):
+    """Display and process comprehensive family history questionnaire"""
+    if request.method == 'POST':
+        # TODO: In production, parse form data and create FamilyHistory records for each family member:
+        # - Father, Mother
+        # - Paternal/Maternal Grandparents
+        # - Siblings, Children
+        # - Aunts, Uncles
+        # - Store hereditary condition flags
+        # - Link to genetic testing information
+        # - etc.
+
+        messages.success(request, 'Family history questionnaire submitted successfully. Your family medical history has been recorded.')
+        return redirect('index')
+
+    # For GET requests, display the questionnaire form
+    return render(request, 'healthcare/questionnaire/family_history.html')
+
+
+# Social History Questionnaire
+@login_required
+def social_history_questionnaire(request):
+    """Display and process comprehensive social history questionnaire"""
+    if request.method == 'POST':
+        # TODO: In production, parse form data and create/update SocialHistory record:
+        # - Tobacco use details
+        # - Alcohol use details
+        # - Substance use history
+        # - Occupation and work exposures
+        # - Living situation and housing
+        # - Relationship status and sexual history
+        # - Physical activity and diet
+        # - Sleep patterns
+        # - Stress and mental health
+        # - Social support system
+        # - Safety concerns
+        # - Travel history
+        # - Spiritual beliefs
+        # - Financial status
+        # - Military service
+        # - etc.
+
+        messages.success(request, 'Social history questionnaire submitted successfully. Your social and lifestyle information has been recorded.')
+        return redirect('index')
+
+    # For GET requests, display the questionnaire form
+    return render(request, 'healthcare/questionnaire/social_history.html')

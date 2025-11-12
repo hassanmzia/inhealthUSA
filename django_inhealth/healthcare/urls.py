@@ -85,4 +85,13 @@ urlpatterns = [
     path('family-history/', views.family_history_list, name='family_history_list'),
     path('family-history/create/', views.family_history_create, name='family_history_create'),
     path('family-history/<int:family_history_id>/', views.family_history_detail, name='family_history_detail'),
+
+    # Medical History Questionnaire
+    path('questionnaire/medical-history/', views.medical_history_questionnaire, name='medical_history_questionnaire'),
+
+    # Family History Questionnaire
+    path('questionnaire/family-history/', views.family_history_questionnaire, name='family_history_questionnaire'),
+
+    # Social History Questionnaire
+    path('questionnaire/social-history/', views.social_history_questionnaire, name='social_history_questionnaire'),
 ]
