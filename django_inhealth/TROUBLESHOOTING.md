@@ -69,7 +69,68 @@ This error occurs when Django migrations have not been run on the database. The 
    - `healthcare_patient`
    - etc.
 
-### 2. Database Connection Refused
+### 2. "relation 'billings' already exists" Error
+
+**Error Message:**
+```
+django.db.utils.ProgrammingError: relation "billings" already exists
+```
+
+**Full Error Context:**
+```
+Applying healthcare.0003_billing_alter_userprofile_role_payment_and_more...
+Traceback (most recent call last):
+  ...
+psycopg2.errors.DuplicateTable: relation "billings" already exists
+```
+
+**Cause:**
+This error occurs when the database tables already exist but Django's migration tracking system doesn't know they've been applied. This typically happens when:
+- Tables were created manually in the database
+- A previous migration partially failed
+- The `django_migrations` table is out of sync with the actual database state
+
+**Solution:**
+
+Use the provided fix script or follow these manual steps:
+
+**Option 1: Using the Fix Script (Recommended)**
+```bash
+cd /home/zia/django_inhealth
+chmod +x fix_migration_issue.sh
+./fix_migration_issue.sh
+```
+
+**Option 2: Manual Fix**
+```bash
+cd /home/zia/django_inhealth
+source venv/bin/activate  # if using virtual environment
+
+# Fake the migration to mark it as applied without running it
+python manage.py migrate healthcare 0003 --fake
+
+# Verify the fix
+python manage.py showmigrations healthcare
+```
+
+**What does `--fake` do?**
+The `--fake` flag tells Django to mark the migration as applied in the `django_migrations` table without actually executing the SQL commands. This is useful when the database changes have already been made but Django doesn't know about them.
+
+**Verification:**
+After running the fix, all migrations should show as applied:
+```bash
+python manage.py showmigrations
+```
+
+You should see:
+```
+healthcare
+ [X] 0001_initial
+ [X] 0002_familyhistory
+ [X] 0003_billing_alter_userprofile_role_payment_and_more
+```
+
+### 3. Database Connection Refused
 
 **Error Message:**
 ```
@@ -91,7 +152,7 @@ django.db.utils.OperationalError: connection to server at "localhost" (127.0.0.1
 
 3. **Verify database credentials in settings.py or .env file**
 
-### 3. Authentication Failed for User
+### 4. Authentication Failed for User
 
 **Error Message:**
 ```
@@ -120,7 +181,7 @@ Then reload PostgreSQL:
 sudo systemctl reload postgresql
 ```
 
-### 4. Static Files Not Found
+### 5. Static Files Not Found
 
 **Error Message:**
 ```
@@ -135,16 +196,48 @@ mkdir -p static
 python manage.py collectstatic --noinput
 ```
 
-### 5. Permission Denied on SSL Certificate
+### 6. Permission Denied on SSL Certificate
 
 **Error Message:**
 ```
 FATAL: private key file "/etc/ssl/private/ssl-cert-snakeoil.key" has group or world access
 ```
 
-**Solution:**
+**Note:** SSL is currently disabled in the development environment to simplify setup. For production deployments, you should enable SSL with proper certificates.
 
-Fix SSL certificate permissions:
+**Development Solution (Current Configuration):**
+
+SSL has been disabled in the development configuration. If you need to verify this:
+```bash
+grep "^ssl" /etc/postgresql/16/main/postgresql.conf
+```
+
+You should see:
+```
+ssl = off
+```
+
+**Production Solution (Re-enabling SSL):**
+
+For production environments, re-enable SSL with proper certificate configuration:
+
+**Option 1: Copy certificates to PostgreSQL data directory**
+```bash
+sudo cp /etc/ssl/certs/ssl-cert-snakeoil.pem /var/lib/postgresql/16/main/server.crt
+sudo cp /etc/ssl/private/ssl-cert-snakeoil.key /var/lib/postgresql/16/main/server.key
+sudo chown postgres:postgres /var/lib/postgresql/16/main/server.*
+sudo chmod 600 /var/lib/postgresql/16/main/server.key
+sudo chmod 644 /var/lib/postgresql/16/main/server.crt
+```
+
+Then update `/etc/postgresql/16/main/postgresql.conf`:
+```
+ssl = on
+ssl_cert_file = '/var/lib/postgresql/16/main/server.crt'
+ssl_key_file = '/var/lib/postgresql/16/main/server.key'
+```
+
+**Option 2: Fix permissions on system certificates**
 ```bash
 sudo chmod 640 /etc/ssl/private/ssl-cert-snakeoil.key
 sudo chown root:ssl-cert /etc/ssl/private/ssl-cert-snakeoil.key
@@ -152,22 +245,9 @@ sudo usermod -a -G ssl-cert postgres
 sudo systemctl restart postgresql
 ```
 
-Or disable SSL in development (not recommended for production):
-```bash
-sudo nano /etc/postgresql/16/main/postgresql.conf
-```
+**Important:** For production, use proper SSL certificates from a trusted Certificate Authority (CA) rather than self-signed certificates.
 
-Change:
-```
-ssl = on
-```
-
-To:
-```
-ssl = off
-```
-
-Then restart PostgreSQL:
+After enabling SSL, restart PostgreSQL:
 ```bash
 sudo systemctl restart postgresql
 ```
