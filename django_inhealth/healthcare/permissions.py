@@ -34,6 +34,11 @@ def is_office_admin(user):
     return get_user_role(user) == 'office_admin'
 
 
+def is_nurse(user):
+    """Check if user is a nurse"""
+    return get_user_role(user) == 'nurse'
+
+
 def get_patient_for_user(user):
     """Get the Patient object for a user if they are a patient"""
     if not is_patient(user):
@@ -58,8 +63,8 @@ def get_provider_for_user(user):
 
 def can_view_patient(user, patient):
     """Check if user can view a specific patient's information"""
-    # Admins and doctors can view all patients
-    if is_office_admin(user) or is_doctor(user):
+    # Admins, doctors, and nurses can view all patients
+    if is_office_admin(user) or is_doctor(user) or is_nurse(user):
         return True
 
     # Patients can only view their own information
@@ -136,12 +141,37 @@ def require_patient_edit(view_func):
     return wrapper
 
 
+# Vital-specific permissions
+
+def can_edit_vitals(user, patient):
+    """Check if user can edit vital information for a patient"""
+    # Admins, doctors, and nurses can edit vital information
+    return is_office_admin(user) or is_doctor(user) or is_nurse(user)
+
+
+def require_vital_edit(view_func):
+    """
+    Decorator to check if user can edit vital information
+    Expects patient_id in URL kwargs
+    """
+    @wraps(view_func)
+    def wrapper(request, patient_id, *args, **kwargs):
+        patient = get_object_or_404(Patient, patient_id=patient_id)
+
+        if not can_edit_vitals(request.user, patient):
+            messages.error(request, 'You do not have permission to edit vital information.')
+            return redirect('patient_detail', patient_id=patient_id)
+
+        return view_func(request, patient_id, *args, **kwargs)
+    return wrapper
+
+
 # Provider-specific permissions
 
 def can_view_provider(user, provider):
     """Check if user can view a specific provider's information"""
-    # Admins can view all providers
-    if is_office_admin(user):
+    # Admins and nurses can view all providers
+    if is_office_admin(user) or is_nurse(user):
         return True
 
     # Doctors can only view their own information

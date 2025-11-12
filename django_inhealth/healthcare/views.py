@@ -14,10 +14,10 @@ from .models import (
 from .forms import UserRegistrationForm
 from .permissions import (
     require_patient_access, require_patient_edit, require_role,
-    require_provider_access, require_provider_edit,
-    is_patient, is_doctor, is_office_admin, get_patient_for_user,
+    require_provider_access, require_provider_edit, require_vital_edit,
+    is_patient, is_doctor, is_office_admin, is_nurse, get_patient_for_user,
     get_provider_for_user, can_view_patient, can_edit_patient,
-    can_view_provider, can_edit_provider
+    can_view_provider, can_edit_provider, can_edit_vitals
 )
 
 
@@ -101,8 +101,8 @@ def patient_list(request):
             messages.error(request, 'Your patient profile is not set up. Please contact administration.')
             return redirect('index')
 
-    # Only doctors and admins can see the full patient list
-    if not (is_doctor(request.user) or is_office_admin(request.user)):
+    # Only doctors, nurses, and admins can see the full patient list
+    if not (is_doctor(request.user) or is_nurse(request.user) or is_office_admin(request.user)):
         messages.error(request, 'You do not have permission to view the patient list.')
         return redirect('index')
 
@@ -131,7 +131,15 @@ def patient_detail(request, patient_id):
     allergies = patient.allergies.filter(is_active=True)
 
     # Determine user role and permissions
-    user_role = 'patient' if is_patient(request.user) else ('doctor' if is_doctor(request.user) else 'admin')
+    if is_patient(request.user):
+        user_role = 'patient'
+    elif is_doctor(request.user):
+        user_role = 'doctor'
+    elif is_nurse(request.user):
+        user_role = 'nurse'
+    else:
+        user_role = 'admin'
+
     can_edit = can_edit_patient(request.user, patient)
 
     context = {
@@ -264,6 +272,7 @@ def patient_edit(request, patient_id):
 
 # Patient Vital Signs Views
 @login_required
+@require_vital_edit
 def patient_vital_create(request, patient_id):
     """Create vital signs for a patient"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
@@ -315,6 +324,7 @@ def patient_vital_create(request, patient_id):
 
 
 @login_required
+@require_vital_edit
 def patient_vital_edit(request, patient_id, vital_signs_id):
     """Edit vital signs for a patient"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
@@ -724,8 +734,8 @@ def physician_list(request):
         messages.error(request, 'You do not have permission to view the physician list.')
         return redirect('index')
 
-    # Only office admins can see the full physician list
-    if not is_office_admin(request.user):
+    # Only office admins and nurses can see the full physician list
+    if not (is_office_admin(request.user) or is_nurse(request.user)):
         messages.error(request, 'You do not have permission to view the physician list.')
         return redirect('index')
 
@@ -753,7 +763,15 @@ def physician_detail(request, provider_id):
     encounters = physician.encounters.all()[:10]
 
     # Determine user role and permissions
-    user_role = 'patient' if is_patient(request.user) else ('doctor' if is_doctor(request.user) else 'admin')
+    if is_patient(request.user):
+        user_role = 'patient'
+    elif is_doctor(request.user):
+        user_role = 'doctor'
+    elif is_nurse(request.user):
+        user_role = 'nurse'
+    else:
+        user_role = 'admin'
+
     can_edit = can_edit_provider(request.user, physician)
 
     context = {
@@ -869,6 +887,11 @@ def encounter_vital_create(request, encounter_id):
     """Create vital signs for an encounter"""
     encounter = get_object_or_404(Encounter, encounter_id=encounter_id)
 
+    # Check if user can edit vitals for this patient
+    if not can_edit_vitals(request.user, encounter.patient):
+        messages.error(request, 'You do not have permission to edit vital information.')
+        return redirect('appointment_detail', encounter_id=encounter.encounter_id)
+
     if request.method == 'POST':
         VitalSign.objects.create(
             encounter=encounter,
@@ -901,6 +924,11 @@ def encounter_vital_edit(request, encounter_id, vital_signs_id):
     """Edit vital signs for an encounter"""
     encounter = get_object_or_404(Encounter, encounter_id=encounter_id)
     vital_sign = get_object_or_404(VitalSign, vital_signs_id=vital_signs_id)
+
+    # Check if user can edit vitals for this patient
+    if not can_edit_vitals(request.user, encounter.patient):
+        messages.error(request, 'You do not have permission to edit vital information.')
+        return redirect('appointment_detail', encounter_id=encounter.encounter_id)
 
     if request.method == 'POST':
         vital_sign.temperature_value = request.POST.get('temperature_value') or None
@@ -1059,6 +1087,11 @@ def encounter_prescription_edit(request, encounter_id, prescription_id):
 def vital_sign_create(request, encounter_id):
     """Create vital signs for an appointment"""
     appointment = get_object_or_404(Encounter, encounter_id=encounter_id)
+
+    # Check if user can edit vitals for this patient
+    if not can_edit_vitals(request.user, appointment.patient):
+        messages.error(request, 'You do not have permission to edit vital information.')
+        return redirect('appointment_detail', encounter_id=appointment.encounter_id)
 
     if request.method == 'POST':
         VitalSign.objects.create(

@@ -3,7 +3,7 @@
 {% block title %}Dr. {{ physician.full_name }} - InHealth EHR{% endblock %}
 
 {% block breadcrumbs %}
-{% if user_role != 'doctor' %}&rsaquo; <a href="{% url 'physician_list' %}">Physicians</a>{% endif %}
+{% if user_role != 'doctor' and user_role != 'patient' %}&rsaquo; <a href="{% url 'physician_list' %}">Physicians</a>{% endif %}
 &rsaquo; Dr. {{ physician.full_name }}
 {% endblock %}
 
@@ -16,6 +16,7 @@
             <strong>Provider ID:</strong> {{ physician.provider_id }}
             {% if user_role == 'patient' %} | <strong>Viewing as:</strong> Patient
             {% elif user_role == 'doctor' %} | <strong>Viewing as:</strong> Doctor
+            {% elif user_role == 'nurse' %} | <strong>Viewing as:</strong> Nurse
             {% else %} | <strong>Viewing as:</strong> Administrator
             {% endif %}
         </p>
