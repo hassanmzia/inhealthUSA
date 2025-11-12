@@ -31,6 +31,7 @@ class UserProfile(models.Model):
     ROLE_CHOICES = [
         ('patient', 'Patient'),
         ('doctor', 'Doctor'),
+        ('nurse', 'Nurse'),
         ('office_admin', 'Office Administrator'),
     ]
 
@@ -54,6 +55,10 @@ class UserProfile(models.Model):
     @property
     def is_doctor(self):
         return self.role == 'doctor'
+
+    @property
+    def is_nurse(self):
+        return self.role == 'nurse'
 
     @property
     def is_office_admin(self):
