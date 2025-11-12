@@ -11,6 +11,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InsuranceController;
 use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -112,6 +113,26 @@ Route::put('patients/{patient}/devices/{device}', [DeviceController::class, 'upd
     ->name('devices.update');
 Route::delete('patients/{patient}/devices/{device}', [DeviceController::class, 'destroy'])
     ->name('devices.destroy');
+
+// Message Routes (for both patients and providers)
+Route::get('{userType}/{userId}/messages/inbox', [MessageController::class, 'inbox'])
+    ->name('messages.inbox')
+    ->where(['userType' => 'patient|provider', 'userId' => '[0-9]+']);
+Route::get('{userType}/{userId}/messages/sent', [MessageController::class, 'sent'])
+    ->name('messages.sent')
+    ->where(['userType' => 'patient|provider', 'userId' => '[0-9]+']);
+Route::get('{userType}/{userId}/messages/compose', [MessageController::class, 'compose'])
+    ->name('messages.compose')
+    ->where(['userType' => 'patient|provider', 'userId' => '[0-9]+']);
+Route::post('{userType}/{userId}/messages', [MessageController::class, 'store'])
+    ->name('messages.store')
+    ->where(['userType' => 'patient|provider', 'userId' => '[0-9]+']);
+Route::get('{userType}/{userId}/messages/{message}', [MessageController::class, 'show'])
+    ->name('messages.show')
+    ->where(['userType' => 'patient|provider', 'userId' => '[0-9]+']);
+Route::delete('{userType}/{userId}/messages/{message}', [MessageController::class, 'destroy'])
+    ->name('messages.destroy')
+    ->where(['userType' => 'patient|provider', 'userId' => '[0-9]+']);
 
 // API Routes (for frontend AJAX calls)
 Route::prefix('api')->group(function () {

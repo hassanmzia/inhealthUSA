@@ -25,7 +25,7 @@
     </div>
 
     <!-- Quick Access Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
         <!-- Billing Card -->
         <a href="{{ route('billing.index', $patient->patient_id) }}"
            class="group bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-blue-300">
@@ -100,6 +100,30 @@
             </div>
             <h3 class="text-lg font-bold text-gray-900 mb-1">IoT Medical Devices</h3>
             <p class="text-sm text-gray-600">Manage connected devices</p>
+        </a>
+
+        <!-- Messages Card -->
+        <a href="{{ route('messages.inbox', ['patient', $patient->patient_id]) }}"
+           class="group bg-gradient-to-br from-pink-50 to-pink-100 hover:from-pink-100 hover:to-pink-200 rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-pink-300">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center">
+                    <div class="bg-pink-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    @if($patient->unread_messages_count > 0)
+                        <span class="ml-2 px-2 py-1 text-xs font-bold text-white bg-red-600 rounded-full">
+                            {{ $patient->unread_messages_count }}
+                        </span>
+                    @endif
+                </div>
+                <svg class="w-5 h-5 text-pink-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-1">Messages</h3>
+            <p class="text-sm text-gray-600">Send and receive messages</p>
         </a>
     </div>
 

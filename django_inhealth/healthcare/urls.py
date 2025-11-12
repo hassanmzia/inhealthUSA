@@ -122,4 +122,11 @@ urlpatterns = [
 
     # Payment History (Generic)
     path('payment-history/', views.payment_history, name='payment_history'),
+
+    # Message URLs
+    path('messages/inbox/', views.message_inbox, name='message_inbox'),
+    path('messages/sent/', views.message_sent, name='message_sent'),
+    path('messages/compose/', views.message_compose, name='message_compose'),
+    path('messages/<int:message_id>/', views.message_show, name='message_show'),
+    path('messages/<int:message_id>/delete/', views.message_delete, name='message_delete'),
 ]

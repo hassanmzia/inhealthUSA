@@ -1619,3 +1619,122 @@ def patient_device_detail(request, patient_id, device_id):
     }
 
     return render(request, 'healthcare/devices/show.html', context)
+
+
+# Messaging Views
+@login_required
+def message_inbox(request):
+    """Display inbox messages for the logged-in user"""
+    messages_list = request.user.received_messages.all().order_by('-created_at')
+
+    context = {
+        'messages': messages_list,
+        'unread_count': messages_list.filter(is_read=False).count(),
+    }
+
+    return render(request, 'healthcare/messages/inbox.html', context)
+
+
+@login_required
+def message_sent(request):
+    """Display sent messages for the logged-in user"""
+    messages_list = request.user.sent_messages.all().order_by('-created_at')
+
+    context = {
+        'messages': messages_list,
+    }
+
+    return render(request, 'healthcare/messages/sent.html', context)
+
+
+@login_required
+def message_compose(request):
+    """Compose a new message"""
+    from django.contrib.auth.models import User
+
+    # Get potential recipients (all users except current user)
+    potential_recipients = User.objects.exclude(id=request.user.id).order_by('last_name', 'first_name')
+
+    # Check if this is a reply
+    reply_to_id = request.GET.get('reply_to')
+    reply_to_message = None
+    if reply_to_id:
+        reply_to_message = get_object_or_404(Message, message_id=reply_to_id)
+
+    if request.method == 'POST':
+        recipient_id = request.POST.get('recipient_id')
+        subject = request.POST.get('subject')
+        body = request.POST.get('body')
+        parent_message_id = request.POST.get('parent_message_id')
+
+        # Validate required fields
+        if not recipient_id or not subject or not body:
+            messages.error(request, 'All fields are required.')
+            return redirect('message_compose')
+
+        try:
+            recipient = User.objects.get(id=recipient_id)
+
+            # Create message
+            message = Message.objects.create(
+                sender=request.user,
+                recipient=recipient,
+                subject=subject,
+                body=body,
+                parent_message=Message.objects.get(message_id=parent_message_id) if parent_message_id else None
+            )
+
+            messages.success(request, 'Message sent successfully!')
+            return redirect('message_sent')
+        except User.DoesNotExist:
+            messages.error(request, 'Invalid recipient.')
+            return redirect('message_compose')
+
+    context = {
+        'recipients': potential_recipients,
+        'reply_to': reply_to_message,
+    }
+
+    return render(request, 'healthcare/messages/compose.html', context)
+
+
+@login_required
+def message_show(request, message_id):
+    """Display a specific message"""
+    message = get_object_or_404(Message, message_id=message_id)
+
+    # Check if user has access to this message
+    if message.sender != request.user and message.recipient != request.user:
+        messages.error(request, 'You do not have permission to view this message.')
+        return redirect('message_inbox')
+
+    # Mark as read if user is the recipient
+    if message.recipient == request.user and not message.is_read:
+        message.is_read = True
+        message.read_at = timezone.now()
+        message.save()
+
+    context = {
+        'message': message,
+        'replies': message.replies.all().order_by('created_at'),
+    }
+
+    return render(request, 'healthcare/messages/show.html', context)
+
+
+@login_required
+def message_delete(request, message_id):
+    """Delete a message (only sender can delete)"""
+    message = get_object_or_404(Message, message_id=message_id)
+
+    # Only sender can delete
+    if message.sender != request.user:
+        messages.error(request, 'You can only delete messages you sent.')
+        return redirect('message_inbox')
+
+    if request.method == 'POST':
+        message.delete()
+        messages.success(request, 'Message deleted successfully!')
+        return redirect('message_sent')
+
+    return redirect('message_show', message_id=message_id)
