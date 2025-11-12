@@ -103,4 +103,7 @@ urlpatterns = [
 
     # Billing Information
     path('billing/', views.billing_information, name='billing_information'),
+
+    # Payment History
+    path('payment-history/', views.payment_history, name='payment_history'),
 ]

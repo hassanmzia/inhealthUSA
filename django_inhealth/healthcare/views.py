@@ -1418,3 +1418,55 @@ def billing_information(request):
 
     # For GET requests, display the billing information form
     return render(request, 'healthcare/billing_information.html')
+
+
+# Payment History
+@login_required
+def payment_history(request):
+    """Display comprehensive payment history, invoices, and statements"""
+    # TODO: In production, fetch actual data from database:
+    # - Patient's payment history records:
+    #   * Payment date, invoice number, description
+    #   * Payment method (last 4 digits of card/account)
+    #   * Amount paid, status (paid, pending, failed, refunded)
+    #   * Receipt number and download link
+    #
+    # - Outstanding invoices:
+    #   * Invoice number, issue date, due date
+    #   * Description of services
+    #   * Total amount, amount paid, balance due
+    #   * Status (unpaid, partial, paid, overdue)
+    #
+    # - Billing statements:
+    #   * Monthly statements with period dates
+    #   * Previous balance, new charges, payments, adjustments
+    #   * Current balance
+    #   * PDF generation and download links
+    #
+    # - Payment receipts:
+    #   * Receipt number, payment date, invoice reference
+    #   * Description, amount paid, payment method
+    #   * PDF receipt generation
+    #
+    # - Account summary:
+    #   * Current balance (total amount due)
+    #   * Total paid year-to-date
+    #   * Overdue amount
+    #   * Last payment date and amount
+    #
+    # - Filtering and pagination:
+    #   * Date range filters (last 30/90 days, 6 months, year, custom)
+    #   * Status filters (paid, pending, failed, refunded)
+    #   * Payment method filters
+    #   * Search by invoice number or description
+    #   * Pagination for large result sets
+    #
+    # - Quick actions:
+    #   * Make a payment (redirect to payment portal)
+    #   * View/download statements
+    #   * Update payment settings
+    #   * Contact billing department
+    # - etc.
+
+    # For now, render with sample data shown in template
+    return render(request, 'healthcare/payment_history.html')
