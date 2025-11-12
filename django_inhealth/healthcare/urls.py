@@ -100,4 +100,7 @@ urlpatterns = [
 
     # Insurance Information
     path('insurance/', views.insurance_information, name='insurance_information'),
+
+    # Billing Information
+    path('billing/', views.billing_information, name='billing_information'),
 ]

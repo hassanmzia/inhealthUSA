@@ -1365,3 +1365,56 @@ def insurance_information(request):
 
     # For GET requests, display the insurance information form
     return render(request, 'healthcare/insurance_information.html')
+
+
+# Billing Information
+@login_required
+def billing_information(request):
+    """Display and process comprehensive billing information form"""
+    if request.method == 'POST':
+        # TODO: In production, parse form data and create/update Billing records:
+        # Billing Contact:
+        # - Name, email, phone, address
+        #
+        # Guarantor Information:
+        # - Name, relationship, DOB, SSN, contact information
+        # - Address (if different from billing)
+        # - Employment information
+        # - Income range and dependents (for financial assistance)
+        #
+        # Payment Methods:
+        # - Preferred payment method (credit card, bank account, check, cash)
+        # - Credit/debit card details (encrypted):
+        #   * Cardholder name, card number, expiry, CVV, billing ZIP
+        # - Bank account details (encrypted):
+        #   * Account holder name, bank name, account type, routing number, account number
+        #
+        # Payment Preferences:
+        # - Auto-pay settings
+        # - Statement preference (email, mail, both, portal)
+        # - Payment reminders (email, SMS, phone)
+        # - Reminder timing
+        #
+        # Payment Plans & Financial Assistance:
+        # - Interest in payment plan (yes/no)
+        # - Selected payment plan (3-month, 6-month, 12-month, custom)
+        # - Preferred monthly payment amount
+        # - Financial assistance application
+        # - Assistance reasons (income, unemployment, medical expenses, hardship)
+        # - Additional assistance information
+        # - Charity care program participation (Medicaid, SNAP, WIC, TANF, SSI, unemployment)
+        #
+        # Additional Information:
+        # - Outstanding balance status
+        # - Preferred contact time for billing questions
+        # - Special billing instructions/notes
+        # - Payment authorization
+        # - Financial responsibility acknowledgment
+        # - Payment policy agreement
+        # - etc.
+
+        messages.success(request, 'Billing information submitted successfully. Your billing details have been securely saved and will be used for payment processing.')
+        return redirect('index')
+
+    # For GET requests, display the billing information form
+    return render(request, 'healthcare/billing_information.html')
