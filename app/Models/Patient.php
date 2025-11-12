@@ -118,6 +118,22 @@ class Patient extends Model
     }
 
     /**
+     * Get the patient's billings
+     */
+    public function billings(): HasMany
+    {
+        return $this->hasMany(Billing::class, 'patient_id', 'patient_id');
+    }
+
+    /**
+     * Get the patient's payments
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'patient_id', 'patient_id');
+    }
+
+    /**
      * Scope to get only active patients
      */
     public function scopeActive($query)

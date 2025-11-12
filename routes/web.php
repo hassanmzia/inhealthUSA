@@ -7,6 +7,9 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\VitalSignController;
 use App\Http\Controllers\DiagnosisController;
 use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\BillingController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\InsuranceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -74,6 +77,24 @@ Route::post('appointments/{encounter}/prescriptions', [PrescriptionController::c
     ->name('prescriptions.store.appointment');
 Route::post('prescriptions/{prescription}/discontinue', [PrescriptionController::class, 'discontinue'])
     ->name('prescriptions.discontinue');
+
+// Billing Routes
+Route::get('patients/{patient}/billing', [BillingController::class, 'index'])
+    ->name('billing.index');
+Route::get('patients/{patient}/billing/{billing}', [BillingController::class, 'show'])
+    ->name('billing.show');
+
+// Payment Routes
+Route::get('patients/{patient}/payments', [PaymentController::class, 'index'])
+    ->name('payments.index');
+Route::get('patients/{patient}/payments/{payment}', [PaymentController::class, 'show'])
+    ->name('payments.show');
+
+// Insurance Routes
+Route::get('patients/{patient}/insurance', [InsuranceController::class, 'index'])
+    ->name('insurance.index');
+Route::get('patients/{patient}/insurance/{insurance}', [InsuranceController::class, 'show'])
+    ->name('insurance.show');
 
 // API Routes (for frontend AJAX calls)
 Route::prefix('api')->group(function () {
