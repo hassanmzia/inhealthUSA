@@ -586,3 +586,63 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment #{self.payment_id} - {self.patient.full_name} - ${self.amount} ({self.status})"
+
+
+class Device(models.Model):
+    """IoT Medical Device model for patient vital monitoring"""
+    DEVICE_TYPES = [
+        ('Watch', 'Watch'),
+        ('Ring', 'Ring'),
+        ('EarClip', 'EarClip'),
+        ('Adapter', 'Adapter'),
+        ('PulseGlucometer', 'PulseGlucometer'),
+    ]
+
+    STATUS_CHOICES = [
+        ('Active', 'Active'),
+        ('Inactive', 'Inactive'),
+        ('Maintenance', 'Maintenance'),
+        ('Retired', 'Retired'),
+    ]
+
+    device_id = models.AutoField(primary_key=True)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='devices')
+    device_unique_id = models.CharField(max_length=255, unique=True)
+    device_type = models.CharField(max_length=20, choices=DEVICE_TYPES)
+    device_name = models.CharField(max_length=200)
+    manufacturer = models.CharField(max_length=200, blank=True, null=True)
+    model_number = models.CharField(max_length=100, blank=True, null=True)
+    firmware_version = models.CharField(max_length=50, blank=True, null=True)
+    capabilities = models.JSONField(blank=True, null=True)  # List of capabilities
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
+    battery_level = models.IntegerField(blank=True, null=True)  # 0-100 percentage
+    last_sync = models.DateTimeField(blank=True, null=True)
+    registration_date = models.DateField()
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'devices'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.device_name} ({self.device_type}) - {self.patient.full_name}"
+
+    @property
+    def battery_color(self):
+        """Get battery status color"""
+        if self.battery_level is None:
+            return 'gray'
+        if self.battery_level >= 70:
+            return 'green'
+        if self.battery_level >= 30:
+            return 'yellow'
+        return 'red'
+
+    @property
+    def capabilities_list(self):
+        """Get capabilities as a list"""
+        if isinstance(self.capabilities, list):
+            return self.capabilities
+        return []

@@ -9,7 +9,7 @@ from .models import (
     Hospital, Patient, Provider, Encounter, VitalSign, Diagnosis,
     Prescription, Department, Allergy, MedicalHistory, SocialHistory,
     FamilyHistory, LabTest, Message, Notification, InsuranceInformation,
-    Billing, BillingItem, Payment
+    Billing, BillingItem, Payment, Device
 )
 from .forms import UserRegistrationForm
 
@@ -1590,3 +1590,32 @@ def patient_insurance_detail(request, patient_id, insurance_id):
     }
 
     return render(request, 'healthcare/insurance/show.html', context)
+
+
+# Device Management
+@login_required
+def patient_device_list(request, patient_id):
+    """Display devices for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    devices = patient.devices.all().order_by('-created_at')
+
+    context = {
+        'patient': patient,
+        'devices': devices,
+    }
+
+    return render(request, 'healthcare/devices/index.html', context)
+
+
+@login_required
+def patient_device_detail(request, patient_id, device_id):
+    """Display device details"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    device = get_object_or_404(Device, device_id=device_id, patient=patient)
+
+    context = {
+        'patient': patient,
+        'device': device,
+    }
+
+    return render(request, 'healthcare/devices/show.html', context)

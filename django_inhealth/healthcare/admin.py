@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Hospital, UserProfile, Patient, Department, Provider, Encounter, VitalSign,
     Diagnosis, Prescription, Allergy, MedicalHistory, SocialHistory, FamilyHistory,
-    Message, LabTest, Notification, InsuranceInformation, Billing, BillingItem, Payment
+    Message, LabTest, Notification, InsuranceInformation, Billing, BillingItem, Payment, Device
 )
 
 
@@ -179,3 +179,13 @@ class PaymentAdmin(admin.ModelAdmin):
     search_fields = ['patient__first_name', 'patient__last_name', 'transaction_id']
     date_hierarchy = 'payment_date'
     raw_id_fields = ['patient', 'billing']
+
+
+@admin.register(Device)
+class DeviceAdmin(admin.ModelAdmin):
+    list_display = ['device_id', 'patient', 'device_name', 'device_type', 'device_unique_id', 'status', 'battery_level', 'last_sync']
+    list_filter = ['device_type', 'status', 'registration_date']
+    search_fields = ['device_name', 'device_unique_id', 'patient__first_name', 'patient__last_name', 'manufacturer']
+    date_hierarchy = 'registration_date'
+    raw_id_fields = ['patient']
+    readonly_fields = ['created_at', 'updated_at']

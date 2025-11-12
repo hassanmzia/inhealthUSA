@@ -10,6 +10,7 @@ use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InsuranceController;
+use App\Http\Controllers\DeviceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -95,6 +96,22 @@ Route::get('patients/{patient}/insurance', [InsuranceController::class, 'index']
     ->name('insurance.index');
 Route::get('patients/{patient}/insurance/{insurance}', [InsuranceController::class, 'show'])
     ->name('insurance.show');
+
+// Device Routes
+Route::get('patients/{patient}/devices', [DeviceController::class, 'index'])
+    ->name('devices.index');
+Route::get('patients/{patient}/devices/create', [DeviceController::class, 'create'])
+    ->name('devices.create');
+Route::post('patients/{patient}/devices', [DeviceController::class, 'store'])
+    ->name('devices.store');
+Route::get('patients/{patient}/devices/{device}', [DeviceController::class, 'show'])
+    ->name('devices.show');
+Route::get('patients/{patient}/devices/{device}/edit', [DeviceController::class, 'edit'])
+    ->name('devices.edit');
+Route::put('patients/{patient}/devices/{device}', [DeviceController::class, 'update'])
+    ->name('devices.update');
+Route::delete('patients/{patient}/devices/{device}', [DeviceController::class, 'destroy'])
+    ->name('devices.destroy');
 
 // API Routes (for frontend AJAX calls)
 Route::prefix('api')->group(function () {

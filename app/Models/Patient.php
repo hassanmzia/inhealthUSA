@@ -134,6 +134,14 @@ class Patient extends Model
     }
 
     /**
+     * Get the patient's devices
+     */
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class, 'patient_id', 'patient_id');
+    }
+
+    /**
      * Scope to get only active patients
      */
     public function scopeActive($query)

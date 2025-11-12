@@ -25,7 +25,7 @@
     </div>
 
     <!-- Quick Access Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <!-- Billing Card -->
         <a href="{{ route('billing.index', $patient->patient_id) }}"
            class="group bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-blue-300">
@@ -81,6 +81,25 @@
             </div>
             <h3 class="text-lg font-bold text-gray-900 mb-1">Insurance Coverage</h3>
             <p class="text-sm text-gray-600">View policy details</p>
+        </a>
+
+        <!-- Devices Card -->
+        <a href="{{ route('devices.index', $patient->patient_id) }}"
+           class="group bg-gradient-to-br from-indigo-50 to-indigo-100 hover:from-indigo-100 hover:to-indigo-200 rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-indigo-300">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center">
+                    <div class="bg-indigo-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <svg class="w-5 h-5 text-indigo-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-1">IoT Medical Devices</h3>
+            <p class="text-sm text-gray-600">Manage connected devices</p>
         </a>
     </div>
 
