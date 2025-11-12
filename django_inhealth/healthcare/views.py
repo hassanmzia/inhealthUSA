@@ -98,8 +98,22 @@ def patient_list(request):
         if user_patient:
             return redirect('patient_detail', patient_id=user_patient.patient_id)
         else:
-            messages.error(request, 'Your patient profile is not set up. Please contact administration.')
-            return redirect('index')
+            # Auto-create patient profile if it doesn't exist
+            try:
+                user_profile = request.user.profile
+                patient = Patient.objects.create(
+                    user=request.user,
+                    first_name=request.user.first_name or 'Unknown',
+                    last_name=request.user.last_name or 'Unknown',
+                    date_of_birth=user_profile.date_of_birth or '2000-01-01',
+                    gender='Other',
+                    email=request.user.email,
+                )
+                messages.success(request, 'Your patient profile has been created. Please update your information.')
+                return redirect('patient_detail', patient_id=patient.patient_id)
+            except Exception as e:
+                messages.error(request, f'Error creating patient profile: {str(e)}. Please contact administration.')
+                return redirect('index')
 
     # Only doctors, nurses, and admins can see the full patient list
     if not (is_doctor(request.user) or is_nurse(request.user) or is_office_admin(request.user)):
@@ -726,8 +740,20 @@ def physician_list(request):
         if user_provider:
             return redirect('physician_detail', provider_id=user_provider.provider_id)
         else:
-            messages.error(request, 'Your provider profile is not set up. Please contact administration.')
-            return redirect('index')
+            # Auto-create provider profile if it doesn't exist
+            try:
+                provider = Provider.objects.create(
+                    user=request.user,
+                    first_name=request.user.first_name or 'Unknown',
+                    last_name=request.user.last_name or 'Unknown',
+                    npi=f'TEMP{request.user.id:010d}',  # Temporary NPI
+                    email=request.user.email,
+                )
+                messages.success(request, 'Your provider profile has been created. Please update your information and NPI.')
+                return redirect('physician_detail', provider_id=provider.provider_id)
+            except Exception as e:
+                messages.error(request, f'Error creating provider profile: {str(e)}. Please contact administration.')
+                return redirect('index')
 
     # Patients cannot view physician list
     if is_patient(request.user):
