@@ -1,0 +1,1627 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Allergies Questionnaire - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; Allergies Questionnaire{% endblock %}
+{% block content %}
+
+{% include 'healthcare/includes/form_styles.html' %}
+
+<style>
+    .questionnaire-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .questionnaire-header {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 30px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .questionnaire-header h1 {
+        margin: 0 0 10px 0;
+        font-size: 32px;
+        font-weight: 300;
+        color: var(--primary);
+    }
+
+    .questionnaire-header .subtitle {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .progress-bar {
+        background: #e9ecef;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 20px;
+    }
+
+    .progress-fill {
+        background: var(--primary);
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    .section-card {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .section-header {
+        background: var(--primary);
+        color: var(--header-link-color);
+        padding: 15px 20px;
+        font-size: 18px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-number {
+        background: rgba(255,255,255,0.2);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    .section-content {
+        padding: 25px;
+    }
+
+    .allergy-item-card {
+        background: #f8f9fa;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+
+    .allergy-item-card h4 {
+        margin: 0 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--primary);
+        color: var(--primary);
+        font-size: 16px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--body-fg);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .checkbox-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+
+    .checkbox-item:hover {
+        background: white;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .checkbox-item label {
+        cursor: pointer;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .radio-group {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .radio-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .radio-item input[type="radio"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .radio-item label {
+        cursor: pointer;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .text-input,
+    .textarea-input,
+    .select-input,
+    .number-input,
+    .date-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+    }
+
+    .text-input:focus,
+    .textarea-input:focus,
+    .select-input:focus,
+    .number-input:focus,
+    .date-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(65, 118, 144, 0.1);
+    }
+
+    .textarea-input {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .input-hint {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        font-style: italic;
+    }
+
+    .submit-section {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 25px;
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .submit-button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 15px 50px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .submit-button:hover {
+        background: #35606f;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .required-mark {
+        color: #dc3545;
+        margin-left: 3px;
+    }
+
+    .warning-box {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 4px;
+    }
+
+    .warning-box p {
+        margin: 0;
+        font-size: 13px;
+        color: #856404;
+    }
+
+    .danger-box {
+        background: #f8d7da;
+        border-left: 4px solid #dc3545;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 4px;
+    }
+
+    .danger-box p {
+        margin: 0;
+        font-size: 13px;
+        color: #721c24;
+        font-weight: 600;
+    }
+
+    .severity-badges {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+
+    .severity-badge {
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .severity-mild {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .severity-moderate {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .severity-severe {
+        background: #f8d7da;
+        color: #721c24;
+    }
+</style>
+
+<div class="questionnaire-container">
+    <div class="questionnaire-header">
+        <h1>Comprehensive Allergies Questionnaire</h1>
+        <p class="subtitle">Please provide detailed information about all your allergies. This is critical for your safety and appropriate medical care.</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <form method="POST" id="questionnaire-form">
+        {% csrf_token %}
+
+        <!-- Section 1: Patient Information -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <div>Patient Information</div>
+            </div>
+            <div class="section-content">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Full Name <span class="required-mark">*</span></label>
+                        <input type="text" name="patient_name" class="text-input" required placeholder="First Middle Last">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date of Birth <span class="required-mark">*</span></label>
+                        <input type="date" name="patient_dob" class="date-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Today's Date <span class="required-mark">*</span></label>
+                        <input type="date" name="questionnaire_date" class="date-input" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Drug/Medication Allergies -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <div>Drug and Medication Allergies</div>
+            </div>
+            <div class="section-content">
+                <div class="danger-box">
+                    <p>⚠️ CRITICAL: Medication allergies can be life-threatening. Please list ALL drug allergies, even if the reaction was minor.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you have any drug or medication allergies? <span class="required-mark">*</span></label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="has_drug_allergies" value="yes" id="drug-allergy-yes" required>
+                            <label for="drug-allergy-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_drug_allergies" value="no" id="drug-allergy-no">
+                            <label for="drug-allergy-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_drug_allergies" value="unknown" id="drug-allergy-unknown">
+                            <label for="drug-allergy-unknown">Unknown</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Common medication allergies (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drug_allergies" value="penicillin" id="drug-penicillin">
+                            <label for="drug-penicillin">Penicillin</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drug_allergies" value="amoxicillin" id="drug-amoxicillin">
+                            <label for="drug-amoxicillin">Amoxicillin</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drug_allergies" value="sulfa" id="drug-sulfa">
+                            <label for="drug-sulfa">Sulfa Drugs</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drug_allergies" value="aspirin" id="drug-aspirin">
+                            <label for="drug-aspirin">Aspirin</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drug_allergies" value="ibuprofen" id="drug-ibuprofen">
+                            <label for="drug-ibuprofen">Ibuprofen/NSAIDs</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drug_allergies" value="codeine" id="drug-codeine">
+                            <label for="drug-codeine">Codeine</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drug_allergies" value="morphine" id="drug-morphine">
+                            <label for="drug-morphine">Morphine</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drug_allergies" value="contrast_dye" id="drug-contrast">
+                            <label for="drug-contrast">Contrast Dye/Iodine</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drug_allergies" value="anesthesia" id="drug-anesthesia">
+                            <label for="drug-anesthesia">Anesthesia</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drug_allergies" value="tetracycline" id="drug-tetracycline">
+                            <label for="drug-tetracycline">Tetracycline</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drug Allergy 1 -->
+                <div class="allergy-item-card">
+                    <h4>Drug Allergy #1</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Medication Name</label>
+                            <input type="text" name="drug_1_name" class="text-input" placeholder="Exact medication name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Severity</label>
+                            <select name="drug_1_severity" class="select-input">
+                                <option value="">Select...</option>
+                                <option value="mild">Mild</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="severe">Severe</option>
+                                <option value="life_threatening">Life-Threatening</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reaction/Symptoms</label>
+                        <textarea name="drug_1_reaction" class="textarea-input" rows="2" placeholder="Describe the reaction (rash, hives, swelling, difficulty breathing, etc.)"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">When did this occur?</label>
+                            <input type="text" name="drug_1_when" class="text-input" placeholder="Approximate date or year">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Required medical treatment?</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" name="drug_1_treatment" value="yes" id="drug-1-treat-yes">
+                                    <label for="drug-1-treat-yes">Yes</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" name="drug_1_treatment" value="no" id="drug-1-treat-no">
+                                    <label for="drug-1-treat-no">No</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drug Allergy 2 -->
+                <div class="allergy-item-card">
+                    <h4>Drug Allergy #2</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Medication Name</label>
+                            <input type="text" name="drug_2_name" class="text-input" placeholder="Exact medication name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Severity</label>
+                            <select name="drug_2_severity" class="select-input">
+                                <option value="">Select...</option>
+                                <option value="mild">Mild</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="severe">Severe</option>
+                                <option value="life_threatening">Life-Threatening</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reaction/Symptoms</label>
+                        <textarea name="drug_2_reaction" class="textarea-input" rows="2" placeholder="Describe the reaction"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">When did this occur?</label>
+                            <input type="text" name="drug_2_when" class="text-input" placeholder="Approximate date or year">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Required medical treatment?</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" name="drug_2_treatment" value="yes" id="drug-2-treat-yes">
+                                    <label for="drug-2-treat-yes">Yes</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" name="drug_2_treatment" value="no" id="drug-2-treat-no">
+                                    <label for="drug-2-treat-no">No</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drug Allergy 3 -->
+                <div class="allergy-item-card">
+                    <h4>Drug Allergy #3</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Medication Name</label>
+                            <input type="text" name="drug_3_name" class="text-input" placeholder="Exact medication name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Severity</label>
+                            <select name="drug_3_severity" class="select-input">
+                                <option value="">Select...</option>
+                                <option value="mild">Mild</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="severe">Severe</option>
+                                <option value="life_threatening">Life-Threatening</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reaction/Symptoms</label>
+                        <textarea name="drug_3_reaction" class="textarea-input" rows="2" placeholder="Describe the reaction"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Additional medication allergies</label>
+                    <textarea name="additional_drug_allergies" class="textarea-input" rows="4" placeholder="List any other medication allergies not mentioned above, including reactions"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Food Allergies -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">3</div>
+                <div>Food Allergies</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Do you have any food allergies? <span class="required-mark">*</span></label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="has_food_allergies" value="yes" id="food-allergy-yes" required>
+                            <label for="food-allergy-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_food_allergies" value="no" id="food-allergy-no">
+                            <label for="food-allergy-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_food_allergies" value="unknown" id="food-allergy-unknown">
+                            <label for="food-allergy-unknown">Unknown</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Common food allergies (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="food_allergies" value="peanuts" id="food-peanuts">
+                            <label for="food-peanuts">Peanuts</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="food_allergies" value="tree_nuts" id="food-tree-nuts">
+                            <label for="food-tree-nuts">Tree Nuts (almonds, walnuts, etc.)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="food_allergies" value="shellfish" id="food-shellfish">
+                            <label for="food-shellfish">Shellfish</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="food_allergies" value="fish" id="food-fish">
+                            <label for="food-fish">Fish</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="food_allergies" value="milk" id="food-milk">
+                            <label for="food-milk">Milk/Dairy</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="food_allergies" value="eggs" id="food-eggs">
+                            <label for="food-eggs">Eggs</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="food_allergies" value="wheat" id="food-wheat">
+                            <label for="food-wheat">Wheat/Gluten</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="food_allergies" value="soy" id="food-soy">
+                            <label for="food-soy">Soy</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="food_allergies" value="sesame" id="food-sesame">
+                            <label for="food-sesame">Sesame</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="food_allergies" value="corn" id="food-corn">
+                            <label for="food-corn">Corn</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="food_allergies" value="fruits" id="food-fruits">
+                            <label for="food-fruits">Fruits (specify below)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="food_allergies" value="vegetables" id="food-vegetables">
+                            <label for="food-vegetables">Vegetables (specify below)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Food Allergy 1 -->
+                <div class="allergy-item-card">
+                    <h4>Food Allergy #1</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Food/Ingredient</label>
+                            <input type="text" name="food_1_name" class="text-input" placeholder="Specific food or ingredient">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Severity</label>
+                            <select name="food_1_severity" class="select-input">
+                                <option value="">Select...</option>
+                                <option value="mild">Mild</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="severe">Severe</option>
+                                <option value="anaphylaxis">Anaphylaxis</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Symptoms/Reaction</label>
+                        <textarea name="food_1_reaction" class="textarea-input" rows="2" placeholder="Hives, swelling, nausea, difficulty breathing, etc."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">How quickly do symptoms appear after eating?</label>
+                        <select name="food_1_onset" class="select-input">
+                            <option value="">Select...</option>
+                            <option value="immediate">Immediate (within minutes)</option>
+                            <option value="30min">Within 30 minutes</option>
+                            <option value="1-2hours">1-2 hours</option>
+                            <option value="delayed">Delayed (several hours)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Food Allergy 2 -->
+                <div class="allergy-item-card">
+                    <h4>Food Allergy #2</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Food/Ingredient</label>
+                            <input type="text" name="food_2_name" class="text-input" placeholder="Specific food or ingredient">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Severity</label>
+                            <select name="food_2_severity" class="select-input">
+                                <option value="">Select...</option>
+                                <option value="mild">Mild</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="severe">Severe</option>
+                                <option value="anaphylaxis">Anaphylaxis</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Symptoms/Reaction</label>
+                        <textarea name="food_2_reaction" class="textarea-input" rows="2" placeholder="Describe symptoms"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Additional food allergies or intolerances</label>
+                    <textarea name="additional_food_allergies" class="textarea-input" rows="4" placeholder="List any other food allergies, including reactions. Also note food intolerances (lactose intolerance, etc.)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you read food labels carefully to avoid allergens?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="read_labels" value="always" id="labels-always">
+                            <label for="labels-always">Always</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="read_labels" value="usually" id="labels-usually">
+                            <label for="labels-usually">Usually</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="read_labels" value="sometimes" id="labels-sometimes">
+                            <label for="labels-sometimes">Sometimes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="read_labels" value="never" id="labels-never">
+                            <label for="labels-never">Never</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Environmental Allergies -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">4</div>
+                <div>Environmental Allergies</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Do you have environmental allergies (seasonal allergies, hay fever)? <span class="required-mark">*</span></label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="has_environmental_allergies" value="yes" id="env-allergy-yes" required>
+                            <label for="env-allergy-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_environmental_allergies" value="no" id="env-allergy-no">
+                            <label for="env-allergy-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Environmental allergens (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_allergens" value="pollen" id="env-pollen">
+                            <label for="env-pollen">Pollen</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_allergens" value="grass" id="env-grass">
+                            <label for="env-grass">Grass</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_allergens" value="ragweed" id="env-ragweed">
+                            <label for="env-ragweed">Ragweed</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_allergens" value="trees" id="env-trees">
+                            <label for="env-trees">Trees</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_allergens" value="dust_mites" id="env-dust">
+                            <label for="env-dust">Dust Mites</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_allergens" value="mold" id="env-mold">
+                            <label for="env-mold">Mold/Mildew</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_allergens" value="pet_dander" id="env-dander">
+                            <label for="env-dander">Pet Dander</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_allergens" value="cats" id="env-cats">
+                            <label for="env-cats">Cats</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_allergens" value="dogs" id="env-dogs">
+                            <label for="env-dogs">Dogs</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_allergens" value="cockroaches" id="env-roaches">
+                            <label for="env-roaches">Cockroaches</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_allergens" value="smoke" id="env-smoke">
+                            <label for="env-smoke">Smoke</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_allergens" value="perfume" id="env-perfume">
+                            <label for="env-perfume">Perfume/Fragrances</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">When are your environmental allergies worst?</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_season" value="spring" id="season-spring">
+                            <label for="season-spring">Spring</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_season" value="summer" id="season-summer">
+                            <label for="season-summer">Summer</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_season" value="fall" id="season-fall">
+                            <label for="season-fall">Fall</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_season" value="winter" id="season-winter">
+                            <label for="season-winter">Winter</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_season" value="year_round" id="season-year">
+                            <label for="season-year">Year-Round</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Environmental allergy symptoms (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_symptoms" value="sneezing" id="env-sym-sneeze">
+                            <label for="env-sym-sneeze">Sneezing</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_symptoms" value="runny_nose" id="env-sym-runny">
+                            <label for="env-sym-runny">Runny Nose</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_symptoms" value="stuffy_nose" id="env-sym-stuffy">
+                            <label for="env-sym-stuffy">Stuffy Nose</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_symptoms" value="itchy_eyes" id="env-sym-eyes">
+                            <label for="env-sym-eyes">Itchy/Watery Eyes</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_symptoms" value="itchy_throat" id="env-sym-throat">
+                            <label for="env-sym-throat">Itchy Throat</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_symptoms" value="cough" id="env-sym-cough">
+                            <label for="env-sym-cough">Cough</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_symptoms" value="wheezing" id="env-sym-wheeze">
+                            <label for="env-sym-wheeze">Wheezing</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="environmental_symptoms" value="headache" id="env-sym-headache">
+                            <label for="env-sym-headache">Headache</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Insect Allergies -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">5</div>
+                <div>Insect Sting/Bite Allergies</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Do you have allergies to insect stings or bites?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="has_insect_allergies" value="yes" id="insect-yes">
+                            <label for="insect-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_insect_allergies" value="no" id="insect-no">
+                            <label for="insect-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_insect_allergies" value="unknown" id="insect-unknown">
+                            <label for="insect-unknown">Unknown</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Insect allergies (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="insect_allergies" value="bees" id="insect-bees">
+                            <label for="insect-bees">Bees</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="insect_allergies" value="wasps" id="insect-wasps">
+                            <label for="insect-wasps">Wasps</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="insect_allergies" value="hornets" id="insect-hornets">
+                            <label for="insect-hornets">Hornets</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="insect_allergies" value="yellow_jackets" id="insect-yellow">
+                            <label for="insect-yellow">Yellow Jackets</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="insect_allergies" value="fire_ants" id="insect-ants">
+                            <label for="insect-ants">Fire Ants</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="insect_allergies" value="mosquitoes" id="insect-mosquito">
+                            <label for="insect-mosquito">Mosquitoes</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Describe your reaction to insect stings/bites</label>
+                    <textarea name="insect_reaction" class="textarea-input" rows="3" placeholder="Severe swelling, anaphylaxis, difficulty breathing, etc."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Have you ever had a severe reaction requiring emergency treatment?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="insect_severe_reaction" value="yes" id="insect-severe-yes">
+                            <label for="insect-severe-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="insect_severe_reaction" value="no" id="insect-severe-no">
+                            <label for="insect-severe-no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6: Latex Allergy -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">6</div>
+                <div>Latex Allergy</div>
+            </div>
+            <div class="section-content">
+                <div class="warning-box">
+                    <p><strong>Important:</strong> Latex allergy is critical information for medical procedures and surgeries.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you have a latex allergy? <span class="required-mark">*</span></label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="has_latex_allergy" value="yes" id="latex-yes" required>
+                            <label for="latex-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_latex_allergy" value="no" id="latex-no">
+                            <label for="latex-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_latex_allergy" value="unknown" id="latex-unknown">
+                            <label for="latex-unknown">Unknown</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If yes, what are your symptoms?</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="latex_symptoms" value="skin_rash" id="latex-rash">
+                            <label for="latex-rash">Skin Rash/Hives</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="latex_symptoms" value="itching" id="latex-itch">
+                            <label for="latex-itch">Itching</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="latex_symptoms" value="swelling" id="latex-swell">
+                            <label for="latex-swell">Swelling</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="latex_symptoms" value="breathing" id="latex-breath">
+                            <label for="latex-breath">Difficulty Breathing</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="latex_symptoms" value="anaphylaxis" id="latex-anaph">
+                            <label for="latex-anaph">Anaphylaxis</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Severity of latex allergy</label>
+                    <select name="latex_severity" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="mild">Mild (skin irritation only)</option>
+                        <option value="moderate">Moderate (significant skin reaction)</option>
+                        <option value="severe">Severe (systemic reaction)</option>
+                        <option value="anaphylaxis">Anaphylaxis risk</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 7: Other Allergies -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">7</div>
+                <div>Other Allergies</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Metal allergies (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="metal_allergies" value="nickel" id="metal-nickel">
+                            <label for="metal-nickel">Nickel</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="metal_allergies" value="gold" id="metal-gold">
+                            <label for="metal-gold">Gold</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="metal_allergies" value="titanium" id="metal-titanium">
+                            <label for="metal-titanium">Titanium</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="metal_allergies" value="stainless_steel" id="metal-steel">
+                            <label for="metal-steel">Stainless Steel</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Chemical or preservative allergies (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="chemical_allergies" value="formaldehyde" id="chem-formal">
+                            <label for="chem-formal">Formaldehyde</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="chemical_allergies" value="parabens" id="chem-parabens">
+                            <label for="chem-parabens">Parabens</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="chemical_allergies" value="sulfites" id="chem-sulfites">
+                            <label for="chem-sulfites">Sulfites</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="chemical_allergies" value="msg" id="chem-msg">
+                            <label for="chem-msg">MSG</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Cosmetic or personal care product allergies</label>
+                    <textarea name="cosmetic_allergies" class="textarea-input" rows="2" placeholder="Specific ingredients in shampoo, soap, makeup, etc."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Any other allergies not mentioned above</label>
+                    <textarea name="other_allergies" class="textarea-input" rows="3" placeholder="Adhesive tape, bandages, specific fabrics, cleaning products, etc."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 8: Anaphylaxis History -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">8</div>
+                <div>Anaphylaxis History</div>
+            </div>
+            <div class="section-content">
+                <div class="danger-box">
+                    <p>⚠️ CRITICAL: Anaphylaxis is a severe, life-threatening allergic reaction requiring immediate emergency treatment.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Have you ever experienced anaphylaxis? <span class="required-mark">*</span></label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="anaphylaxis_history" value="yes" id="anaph-yes" required>
+                            <label for="anaph-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="anaphylaxis_history" value="no" id="anaph-no">
+                            <label for="anaph-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="anaphylaxis_history" value="unsure" id="anaph-unsure">
+                            <label for="anaph-unsure">Unsure</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If yes, what caused the anaphylaxis?</label>
+                    <textarea name="anaphylaxis_cause" class="textarea-input" rows="2" placeholder="Food, medication, insect sting, etc."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How many times have you experienced anaphylaxis?</label>
+                    <select name="anaphylaxis_frequency" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="once">Once</option>
+                        <option value="2-3">2-3 times</option>
+                        <option value="4-5">4-5 times</option>
+                        <option value="more">More than 5 times</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Symptoms during anaphylaxis (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="anaphylaxis_symptoms" value="difficulty_breathing" id="anaph-breathing">
+                            <label for="anaph-breathing">Difficulty Breathing</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="anaphylaxis_symptoms" value="throat_swelling" id="anaph-throat">
+                            <label for="anaph-throat">Throat Swelling</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="anaphylaxis_symptoms" value="drop_bp" id="anaph-bp">
+                            <label for="anaph-bp">Drop in Blood Pressure</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="anaphylaxis_symptoms" value="rapid_pulse" id="anaph-pulse">
+                            <label for="anaph-pulse">Rapid Pulse</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="anaphylaxis_symptoms" value="dizziness" id="anaph-dizzy">
+                            <label for="anaph-dizzy">Dizziness/Fainting</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="anaphylaxis_symptoms" value="hives" id="anaph-hives">
+                            <label for="anaph-hives">Widespread Hives</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="anaphylaxis_symptoms" value="nausea" id="anaph-nausea">
+                            <label for="anaph-nausea">Nausea/Vomiting</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="anaphylaxis_symptoms" value="loss_consciousness" id="anaph-unconscious">
+                            <label for="anaph-unconscious">Loss of Consciousness</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Were you hospitalized for anaphylaxis?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="anaphylaxis_hospitalized" value="yes" id="anaph-hosp-yes">
+                            <label for="anaph-hosp-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="anaphylaxis_hospitalized" value="no" id="anaph-hosp-no">
+                            <label for="anaph-hosp-no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 9: Allergy Testing -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">9</div>
+                <div>Allergy Testing History</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Have you had allergy testing?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="allergy_testing" value="yes" id="testing-yes">
+                            <label for="testing-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="allergy_testing" value="no" id="testing-no">
+                            <label for="testing-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Type of allergy testing (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="testing_types" value="skin_prick" id="test-prick">
+                            <label for="test-prick">Skin Prick Test</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="testing_types" value="blood_test" id="test-blood">
+                            <label for="test-blood">Blood Test (IgE)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="testing_types" value="patch_test" id="test-patch">
+                            <label for="test-patch">Patch Test</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="testing_types" value="food_challenge" id="test-food">
+                            <label for="test-food">Food Challenge</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">When was your most recent allergy testing?</label>
+                    <input type="text" name="testing_date" class="text-input" placeholder="Month/Year">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Results of allergy testing</label>
+                    <textarea name="testing_results" class="textarea-input" rows="4" placeholder="List allergens identified through testing"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Would you like to be referred for allergy testing?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="want_testing" value="yes" id="want-test-yes">
+                            <label for="want-test-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="want_testing" value="no" id="want-test-no">
+                            <label for="want-test-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="want_testing" value="maybe" id="want-test-maybe">
+                            <label for="want-test-maybe">Maybe</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 10: Current Allergy Medications -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">10</div>
+                <div>Current Allergy Medications and Treatments</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Are you currently taking any allergy medications?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="taking_allergy_meds" value="yes" id="meds-yes">
+                            <label for="meds-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="taking_allergy_meds" value="no" id="meds-no">
+                            <label for="meds-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Types of allergy medications (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_med_types" value="antihistamines" id="med-antihistamine">
+                            <label for="med-antihistamine">Antihistamines (Claritin, Zyrtec, etc.)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_med_types" value="decongestants" id="med-decongest">
+                            <label for="med-decongest">Decongestants (Sudafed, etc.)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_med_types" value="nasal_spray" id="med-nasal">
+                            <label for="med-nasal">Nasal Spray (Flonase, Nasonex, etc.)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_med_types" value="eye_drops" id="med-eyes">
+                            <label for="med-eyes">Eye Drops</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_med_types" value="inhaler" id="med-inhaler">
+                            <label for="med-inhaler">Inhaler</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">List all current allergy medications</label>
+                    <textarea name="current_allergy_medications" class="textarea-input" rows="4" placeholder="Include medication name, dosage, and frequency (e.g., Claritin 10mg daily, Flonase nasal spray twice daily)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Are you currently receiving allergy shots (immunotherapy)?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="allergy_shots" value="yes" id="shots-yes">
+                            <label for="shots-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="allergy_shots" value="no" id="shots-no">
+                            <label for="shots-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="allergy_shots" value="past" id="shots-past">
+                            <label for="shots-past">In the Past</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How effective are your current allergy treatments?</label>
+                    <select name="treatment_effectiveness" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="very_effective">Very Effective</option>
+                        <option value="somewhat_effective">Somewhat Effective</option>
+                        <option value="not_effective">Not Effective</option>
+                        <option value="na">N/A - Not Currently Treating</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 11: EpiPen and Emergency Medications -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">11</div>
+                <div>Emergency Allergy Medications</div>
+            </div>
+            <div class="section-content">
+                <div class="danger-box">
+                    <p>⚠️ CRITICAL: EpiPen (epinephrine auto-injector) is life-saving for severe allergic reactions.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you carry an EpiPen or epinephrine auto-injector? <span class="required-mark">*</span></label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="has_epipen" value="yes" id="epipen-yes" required>
+                            <label for="epipen-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_epipen" value="no" id="epipen-no">
+                            <label for="epipen-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_epipen" value="prescribed_but_not_carrying" id="epipen-prescribed">
+                            <label for="epipen-prescribed">Prescribed but Not Carrying</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If yes, how many do you carry?</label>
+                    <select name="epipen_count" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="1">1</option>
+                        <option value="2">2 (recommended)</option>
+                        <option value="more">More than 2</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">EpiPen expiration date</label>
+                    <input type="date" name="epipen_expiration" class="date-input">
+                    <div class="input-hint">Check your EpiPen - expired epinephrine may not be effective</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Have you ever used your EpiPen?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="used_epipen" value="yes" id="used-epi-yes">
+                            <label for="used-epi-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="used_epipen" value="no" id="used-epi-no">
+                            <label for="used-epi-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If yes, when and why?</label>
+                    <textarea name="epipen_use_details" class="textarea-input" rows="2" placeholder="Date and circumstances"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you know how to properly use your EpiPen?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="know_epipen_use" value="yes" id="know-epi-yes">
+                            <label for="know-epi-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="know_epipen_use" value="no" id="know-epi-no">
+                            <label for="know-epi-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="know_epipen_use" value="unsure" id="know-epi-unsure">
+                            <label for="know-epi-unsure">Unsure</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do your family/friends know about your allergies and how to use the EpiPen?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="others_know_epipen" value="yes" id="others-know-yes">
+                            <label for="others-know-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="others_know_epipen" value="some" id="others-know-some">
+                            <label for="others-know-some">Some Do</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="others_know_epipen" value="no" id="others-know-no">
+                            <label for="others-know-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you wear medical alert jewelry for your allergies?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="medical_alert_jewelry" value="yes" id="jewelry-yes">
+                            <label for="jewelry-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="medical_alert_jewelry" value="no" id="jewelry-no">
+                            <label for="jewelry-no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 12: Allergy Management -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">12</div>
+                <div>Allergy Management and Prevention</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">How do you manage your allergies? (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_management" value="avoid_triggers" id="manage-avoid">
+                            <label for="manage-avoid">Avoid Known Triggers</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_management" value="medications" id="manage-meds">
+                            <label for="manage-meds">Take Medications Regularly</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_management" value="air_purifier" id="manage-air">
+                            <label for="manage-air">Use Air Purifier</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_management" value="dust_covers" id="manage-dust">
+                            <label for="manage-dust">Allergen-Proof Bedding</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_management" value="diet_restrictions" id="manage-diet">
+                            <label for="manage-diet">Strict Diet Restrictions</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="allergy_management" value="monitor_pollen" id="manage-pollen">
+                            <label for="manage-pollen">Monitor Pollen Counts</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How often do your allergies interfere with daily activities?</label>
+                    <select name="allergy_impact" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="never">Never</option>
+                        <option value="rarely">Rarely</option>
+                        <option value="sometimes">Sometimes</option>
+                        <option value="often">Often</option>
+                        <option value="daily">Daily</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do your allergies affect your work or school performance?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="allergies_affect_work" value="yes" id="work-yes">
+                            <label for="work-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="allergies_affect_work" value="sometimes" id="work-sometimes">
+                            <label for="work-sometimes">Sometimes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="allergies_affect_work" value="no" id="work-no">
+                            <label for="work-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do your allergies affect your sleep?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="allergies_affect_sleep" value="yes" id="sleep-yes">
+                            <label for="sleep-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="allergies_affect_sleep" value="sometimes" id="sleep-sometimes">
+                            <label for="sleep-sometimes">Sometimes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="allergies_affect_sleep" value="no" id="sleep-no">
+                            <label for="sleep-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Are you interested in seeing an allergist/immunologist?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="want_allergist" value="yes" id="allergist-yes">
+                            <label for="allergist-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="want_allergist" value="no" id="allergist-no">
+                            <label for="allergist-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="want_allergist" value="already_seeing" id="allergist-current">
+                            <label for="allergist-current">Already Seeing One</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 13: Additional Information -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">13</div>
+                <div>Additional Allergy Information</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Do you have any family history of severe allergies or anaphylaxis?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="family_allergy_history" value="yes" id="fam-allergy-yes">
+                            <label for="fam-allergy-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="family_allergy_history" value="no" id="fam-allergy-no">
+                            <label for="fam-allergy-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="family_allergy_history" value="unknown" id="fam-allergy-unknown">
+                            <label for="fam-allergy-unknown">Unknown</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If yes, please describe</label>
+                    <textarea name="family_allergy_details" class="textarea-input" rows="2" placeholder="Which family members and what allergies"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Have your allergies changed over time?</label>
+                    <textarea name="allergy_changes" class="textarea-input" rows="3" placeholder="New allergies developed, old allergies resolved, severity changes, etc."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you have any concerns or questions about your allergies?</label>
+                    <textarea name="allergy_concerns" class="textarea-input" rows="3" placeholder="Questions about allergy management, treatment options, testing, etc."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Any other allergy information we should know?</label>
+                    <textarea name="additional_info" class="textarea-input" rows="4" placeholder="Cross-reactions, patterns you've noticed, triggers, etc."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Section -->
+        <div class="submit-section">
+            <p style="margin-bottom: 20px; color: #666;">
+                By submitting this form, I certify that the allergy information provided is accurate and complete to the best of my knowledge. I understand this information is critical for my safety and medical care.
+            </p>
+            <button type="submit" class="submit-button">Submit Allergies Questionnaire</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Progress tracking
+    const form = document.getElementById('questionnaire-form');
+    const progressFill = document.getElementById('progress-fill');
+
+    function updateProgress() {
+        const inputs = form.querySelectorAll('input:not([type="checkbox"]):not([type="radio"]), textarea, select');
+        let filled = 0;
+        let total = 0;
+
+        inputs.forEach(input => {
+            total++;
+            if (input.value.trim() !== '') {
+                filled++;
+            }
+        });
+
+        // Count radio groups
+        const radioGroups = new Set();
+        form.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radioGroups.add(radio.name);
+        });
+
+        // Check which radio groups have a selection
+        radioGroups.forEach(groupName => {
+            total++;
+            const selected = form.querySelector(`input[name="${groupName}"]:checked`);
+            if (selected) filled++;
+        });
+
+        const percentage = total > 0 ? (filled / total) * 100 : 0;
+        progressFill.style.width = percentage + '%';
+    }
+
+    // Update progress on any input change
+    form.addEventListener('change', updateProgress);
+    form.addEventListener('input', updateProgress);
+
+    // Initial progress
+    updateProgress();
+</script>
+
+{% endblock %}

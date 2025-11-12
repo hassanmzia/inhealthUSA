@@ -94,4 +94,7 @@ urlpatterns = [
 
     # Social History Questionnaire
     path('questionnaire/social-history/', views.social_history_questionnaire, name='social_history_questionnaire'),
+
+    # Allergies Questionnaire
+    path('questionnaire/allergies/', views.allergies_questionnaire, name='allergies_questionnaire'),
 ]

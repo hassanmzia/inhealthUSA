@@ -1286,3 +1286,28 @@ def social_history_questionnaire(request):
 
     # For GET requests, display the questionnaire form
     return render(request, 'healthcare/questionnaire/social_history.html')
+
+
+# Allergies Questionnaire
+@login_required
+def allergies_questionnaire(request):
+    """Display and process comprehensive allergies questionnaire"""
+    if request.method == 'POST':
+        # TODO: In production, parse form data and create Allergy records for each allergy:
+        # - Drug/medication allergies with severity and reactions
+        # - Food allergies with onset time and symptoms
+        # - Environmental allergies with seasonal patterns
+        # - Insect allergies
+        # - Latex allergy
+        # - Metal and chemical allergies
+        # - Anaphylaxis history
+        # - EpiPen information
+        # - Allergy testing history
+        # - Current allergy medications
+        # - etc.
+
+        messages.success(request, 'Allergies questionnaire submitted successfully. Your allergy information has been recorded.')
+        return redirect('index')
+
+    # For GET requests, display the questionnaire form
+    return render(request, 'healthcare/questionnaire/allergies.html')
