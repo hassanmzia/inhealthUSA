@@ -42,7 +42,7 @@
     <!-- Messages List -->
     <div class="bg-white shadow overflow-hidden rounded-lg">
         <ul class="divide-y divide-gray-200">
-            {% for msg in messages %}
+            {% for msg in messages_list %}
                 <li>
                     <a href="{% url 'message_show' msg.message_id %}"
                        class="block hover:bg-gray-50 transition-colors">

@@ -31,11 +31,12 @@ class UserProfile(models.Model):
     ROLE_CHOICES = [
         ('patient', 'Patient'),
         ('doctor', 'Doctor'),
+        ('nurse', 'Nurse'),
         ('office_admin', 'Office Administrator'),
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='patient')
     phone = models.CharField(max_length=20, blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -54,6 +55,10 @@ class UserProfile(models.Model):
     @property
     def is_doctor(self):
         return self.role == 'doctor'
+
+    @property
+    def is_nurse(self):
+        return self.role == 'nurse'
 
     @property
     def is_office_admin(self):

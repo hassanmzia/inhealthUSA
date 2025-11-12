@@ -1288,8 +1288,9 @@ def family_history_detail(request, family_history_id):
 def family_history_create(request):
     """Create a new family history record"""
     if request.method == 'POST':
+        patient_id = request.POST['patient_id']
         FamilyHistory.objects.create(
-            patient_id=request.POST['patient_id'],
+            patient_id=patient_id,
             relationship=request.POST['relationship'],
             condition=request.POST['condition'],
             age_at_diagnosis=request.POST.get('age_at_diagnosis') or None,
@@ -1299,10 +1300,16 @@ def family_history_create(request):
             notes=request.POST.get('notes', ''),
         )
         messages.success(request, 'Family history record created successfully.')
-        return redirect('family_history_list')
+        # Redirect back to patient edit page if patient_id is in POST
+        return redirect('patient_edit', patient_id=patient_id)
 
+    # Get patient_id from query parameter if provided
+    pre_selected_patient_id = request.GET.get('patient_id')
     patients = Patient.objects.filter(is_active=True).order_by('last_name', 'first_name')
-    context = {'patients': patients}
+    context = {
+        'patients': patients,
+        'pre_selected_patient_id': pre_selected_patient_id,
+    }
     return render(request, 'healthcare/family_history/create.html', context)
 
 
@@ -1725,7 +1732,7 @@ def message_inbox(request):
     messages_list = request.user.received_messages.all().order_by('-created_at')
 
     context = {
-        'messages': messages_list,
+        'messages_list': messages_list,
         'unread_count': messages_list.filter(is_read=False).count(),
     }
 
@@ -1738,7 +1745,7 @@ def message_sent(request):
     messages_list = request.user.sent_messages.all().order_by('-created_at')
 
     context = {
-        'messages': messages_list,
+        'messages_list': messages_list,
     }
 
     return render(request, 'healthcare/messages/sent.html', context)
