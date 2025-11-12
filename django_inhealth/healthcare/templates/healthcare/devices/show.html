@@ -1,0 +1,223 @@
+{% extends 'healthcare/base.html' %}
+{% load static %}
+
+{% block title %}{{ device.device_name }} - Device Details - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'patient_device_list' patient.patient_id %}"
+                   class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <h1 class="text-3xl font-bold text-gray-900">Device Details</h1>
+            </div>
+            <p class="mt-2 text-sm text-gray-700">
+                Patient: <a href="{% url 'patient_detail' patient.patient_id %}" class="font-medium text-indigo-600 hover:text-indigo-800">{{ patient.full_name }}</a>
+            </p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'patient_device_list' patient.patient_id %}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                Back to Devices
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
+                <p class="text-green-800">{{ message }}</p>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+            <!-- Device Information Card -->
+            <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">{{ device.device_name }}</h2>
+                            <p class="text-indigo-100 mt-1">{{ device.device_type }}</p>
+                        </div>
+                        {% if device.status == 'Active' %}
+                            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                <span class="w-3 h-3 bg-green-600 rounded-full mr-2"></span>
+                                Active
+                            </span>
+                        {% elif device.status == 'Inactive' %}
+                            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                Inactive
+                            </span>
+                        {% elif device.status == 'Maintenance' %}
+                            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                Maintenance
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                Retired
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="px-6 py-5">
+                    <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Device ID</dt>
+                            <dd class="mt-1 text-sm font-mono text-gray-900">{{ device.device_unique_id }}</dd>
+                        </div>
+
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Device Type</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ device.device_type }}</dd>
+                        </div>
+
+                        {% if device.manufacturer %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Manufacturer</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ device.manufacturer }}</dd>
+                            </div>
+                        {% endif %}
+
+                        {% if device.model_number %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Model Number</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ device.model_number }}</dd>
+                            </div>
+                        {% endif %}
+
+                        {% if device.firmware_version %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Firmware Version</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ device.firmware_version }}</dd>
+                            </div>
+                        {% endif %}
+
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Registration Date</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ device.registration_date|date:"M d, Y" }}</dd>
+                        </div>
+
+                        {% if device.last_sync %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Last Sync</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ device.last_sync|date:"M d, Y h:i A" }} ({{ device.last_sync|timesince }} ago)</dd>
+                            </div>
+                        {% endif %}
+
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Created</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ device.created_at|date:"M d, Y h:i A" }}</dd>
+                        </div>
+
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Last Updated</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ device.updated_at|date:"M d, Y h:i A" }}</dd>
+                        </div>
+                    </dl>
+
+                    {% if device.notes %}
+                        <div class="mt-6 pt-6 border-t border-gray-200">
+                            <dt class="text-sm font-medium text-gray-500 mb-2">Notes</dt>
+                            <dd class="text-sm text-gray-900 whitespace-pre-wrap">{{ device.notes }}</dd>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Capabilities Card -->
+            {% if device.capabilities_list %}
+                <div class="bg-white shadow rounded-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Device Capabilities</h3>
+                    </div>
+                    <div class="px-6 py-4">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {% for capability in device.capabilities_list %}
+                                <div class="flex items-center space-x-2 bg-indigo-50 rounded-lg px-3 py-2 border border-indigo-200">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    <span class="text-sm font-medium text-indigo-900">{{ capability }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <!-- Battery Status Card -->
+            {% if device.battery_level is not None %}
+                <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Battery Status</h3>
+                    </div>
+                    <div class="px-6 py-4">
+                        <div class="text-center mb-4">
+                            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full {% if device.battery_color == 'green' %}bg-green-100{% elif device.battery_color == 'yellow' %}bg-yellow-100{% else %}bg-red-100{% endif %}">
+                                <span class="text-3xl font-bold {% if device.battery_color == 'green' %}text-green-600{% elif device.battery_color == 'yellow' %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                    {{ device.battery_level }}%
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="h-3 rounded-full {% if device.battery_color == 'green' %}bg-green-500{% elif device.battery_color == 'yellow' %}bg-yellow-500{% else %}bg-red-500{% endif %}"
+                                 style="width: {{ device.battery_level }}%"></div>
+                        </div>
+                        <p class="text-sm text-gray-600 text-center mt-3">
+                            {% if device.battery_color == 'green' %}
+                                Battery level is good
+                            {% elif device.battery_color == 'yellow' %}
+                                Battery level is moderate
+                            {% else %}
+                                Battery level is low - charge soon
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Quick Stats Card -->
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Quick Info</h3>
+                </div>
+                <div class="px-6 py-4">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Status</span>
+                            <span class="text-sm font-medium text-gray-900">{{ device.status }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Type</span>
+                            <span class="text-sm font-medium text-gray-900">{{ device.device_type }}</span>
+                        </div>
+                        {% if device.capabilities_list %}
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Capabilities</span>
+                                <span class="text-sm font-medium text-gray-900">{{ device.capabilities_list|length }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Days Active</span>
+                            <span class="text-sm font-medium text-gray-900">{{ device.created_at|timesince }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
