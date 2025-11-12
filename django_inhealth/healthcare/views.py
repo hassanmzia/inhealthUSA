@@ -14,8 +14,10 @@ from .models import (
 from .forms import UserRegistrationForm
 from .permissions import (
     require_patient_access, require_patient_edit, require_role,
+    require_provider_access, require_provider_edit,
     is_patient, is_doctor, is_office_admin, get_patient_for_user,
-    get_provider_for_user, can_view_patient, can_edit_patient
+    get_provider_for_user, can_view_patient, can_edit_patient,
+    can_view_provider, can_edit_provider
 )
 
 
@@ -707,7 +709,26 @@ def patient_lab_test_edit(request, patient_id, lab_test_id):
 # Physician (Provider) Views
 @login_required
 def physician_list(request):
-    """List all physicians"""
+    """List all physicians - filtered by role"""
+    # If user is a doctor, redirect them to their own profile
+    if is_doctor(request.user):
+        user_provider = get_provider_for_user(request.user)
+        if user_provider:
+            return redirect('physician_detail', provider_id=user_provider.provider_id)
+        else:
+            messages.error(request, 'Your provider profile is not set up. Please contact administration.')
+            return redirect('index')
+
+    # Patients cannot view physician list
+    if is_patient(request.user):
+        messages.error(request, 'You do not have permission to view the physician list.')
+        return redirect('index')
+
+    # Only office admins can see the full physician list
+    if not is_office_admin(request.user):
+        messages.error(request, 'You do not have permission to view the physician list.')
+        return redirect('index')
+
     search = request.GET.get('search', '')
     physicians = Provider.objects.filter(is_active=True).select_related('hospital', 'department')
 
@@ -725,14 +746,21 @@ def physician_list(request):
 
 
 @login_required
+@require_provider_access
 def physician_detail(request, provider_id):
-    """View physician details"""
+    """View physician details - with role-based access control"""
     physician = get_object_or_404(Provider, provider_id=provider_id)
     encounters = physician.encounters.all()[:10]
+
+    # Determine user role and permissions
+    user_role = 'patient' if is_patient(request.user) else ('doctor' if is_doctor(request.user) else 'admin')
+    can_edit = can_edit_provider(request.user, physician)
 
     context = {
         'physician': physician,
         'encounters': encounters,
+        'user_role': user_role,
+        'can_edit': can_edit,
     }
     return render(request, 'healthcare/physicians/show.html', context)
 
