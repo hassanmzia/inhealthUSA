@@ -1,8 +1,8 @@
 from django.contrib import admin
 from .models import (
     Hospital, UserProfile, Patient, Department, Provider, Encounter, VitalSign,
-    Diagnosis, Prescription, Allergy, MedicalHistory, SocialHistory, Message,
-    LabTest, Notification
+    Diagnosis, Prescription, Allergy, MedicalHistory, SocialHistory, FamilyHistory,
+    Message, LabTest, Notification
 )
 
 
@@ -102,6 +102,14 @@ class SocialHistoryAdmin(admin.ModelAdmin):
     list_display = ['social_history_id', 'patient', 'smoking_status', 'alcohol_use', 'marital_status', 'recorded_date']
     list_filter = ['smoking_status', 'marital_status', 'recorded_date']
     search_fields = ['patient__first_name', 'patient__last_name', 'occupation']
+    raw_id_fields = ['patient']
+
+
+@admin.register(FamilyHistory)
+class FamilyHistoryAdmin(admin.ModelAdmin):
+    list_display = ['family_history_id', 'patient', 'relationship', 'condition', 'is_alive', 'recorded_date']
+    list_filter = ['relationship', 'is_alive', 'recorded_date']
+    search_fields = ['condition', 'patient__first_name', 'patient__last_name']
     raw_id_fields = ['patient']
 
 

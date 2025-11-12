@@ -414,6 +414,39 @@ class LabTest(models.Model):
         return f"{self.test_name} for {self.patient.full_name} - {self.status}"
 
 
+class FamilyHistory(models.Model):
+    """Family History model"""
+    family_history_id = models.AutoField(primary_key=True)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='family_history')
+    relationship = models.CharField(max_length=100, choices=[
+        ('Father', 'Father'),
+        ('Mother', 'Mother'),
+        ('Brother', 'Brother'),
+        ('Sister', 'Sister'),
+        ('Grandfather', 'Grandfather'),
+        ('Grandmother', 'Grandmother'),
+        ('Uncle', 'Uncle'),
+        ('Aunt', 'Aunt'),
+        ('Son', 'Son'),
+        ('Daughter', 'Daughter'),
+        ('Other', 'Other'),
+    ])
+    condition = models.CharField(max_length=255)
+    age_at_diagnosis = models.IntegerField(blank=True, null=True)
+    is_alive = models.BooleanField(default=True)
+    age_at_death = models.IntegerField(blank=True, null=True)
+    cause_of_death = models.CharField(max_length=255, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    recorded_date = models.DateField(default=timezone.now)
+
+    class Meta:
+        db_table = 'family_history'
+        ordering = ['-recorded_date']
+
+    def __str__(self):
+        return f"{self.relationship} - {self.condition} (Patient: {self.patient.full_name})"
+
+
 class Notification(models.Model):
     """Notification model for system alerts"""
     notification_id = models.AutoField(primary_key=True)
