@@ -80,4 +80,9 @@ urlpatterns = [
     # Hospital URLs
     path('hospitals/', views.hospital_list, name='hospital_list'),
     path('hospitals/<int:hospital_id>/', views.hospital_detail, name='hospital_detail'),
+
+    # Family History URLs
+    path('family-history/', views.family_history_list, name='family_history_list'),
+    path('family-history/create/', views.family_history_create, name='family_history_create'),
+    path('family-history/<int:family_history_id>/', views.family_history_detail, name='family_history_detail'),
 ]

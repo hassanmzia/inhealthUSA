@@ -8,7 +8,7 @@ from django.utils import timezone
 from .models import (
     Hospital, Patient, Provider, Encounter, VitalSign, Diagnosis,
     Prescription, Department, Allergy, MedicalHistory, SocialHistory,
-    LabTest, Message, Notification
+    FamilyHistory, LabTest, Message, Notification
 )
 from .forms import UserRegistrationForm
 
@@ -193,6 +193,9 @@ def patient_edit(request, patient_id):
     # Get all social history
     social_history = patient.social_history.all().order_by('-recorded_date')
 
+    # Get all family history
+    family_history = patient.family_history.all().order_by('-recorded_date')
+
     # Get all allergies
     allergies = patient.allergies.filter(is_active=True).order_by('-severity', 'allergen')
 
@@ -217,6 +220,7 @@ def patient_edit(request, patient_id):
         'prescriptions': prescriptions,
         'medical_history': medical_history,
         'social_history': social_history,
+        'family_history': family_history,
         'allergies': allergies,
         'lab_tests': lab_tests,
         'sent_messages': sent_messages,
@@ -1151,3 +1155,62 @@ def hospital_detail(request, hospital_id):
         'total_providers': providers.count(),
     }
     return render(request, 'healthcare/hospitals/show.html', context)
+
+
+# Family History Views
+@login_required
+def family_history_list(request):
+    """List all family histories"""
+    search = request.GET.get('search', '')
+    relationship = request.GET.get('relationship', '')
+    
+    family_histories = FamilyHistory.objects.select_related('patient').all()
+
+    if search:
+        family_histories = family_histories.filter(
+            Q(patient__first_name__icontains=search) |
+            Q(patient__last_name__icontains=search) |
+            Q(condition__icontains=search)
+        )
+    
+    if relationship:
+        family_histories = family_histories.filter(relationship=relationship)
+
+    family_histories = family_histories.order_by('-recorded_date')
+    
+    context = {
+        'family_histories': family_histories,
+        'search': search,
+        'relationship': relationship,
+    }
+    return render(request, 'healthcare/family_history/index.html', context)
+
+
+@login_required
+def family_history_detail(request, family_history_id):
+    """View family history details"""
+    history = get_object_or_404(FamilyHistory, family_history_id=family_history_id)
+    context = {'history': history}
+    return render(request, 'healthcare/family_history/show.html', context)
+
+
+@login_required
+def family_history_create(request):
+    """Create a new family history record"""
+    if request.method == 'POST':
+        FamilyHistory.objects.create(
+            patient_id=request.POST['patient_id'],
+            relationship=request.POST['relationship'],
+            condition=request.POST['condition'],
+            age_at_diagnosis=request.POST.get('age_at_diagnosis') or None,
+            is_alive='is_alive' in request.POST,
+            age_at_death=request.POST.get('age_at_death') or None,
+            cause_of_death=request.POST.get('cause_of_death', ''),
+            notes=request.POST.get('notes', ''),
+        )
+        messages.success(request, 'Family history record created successfully.')
+        return redirect('family_history_list')
+
+    patients = Patient.objects.filter(is_active=True).order_by('last_name', 'first_name')
+    context = {'patients': patients}
+    return render(request, 'healthcare/family_history/create.html', context)
