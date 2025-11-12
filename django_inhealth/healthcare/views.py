@@ -12,6 +12,11 @@ from .models import (
     Billing, BillingItem, Payment, Device
 )
 from .forms import UserRegistrationForm
+from .permissions import (
+    require_patient_access, require_patient_edit, require_role,
+    is_patient, is_doctor, is_office_admin, get_patient_for_user,
+    get_provider_for_user, can_view_patient, can_edit_patient
+)
 
 
 # Authentication Views
@@ -84,7 +89,21 @@ def index(request):
 # Patient Views
 @login_required
 def patient_list(request):
-    """List all patients"""
+    """List all patients - filtered by role"""
+    # If user is a patient, redirect them to their own profile
+    if is_patient(request.user):
+        user_patient = get_patient_for_user(request.user)
+        if user_patient:
+            return redirect('patient_detail', patient_id=user_patient.patient_id)
+        else:
+            messages.error(request, 'Your patient profile is not set up. Please contact administration.')
+            return redirect('index')
+
+    # Only doctors and admins can see the full patient list
+    if not (is_doctor(request.user) or is_office_admin(request.user)):
+        messages.error(request, 'You do not have permission to view the patient list.')
+        return redirect('index')
+
     search = request.GET.get('search', '')
     patients = Patient.objects.filter(is_active=True).select_related('primary_doctor', 'primary_doctor__hospital')
 
@@ -101,23 +120,31 @@ def patient_list(request):
 
 
 @login_required
+@require_patient_access
 def patient_detail(request, patient_id):
-    """View patient details"""
+    """View patient details - with role-based access control"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
     encounters = patient.encounters.all()[:10]
     prescriptions = patient.prescriptions.all()[:10]
     allergies = patient.allergies.filter(is_active=True)
+
+    # Determine user role and permissions
+    user_role = 'patient' if is_patient(request.user) else ('doctor' if is_doctor(request.user) else 'admin')
+    can_edit = can_edit_patient(request.user, patient)
 
     context = {
         'patient': patient,
         'encounters': encounters,
         'prescriptions': prescriptions,
         'allergies': allergies,
+        'user_role': user_role,
+        'can_edit': can_edit,
     }
     return render(request, 'healthcare/patients/show.html', context)
 
 
 @login_required
+@require_role('doctor', 'office_admin')
 def patient_create(request):
     """Create new patient"""
     if request.method == 'POST':
@@ -146,8 +173,9 @@ def patient_create(request):
 
 
 @login_required
+@require_patient_edit
 def patient_edit(request, patient_id):
-    """Edit patient with comprehensive medical records"""
+    """Edit patient with comprehensive medical records - only doctors and admins"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
 
     if request.method == 'POST':
@@ -1475,8 +1503,9 @@ def payment_history(request):
 
 # Billing Information
 @login_required
+@require_patient_access
 def patient_billing_list(request, patient_id):
-    """Display billing information and invoices for a patient"""
+    """Display billing information and invoices for a patient - with role-based access control"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
 
     # Get all billings for the patient
@@ -1499,8 +1528,9 @@ def patient_billing_list(request, patient_id):
 
 
 @login_required
+@require_patient_access
 def patient_billing_detail(request, patient_id, billing_id):
-    """Display detailed invoice view"""
+    """Display detailed invoice view - with role-based access control"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
     billing = get_object_or_404(Billing, billing_id=billing_id, patient=patient)
     billing_items = billing.billing_items.all()
@@ -1518,8 +1548,9 @@ def patient_billing_detail(request, patient_id, billing_id):
 
 # Payment Information
 @login_required
+@require_patient_access
 def patient_payment_list(request, patient_id):
-    """Display payment history for a patient"""
+    """Display payment history for a patient - with role-based access control"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
 
     # Get all payments for the patient
@@ -1544,8 +1575,9 @@ def patient_payment_list(request, patient_id):
 
 
 @login_required
+@require_patient_access
 def patient_payment_detail(request, patient_id, payment_id):
-    """Display payment receipt"""
+    """Display payment receipt - with role-based access control"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
     payment = get_object_or_404(Payment, payment_id=payment_id, patient=patient)
 
@@ -1559,8 +1591,9 @@ def patient_payment_detail(request, patient_id, payment_id):
 
 # Insurance Information
 @login_required
+@require_patient_access
 def patient_insurance_list(request, patient_id):
-    """Display insurance information for a patient"""
+    """Display insurance information for a patient - with role-based access control"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
 
     # Get all insurance policies
@@ -1579,8 +1612,9 @@ def patient_insurance_list(request, patient_id):
 
 
 @login_required
+@require_patient_access
 def patient_insurance_detail(request, patient_id, insurance_id):
-    """Display detailed insurance policy view"""
+    """Display detailed insurance policy view - with role-based access control"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
     insurance = get_object_or_404(InsuranceInformation, insurance_id=insurance_id, patient=patient)
 
@@ -1594,8 +1628,9 @@ def patient_insurance_detail(request, patient_id, insurance_id):
 
 # Device Management
 @login_required
+@require_patient_access
 def patient_device_list(request, patient_id):
-    """Display devices for a patient"""
+    """Display devices for a patient - with role-based access control"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
     devices = patient.devices.all().order_by('-created_at')
 
@@ -1608,8 +1643,9 @@ def patient_device_list(request, patient_id):
 
 
 @login_required
+@require_patient_access
 def patient_device_detail(request, patient_id, device_id):
-    """Display device details"""
+    """Display device details - with role-based access control"""
     patient = get_object_or_404(Patient, patient_id=patient_id)
     device = get_object_or_404(Device, device_id=device_id, patient=patient)
 
