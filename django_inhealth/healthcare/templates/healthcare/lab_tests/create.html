@@ -1,0 +1,107 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}New Lab Test - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'lab_test_list' %}">Lab Tests</a> &rsaquo; New Lab Test{% endblock %}
+{% block content %}
+
+{% include 'healthcare/includes/form_styles.html' %}
+
+<div class="form-container">
+    <div class="form-header">
+        <div>
+            <h1>Order Lab Test</h1>
+            <div class="meta">
+                Order a new laboratory test for a patient
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'lab_test_list' %}" class="button-secondary">Back to Lab Tests</a>
+        </div>
+    </div>
+
+    <div class="module form-module">
+        <h2>Test Order Information</h2>
+        <div class="form-content">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label class="required">Patient</label>
+                        <select name="patient_id" required>
+                            <option value="">Select a patient...</option>
+                            {% for patient in patients %}
+                            <option value="{{ patient.patient_id }}">{{ patient.full_name }} (ID: {{ patient.patient_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label class="required">Test Name</label>
+                        <input type="text" name="test_name" required placeholder="e.g., Complete Blood Count (CBC)">
+                    </div>
+                    <div class="form-field">
+                        <label>Test Code</label>
+                        <input type="text" name="test_code" placeholder="e.g., LAB001">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Ordering Provider</label>
+                        <select name="provider_id">
+                            <option value="">Select provider...</option>
+                            {% for provider in providers %}
+                            <option value="{{ provider.provider_id }}">Dr. {{ provider.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Related Encounter</label>
+                        <select name="encounter_id">
+                            <option value="">Select encounter...</option>
+                            {% for encounter in encounters %}
+                            <option value="{{ encounter.encounter_id }}">
+                                {{ encounter.encounter_type }} - {{ encounter.encounter_date|date:"M d, Y" }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label class="required">Status</label>
+                        <select name="status" required>
+                            <option value="Ordered">Ordered</option>
+                            <option value="Collected">Collected</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field full-width">
+                        <label>Notes</label>
+                        <textarea name="notes" rows="3" placeholder="Additional notes or instructions..."></textarea>
+                    </div>
+                </div>
+
+                <div class="submit-row">
+                    <div class="buttons-right">
+                        <a href="{% url 'lab_test_list' %}" class="button-secondary">Cancel</a>
+                        <button type="submit" class="button-primary">Order Lab Test</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<p style="margin-top: 20px; font-size: 12px; color: #666;">
+    <strong>Note:</strong> You can also use the <a href="/admin/healthcare/labtest/add/">Django Admin Panel</a> to order lab tests with more advanced options.
+</p>
+{% endblock %}

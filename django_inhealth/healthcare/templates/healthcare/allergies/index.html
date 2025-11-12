@@ -1,9 +1,9 @@
 {% extends 'healthcare/base.html' %}
 
-{% block title %}Prescriptions - InHealth EHR{% endblock %}
+{% block title %}Allergies - InHealth EHR{% endblock %}
 
 {% block breadcrumbs %}
-&rsaquo; Prescriptions
+&rsaquo; Allergies
 {% endblock %}
 
 {% block content %}
@@ -111,7 +111,7 @@
         border-bottom: none;
     }
 
-    .medication-name {
+    .allergen-name {
         font-weight: 600;
         color: var(--body-fg);
     }
@@ -126,7 +126,7 @@
         text-decoration: underline;
     }
 
-    .status-badge {
+    .severity-badge {
         display: inline-block;
         padding: 4px 10px;
         border-radius: 12px;
@@ -136,19 +136,45 @@
         letter-spacing: 0.5px;
     }
 
-    .status-badge.status-active {
-        background: #d4edda;
-        color: #155724;
+    .severity-badge.severity-mild {
+        background: #fff3cd;
+        color: #856404;
     }
 
-    .status-badge.status-discontinued {
+    .severity-badge.severity-moderate {
+        background: #ffe5b4;
+        color: #cc7a00;
+    }
+
+    .severity-badge.severity-severe {
         background: #f8d7da;
         color: #721c24;
     }
 
-    .status-badge.status-completed {
+    .type-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 500;
         background: #e2e3e5;
         color: #383d41;
+    }
+
+    .status-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+
+    .status-indicator.active {
+        background: #28a745;
+    }
+
+    .status-indicator.inactive {
+        background: #dc3545;
     }
 
     .empty-state {
@@ -199,102 +225,119 @@
 </style>
 
 <div class="page-header">
-    <h1>Prescriptions</h1>
+    <h1>Allergies</h1>
     <div>
-        <a href="/admin/healthcare/prescription/add/" class="button">+ New Prescription</a>
+        <a href="/admin/healthcare/allergy/add/" class="button">+ New Allergy</a>
     </div>
 </div>
 
 <!-- Stats Bar -->
 <div class="stats-bar">
     <div class="stat-item">
-        <div class="stat-value">{{ prescriptions|length }}</div>
-        <div class="stat-label">Total Prescriptions</div>
+        <div class="stat-value">{{ allergies|length }}</div>
+        <div class="stat-label">Total Allergies</div>
     </div>
     <div class="stat-item">
-        <div class="stat-value">{{ prescriptions|length }}</div>
-        <div class="stat-label">Active Records</div>
+        <div class="stat-value">{{ active_count|default:0 }}</div>
+        <div class="stat-label">Active Allergies</div>
     </div>
 </div>
 
 <!-- Filter Form -->
 <div class="filter-form">
     <form method="get">
-        <input type="text" name="search" value="{{ search }}" placeholder="Search by medication, patient name, or prescription ID...">
-        <label for="status">Status:</label>
-        <select name="status" id="status">
-            <option value="">All Statuses</option>
-            <option value="Active" {% if status == 'Active' %}selected{% endif %}>Active</option>
-            <option value="Discontinued" {% if status == 'Discontinued' %}selected{% endif %}>Discontinued</option>
-            <option value="Completed" {% if status == 'Completed' %}selected{% endif %}>Completed</option>
+        <input type="text" name="search" value="{{ search }}" placeholder="Search by allergen, patient name, or allergy ID...">
+        <label for="severity">Severity:</label>
+        <select name="severity" id="severity">
+            <option value="">All Severities</option>
+            <option value="Mild" {% if severity == 'Mild' %}selected{% endif %}>Mild</option>
+            <option value="Moderate" {% if severity == 'Moderate' %}selected{% endif %}>Moderate</option>
+            <option value="Severe" {% if severity == 'Severe' %}selected{% endif %}>Severe</option>
+        </select>
+        <label for="type">Type:</label>
+        <select name="type" id="type">
+            <option value="">All Types</option>
+            <option value="Drug" {% if allergy_type == 'Drug' %}selected{% endif %}>Drug</option>
+            <option value="Food" {% if allergy_type == 'Food' %}selected{% endif %}>Food</option>
+            <option value="Environmental" {% if allergy_type == 'Environmental' %}selected{% endif %}>Environmental</option>
+            <option value="Other" {% if allergy_type == 'Other' %}selected{% endif %}>Other</option>
         </select>
         <button type="submit" class="button">Filter</button>
-        {% if search or status %}
-        <a href="{% url 'prescription_list' %}" class="button button-secondary">Clear</a>
+        {% if search or severity or allergy_type %}
+        <a href="{% url 'allergy_list' %}" class="button button-secondary">Clear</a>
         {% endif %}
     </form>
 </div>
 
-<!-- Prescription List -->
+<!-- Allergy List -->
 <div class="data-module">
     <table>
         <caption>
             {% if search %}
                 Search Results for "{{ search }}"
-            {% elif status %}
-                {{ status }} Prescriptions
+            {% elif severity %}
+                {{ severity }} Allergies
+            {% elif allergy_type %}
+                {{ allergy_type }} Allergies
             {% else %}
-                All Prescriptions
+                All Allergies
             {% endif %}
         </caption>
         <thead>
             <tr>
-                <th>Prescription ID</th>
-                <th>Medication</th>
+                <th>Allergy ID</th>
+                <th>Allergen</th>
                 <th>Patient</th>
-                <th>Dosage</th>
-                <th>Frequency</th>
-                <th>Start Date</th>
+                <th>Type</th>
+                <th>Severity</th>
+                <th>Reaction</th>
+                <th>Onset Date</th>
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            {% for prescription in prescriptions %}
+            {% for allergy in allergies %}
             <tr>
-                <td><strong>{{ prescription.prescription_id }}</strong></td>
-                <td class="medication-name">{{ prescription.medication_name }}</td>
+                <td><strong>{{ allergy.allergy_id }}</strong></td>
+                <td class="allergen-name">{{ allergy.allergen }}</td>
                 <td>
-                    <a href="{% url 'patient_detail' prescription.patient.patient_id %}" class="patient-link">
-                        {{ prescription.patient.full_name }}
+                    <a href="{% url 'patient_detail' allergy.patient.patient_id %}" class="patient-link">
+                        {{ allergy.patient.full_name }}
                     </a>
                 </td>
-                <td>{{ prescription.dosage }}</td>
-                <td>{{ prescription.frequency }}</td>
-                <td>{{ prescription.start_date|date:"M d, Y" }}</td>
+                <td><span class="type-badge">{{ allergy.allergy_type }}</span></td>
                 <td>
-                    <span class="status-badge status-{{ prescription.status|lower }}">
-                        {{ prescription.status }}
+                    <span class="severity-badge severity-{{ allergy.severity|lower }}">
+                        {{ allergy.severity }}
                     </span>
                 </td>
+                <td>{{ allergy.reaction|truncatewords:5|default:"—" }}</td>
+                <td>{{ allergy.onset_date|date:"M d, Y"|default:"—" }}</td>
                 <td>
-                    <a href="{% url 'prescription_detail' prescription.prescription_id %}" style="color: var(--link-fg); font-weight: 500;">View</a>
+                    <span class="status-indicator {% if allergy.is_active %}active{% else %}inactive{% endif %}"></span>
+                    {% if allergy.is_active %}Active{% else %}Inactive{% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'allergy_detail' allergy.allergy_id %}" style="color: var(--link-fg); font-weight: 500;">View</a>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8">
+                <td colspan="9">
                     <div class="empty-state">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                         </svg>
                         <p>
                             {% if search %}
-                                No prescriptions found matching "{{ search }}"
-                            {% elif status %}
-                                No {{ status|lower }} prescriptions found
+                                No allergies found matching "{{ search }}"
+                            {% elif severity %}
+                                No {{ severity|lower }} allergies found
+                            {% elif allergy_type %}
+                                No {{ allergy_type|lower }} allergies found
                             {% else %}
-                                No prescriptions recorded yet
+                                No allergies recorded yet
                             {% endif %}
                         </p>
                     </div>
@@ -306,6 +349,6 @@
 </div>
 
 <p style="margin-top: 20px; font-size: 12px; color: #666;">
-    <strong>Tip:</strong> Use the <a href="/admin/healthcare/prescription/">Django Admin Panel</a> for advanced prescription management operations.
+    <strong>Tip:</strong> Use the <a href="/admin/healthcare/allergy/">Django Admin Panel</a> for advanced allergy management operations.
 </p>
 {% endblock %}

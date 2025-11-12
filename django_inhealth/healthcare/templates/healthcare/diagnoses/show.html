@@ -1,0 +1,274 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Diagnosis Details - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'diagnosis_list' %}">Diagnoses</a> &rsaquo; {{ diagnosis.diagnosis_description|truncatewords:5 }}{% endblock %}
+{% block content %}
+<style>
+    .detail-header {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .detail-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        font-weight: 300;
+        line-height: 1.3;
+    }
+
+    .detail-header .meta {
+        font-size: 13px;
+        color: #666;
+    }
+
+    .detail-header .actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .info-module {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .info-module h2 {
+        margin: 0;
+        padding: 12px 20px;
+        font-weight: 500;
+        font-size: 15px;
+        background: var(--primary);
+        color: var(--header-link-color);
+    }
+
+    .info-module dl {
+        margin: 0;
+    }
+
+    .info-module dl > div {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 20px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--hairline-color);
+    }
+
+    .info-module dl > div:nth-child(even) {
+        background: var(--darkened-bg);
+    }
+
+    .info-module dl > div:last-child {
+        border-bottom: none;
+    }
+
+    .info-module dt {
+        font-size: 13px;
+        font-weight: 600;
+        color: #666;
+    }
+
+    .info-module dd {
+        font-size: 13px;
+        color: var(--body-fg);
+        margin: 0;
+    }
+
+    .type-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .type-badge.type-primary {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .type-badge.type-secondary {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .type-badge.type-differential {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge.status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-badge.status-resolved {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .status-badge.status-rule.out {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .icd-code {
+        font-family: monospace;
+        font-size: 12px;
+        color: #666;
+        padding: 4px 8px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        border: 1px solid #e9ecef;
+    }
+
+    .alert-info {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        border-radius: 4px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        color: #0c5460;
+    }
+
+    .alert-info h3 {
+        margin: 0 0 8px 0;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .alert-info p {
+        margin: 0;
+        font-size: 13px;
+    }
+</style>
+
+<div class="detail-header">
+    <div style="flex: 1;">
+        <h1>{{ diagnosis.diagnosis_description }}</h1>
+        <div class="meta">
+            <strong>Patient:</strong> <a href="{% url 'patient_detail' diagnosis.encounter.patient.patient_id %}" style="color: var(--link-fg);">{{ diagnosis.encounter.patient.full_name }}</a> |
+            <strong>Diagnosis ID:</strong> {{ diagnosis.diagnosis_id }}
+        </div>
+    </div>
+    <div class="actions">
+        <a href="{% url 'patient_detail' diagnosis.encounter.patient.patient_id %}" class="button button-secondary">View Patient</a>
+        <a href="/admin/healthcare/diagnosis/{{ diagnosis.diagnosis_id }}/change/" class="button">Edit Diagnosis</a>
+    </div>
+</div>
+
+{% if diagnosis.status == 'Active' %}
+<div class="alert-info">
+    <h3>ℹ️ Active Diagnosis</h3>
+    <p>This diagnosis is currently active and being managed.</p>
+</div>
+{% endif %}
+
+<div class="info-module">
+    <h2>Diagnosis Information</h2>
+    <dl>
+        <div>
+            <dt>Patient</dt>
+            <dd>
+                <a href="{% url 'patient_detail' diagnosis.encounter.patient.patient_id %}" style="color: var(--link-fg); font-weight: 600;">
+                    {{ diagnosis.encounter.patient.full_name }}
+                </a>
+            </dd>
+        </div>
+        <div>
+            <dt>Description</dt>
+            <dd><strong>{{ diagnosis.diagnosis_description }}</strong></dd>
+        </div>
+        <div>
+            <dt>ICD-10 Code</dt>
+            <dd>
+                {% if diagnosis.icd10_code %}
+                <span class="icd-code">{{ diagnosis.icd10_code }}</span>
+                {% else %}—{% endif %}
+            </dd>
+        </div>
+        <div>
+            <dt>ICD-11 Code</dt>
+            <dd>
+                {% if diagnosis.icd11_code %}
+                <span class="icd-code">{{ diagnosis.icd11_code }}</span>
+                {% else %}—{% endif %}
+            </dd>
+        </div>
+        <div>
+            <dt>Diagnosis Type</dt>
+            <dd>
+                <span class="type-badge type-{{ diagnosis.diagnosis_type|lower }}">
+                    {{ diagnosis.diagnosis_type }}
+                </span>
+            </dd>
+        </div>
+        <div>
+            <dt>Status</dt>
+            <dd>
+                <span class="status-badge status-{{ diagnosis.status|lower|cut:' ' }}">
+                    {{ diagnosis.status }}
+                </span>
+            </dd>
+        </div>
+        <div>
+            <dt>Onset Date</dt>
+            <dd>{{ diagnosis.onset_date|date:"F d, Y"|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Resolved Date</dt>
+            <dd>{{ diagnosis.resolved_date|date:"F d, Y"|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Diagnosed By</dt>
+            <dd>
+                {% if diagnosis.diagnosed_by %}
+                <a href="{% url 'physician_detail' diagnosis.diagnosed_by.provider_id %}" style="color: var(--link-fg);">
+                    Dr. {{ diagnosis.diagnosed_by.full_name }}
+                </a>
+                {% else %}—{% endif %}
+            </dd>
+        </div>
+        <div>
+            <dt>Diagnosed At</dt>
+            <dd>{{ diagnosis.diagnosed_at|date:"F d, Y g:i A" }}</dd>
+        </div>
+        <div>
+            <dt>Related Encounter</dt>
+            <dd>
+                <a href="{% url 'appointment_detail' diagnosis.encounter.encounter_id %}" style="color: var(--link-fg);">
+                    {{ diagnosis.encounter.encounter_type }} - {{ diagnosis.encounter.encounter_date|date:"M d, Y" }}
+                </a>
+            </dd>
+        </div>
+        {% if diagnosis.notes %}
+        <div>
+            <dt>Notes</dt>
+            <dd>{{ diagnosis.notes }}</dd>
+        </div>
+        {% endif %}
+    </dl>
+</div>
+
+<p style="margin-top: 20px; font-size: 12px; color: #666;">
+    <strong>Note:</strong> Use the <a href="/admin/healthcare/diagnosis/{{ diagnosis.diagnosis_id }}/change/">Django Admin Panel</a> to edit diagnosis details.
+</p>
+{% endblock %}

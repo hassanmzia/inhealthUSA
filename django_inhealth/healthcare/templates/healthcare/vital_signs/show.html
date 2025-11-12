@@ -1,0 +1,52 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Vital Signs Details - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'vital_sign_list' %}">Vital Signs</a> &rsaquo; {{ vital.encounter.patient.full_name }}{% endblock %}
+{% block content %}
+<style>
+    .detail-header { background: white; border: 1px solid var(--hairline-color); border-radius: 4px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .detail-header h1 { margin: 0 0 8px 0; font-size: 28px; font-weight: 300; }
+    .detail-header .meta { font-size: 13px; color: #666; }
+    .detail-header .actions { display: flex; gap: 10px; }
+    .info-module { background: white; border: 1px solid var(--hairline-color); border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+    .info-module h2 { margin: 0; padding: 12px 20px; font-weight: 500; font-size: 15px; background: var(--primary); color: var(--header-link-color); }
+    .info-module dl { margin: 0; }
+    .info-module dl > div { display: grid; grid-template-columns: 200px 1fr; gap: 20px; padding: 12px 20px; border-bottom: 1px solid var(--hairline-color); }
+    .info-module dl > div:nth-child(even) { background: var(--darkened-bg); }
+    .info-module dl > div:last-child { border-bottom: none; }
+    .info-module dt { font-size: 13px; font-weight: 600; color: #666; }
+    .info-module dd { font-size: 13px; color: var(--body-fg); margin: 0; }
+    .vital-highlight { padding: 10px 15px; background: #f8f9fa; border-left: 4px solid var(--primary); border-radius: 4px; font-size: 18px; font-weight: 600; }
+</style>
+
+<div class="detail-header">
+    <div>
+        <h1>Vital Signs - {{ vital.encounter.patient.full_name }}</h1>
+        <div class="meta"><strong>Patient:</strong> <a href="{% url 'patient_detail' vital.encounter.patient.patient_id %}" style="color: var(--link-fg);">{{ vital.encounter.patient.full_name }}</a> | <strong>Vitals ID:</strong> {{ vital.vital_signs_id }}</div>
+    </div>
+    <div class="actions">
+        <a href="{% url 'patient_detail' vital.encounter.patient.patient_id %}" class="button button-secondary">View Patient</a>
+        <a href="/admin/healthcare/vitalsign/{{ vital.vital_signs_id }}/change/" class="button">Edit Record</a>
+    </div>
+</div>
+
+<div class="info-module">
+    <h2>Vital Signs Measurements</h2>
+    <dl>
+        <div><dt>Patient</dt><dd><a href="{% url 'patient_detail' vital.encounter.patient.patient_id %}" style="color: var(--link-fg); font-weight: 600;">{{ vital.encounter.patient.full_name }}</a></dd></div>
+        <div><dt>Blood Pressure</dt><dd><div class="vital-highlight">{{ vital.blood_pressure|default:"—" }}</div></dd></div>
+        <div><dt>Heart Rate</dt><dd>{% if vital.heart_rate %}<div class="vital-highlight">{{ vital.heart_rate }} bpm</div>{% else %}—{% endif %}</dd></div>
+        <div><dt>Temperature</dt><dd>{% if vital.temperature_value %}<div class="vital-highlight">{{ vital.temperature_value }}°{{ vital.temperature_unit }}</div>{% else %}—{% endif %}</dd></div>
+        <div><dt>Respiratory Rate</dt><dd>{% if vital.respiratory_rate %}<div class="vital-highlight">{{ vital.respiratory_rate }} breaths/min</div>{% else %}—{% endif %}</dd></div>
+        <div><dt>Oxygen Saturation</dt><dd>{% if vital.oxygen_saturation %}<div class="vital-highlight">{{ vital.oxygen_saturation }}%</div>{% else %}—{% endif %}</dd></div>
+        {% if vital.height %}<div><dt>Height</dt><dd>{{ vital.height }} cm</dd></div>{% endif %}
+        {% if vital.weight %}<div><dt>Weight</dt><dd>{{ vital.weight }} kg</dd></div>{% endif %}
+        {% if vital.bmi %}<div><dt>BMI</dt><dd>{{ vital.bmi }}</dd></div>{% endif %}
+        <div><dt>Recorded By</dt><dd>{% if vital.recorded_by %}{{ vital.recorded_by.full_name }}{% else %}—{% endif %}</dd></div>
+        <div><dt>Recorded At</dt><dd>{{ vital.recorded_at|date:"F d, Y g:i A" }}</dd></div>
+        <div><dt>Related Encounter</dt><dd><a href="{% url 'appointment_detail' vital.encounter.encounter_id %}" style="color: var(--link-fg);">{{ vital.encounter.encounter_type }} - {{ vital.encounter.encounter_date|date:"M d, Y" }}</a></dd></div>
+        {% if vital.notes %}<div><dt>Notes</dt><dd>{{ vital.notes }}</dd></div>{% endif %}
+    </dl>
+</div>
+
+<p style="margin-top: 20px; font-size: 12px; color: #666;"><strong>Note:</strong> Use the <a href="/admin/healthcare/vitalsign/{{ vital.vital_signs_id }}/change/">Django Admin Panel</a> to edit vital signs details.</p>
+{% endblock %}

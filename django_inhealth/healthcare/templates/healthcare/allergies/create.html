@@ -1,0 +1,109 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}New Allergy - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'allergy_list' %}">Allergies</a> &rsaquo; New Allergy{% endblock %}
+{% block content %}
+
+{% include 'healthcare/includes/form_styles.html' %}
+
+<div class="form-container">
+    <div class="form-header">
+        <div>
+            <h1>New Allergy Record</h1>
+            <div class="meta">
+                Document a new patient allergy
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'allergy_list' %}" class="button-secondary">Back to Allergies</a>
+        </div>
+    </div>
+
+    <div class="module form-module">
+        <h2>Allergy Information</h2>
+        <div class="form-content">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label class="required">Patient</label>
+                        <select name="patient_id" required>
+                            <option value="">Select a patient...</option>
+                            {% for patient in patients %}
+                            <option value="{{ patient.patient_id }}">{{ patient.full_name }} (ID: {{ patient.patient_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label class="required">Allergen</label>
+                        <input type="text" name="allergen" required placeholder="e.g., Penicillin, Peanuts, Pollen">
+                    </div>
+                    <div class="form-field">
+                        <label class="required">Allergy Type</label>
+                        <select name="allergy_type" required>
+                            <option value="">Select type...</option>
+                            <option value="Drug">Drug</option>
+                            <option value="Food">Food</option>
+                            <option value="Environmental">Environmental</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Severity</label>
+                        <select name="severity">
+                            <option value="">Select severity...</option>
+                            <option value="Mild">Mild</option>
+                            <option value="Moderate">Moderate</option>
+                            <option value="Severe">Severe</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Onset Date</label>
+                        <input type="date" name="onset_date">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field full-width">
+                        <label>Reaction</label>
+                        <textarea name="reaction" rows="3" placeholder="Describe the allergic reaction (e.g., hives, difficulty breathing, swelling)..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field full-width">
+                        <label>Notes</label>
+                        <textarea name="notes" rows="3" placeholder="Additional notes or comments..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="is_active" checked style="width: auto;">
+                            <span>Active Allergy</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="submit-row">
+                    <div class="buttons-right">
+                        <a href="{% url 'allergy_list' %}" class="button-secondary">Cancel</a>
+                        <button type="submit" class="button-primary">Create Allergy Record</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<p style="margin-top: 20px; font-size: 12px; color: #666;">
+    <strong>Note:</strong> You can also use the <a href="/admin/healthcare/allergy/add/">Django Admin Panel</a> to create allergy records with more advanced options.
+</p>
+{% endblock %}

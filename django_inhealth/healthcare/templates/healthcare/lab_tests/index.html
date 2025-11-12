@@ -1,9 +1,9 @@
 {% extends 'healthcare/base.html' %}
 
-{% block title %}Prescriptions - InHealth EHR{% endblock %}
+{% block title %}Lab Tests - InHealth EHR{% endblock %}
 
 {% block breadcrumbs %}
-&rsaquo; Prescriptions
+&rsaquo; Lab Tests
 {% endblock %}
 
 {% block content %}
@@ -111,7 +111,7 @@
         border-bottom: none;
     }
 
-    .medication-name {
+    .test-name {
         font-weight: 600;
         color: var(--body-fg);
     }
@@ -136,19 +136,45 @@
         letter-spacing: 0.5px;
     }
 
-    .status-badge.status-active {
+    .status-badge.status-ordered {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .status-badge.status-collected {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-badge.status-in.progress {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .status-badge.status-completed {
         background: #d4edda;
         color: #155724;
     }
 
-    .status-badge.status-discontinued {
+    .status-badge.status-cancelled {
         background: #f8d7da;
         color: #721c24;
     }
 
-    .status-badge.status-completed {
-        background: #e2e3e5;
-        color: #383d41;
+    .abnormal-indicator {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 700;
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .test-code {
+        font-family: monospace;
+        font-size: 11px;
+        color: #666;
     }
 
     .empty-state {
@@ -199,86 +225,105 @@
 </style>
 
 <div class="page-header">
-    <h1>Prescriptions</h1>
+    <h1>Lab Tests</h1>
     <div>
-        <a href="/admin/healthcare/prescription/add/" class="button">+ New Prescription</a>
+        <a href="/admin/healthcare/labtest/add/" class="button">+ New Lab Test</a>
     </div>
 </div>
 
 <!-- Stats Bar -->
 <div class="stats-bar">
     <div class="stat-item">
-        <div class="stat-value">{{ prescriptions|length }}</div>
-        <div class="stat-label">Total Prescriptions</div>
+        <div class="stat-value">{{ lab_tests|length }}</div>
+        <div class="stat-label">Total Lab Tests</div>
     </div>
     <div class="stat-item">
-        <div class="stat-value">{{ prescriptions|length }}</div>
-        <div class="stat-label">Active Records</div>
+        <div class="stat-value">{{ pending_count|default:0 }}</div>
+        <div class="stat-label">Pending Results</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value">{{ abnormal_count|default:0 }}</div>
+        <div class="stat-label">Abnormal Results</div>
     </div>
 </div>
 
 <!-- Filter Form -->
 <div class="filter-form">
     <form method="get">
-        <input type="text" name="search" value="{{ search }}" placeholder="Search by medication, patient name, or prescription ID...">
+        <input type="text" name="search" value="{{ search }}" placeholder="Search by test name, code, or patient name...">
         <label for="status">Status:</label>
         <select name="status" id="status">
             <option value="">All Statuses</option>
-            <option value="Active" {% if status == 'Active' %}selected{% endif %}>Active</option>
-            <option value="Discontinued" {% if status == 'Discontinued' %}selected{% endif %}>Discontinued</option>
+            <option value="Ordered" {% if status == 'Ordered' %}selected{% endif %}>Ordered</option>
+            <option value="Collected" {% if status == 'Collected' %}selected{% endif %}>Collected</option>
+            <option value="In Progress" {% if status == 'In Progress' %}selected{% endif %}>In Progress</option>
             <option value="Completed" {% if status == 'Completed' %}selected{% endif %}>Completed</option>
+            <option value="Cancelled" {% if status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
         </select>
+        <label>
+            <input type="checkbox" name="abnormal" value="1" {% if abnormal %}checked{% endif %}>
+            Abnormal Only
+        </label>
         <button type="submit" class="button">Filter</button>
-        {% if search or status %}
-        <a href="{% url 'prescription_list' %}" class="button button-secondary">Clear</a>
+        {% if search or status or abnormal %}
+        <a href="{% url 'lab_test_list' %}" class="button button-secondary">Clear</a>
         {% endif %}
     </form>
 </div>
 
-<!-- Prescription List -->
+<!-- Lab Test List -->
 <div class="data-module">
     <table>
         <caption>
             {% if search %}
                 Search Results for "{{ search }}"
             {% elif status %}
-                {{ status }} Prescriptions
+                {{ status }} Lab Tests
+            {% elif abnormal %}
+                Abnormal Lab Tests
             {% else %}
-                All Prescriptions
+                All Lab Tests
             {% endif %}
         </caption>
         <thead>
             <tr>
-                <th>Prescription ID</th>
-                <th>Medication</th>
+                <th>Test ID</th>
+                <th>Test Name</th>
                 <th>Patient</th>
-                <th>Dosage</th>
-                <th>Frequency</th>
-                <th>Start Date</th>
+                <th>Test Code</th>
+                <th>Ordered Date</th>
                 <th>Status</th>
+                <th>Result</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            {% for prescription in prescriptions %}
+            {% for lab_test in lab_tests %}
             <tr>
-                <td><strong>{{ prescription.prescription_id }}</strong></td>
-                <td class="medication-name">{{ prescription.medication_name }}</td>
+                <td><strong>{{ lab_test.lab_test_id }}</strong></td>
+                <td class="test-name">{{ lab_test.test_name }}</td>
                 <td>
-                    <a href="{% url 'patient_detail' prescription.patient.patient_id %}" class="patient-link">
-                        {{ prescription.patient.full_name }}
+                    <a href="{% url 'patient_detail' lab_test.patient.patient_id %}" class="patient-link">
+                        {{ lab_test.patient.full_name }}
                     </a>
                 </td>
-                <td>{{ prescription.dosage }}</td>
-                <td>{{ prescription.frequency }}</td>
-                <td>{{ prescription.start_date|date:"M d, Y" }}</td>
+                <td><span class="test-code">{{ lab_test.test_code|default:"—" }}</span></td>
+                <td>{{ lab_test.ordered_date|date:"M d, Y" }}</td>
                 <td>
-                    <span class="status-badge status-{{ prescription.status|lower }}">
-                        {{ prescription.status }}
+                    <span class="status-badge status-{{ lab_test.status|lower|cut:' ' }}">
+                        {{ lab_test.status }}
                     </span>
                 </td>
                 <td>
-                    <a href="{% url 'prescription_detail' prescription.prescription_id %}" style="color: var(--link-fg); font-weight: 500;">View</a>
+                    {% if lab_test.result_value %}
+                        {{ lab_test.result_value }} {{ lab_test.result_unit }}
+                        {% if lab_test.abnormal_flag %}
+                        <span class="abnormal-indicator">ABNORMAL</span>
+                        {% endif %}
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'lab_test_detail' lab_test.lab_test_id %}" style="color: var(--link-fg); font-weight: 500;">View</a>
                 </td>
             </tr>
             {% empty %}
@@ -286,15 +331,17 @@
                 <td colspan="8">
                     <div class="empty-state">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                         </svg>
                         <p>
                             {% if search %}
-                                No prescriptions found matching "{{ search }}"
+                                No lab tests found matching "{{ search }}"
                             {% elif status %}
-                                No {{ status|lower }} prescriptions found
+                                No {{ status|lower }} lab tests found
+                            {% elif abnormal %}
+                                No abnormal lab tests found
                             {% else %}
-                                No prescriptions recorded yet
+                                No lab tests recorded yet
                             {% endif %}
                         </p>
                     </div>
@@ -306,6 +353,6 @@
 </div>
 
 <p style="margin-top: 20px; font-size: 12px; color: #666;">
-    <strong>Tip:</strong> Use the <a href="/admin/healthcare/prescription/">Django Admin Panel</a> for advanced prescription management operations.
+    <strong>Tip:</strong> Use the <a href="/admin/healthcare/labtest/">Django Admin Panel</a> for advanced lab test management operations.
 </p>
 {% endblock %}
