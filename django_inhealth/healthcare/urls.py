@@ -86,6 +86,18 @@ urlpatterns = [
     path('family-history/create/', views.family_history_create, name='family_history_create'),
     path('family-history/<int:family_history_id>/', views.family_history_detail, name='family_history_detail'),
 
+    # Patient Billing URLs
+    path('patients/<int:patient_id>/billing/', views.patient_billing_list, name='patient_billing_list'),
+    path('patients/<int:patient_id>/billing/<int:billing_id>/', views.patient_billing_detail, name='patient_billing_detail'),
+
+    # Patient Payment URLs
+    path('patients/<int:patient_id>/payments/', views.patient_payment_list, name='patient_payment_list'),
+    path('patients/<int:patient_id>/payments/<int:payment_id>/', views.patient_payment_detail, name='patient_payment_detail'),
+
+    # Patient Insurance URLs
+    path('patients/<int:patient_id>/insurance/', views.patient_insurance_list, name='patient_insurance_list'),
+    path('patients/<int:patient_id>/insurance/<int:insurance_id>/', views.patient_insurance_detail, name='patient_insurance_detail'),
+
     # Medical History Questionnaire
     path('questionnaire/medical-history/', views.medical_history_questionnaire, name='medical_history_questionnaire'),
 
@@ -98,12 +110,12 @@ urlpatterns = [
     # Allergies Questionnaire
     path('questionnaire/allergies/', views.allergies_questionnaire, name='allergies_questionnaire'),
 
-    # Insurance Information
+    # Insurance Information (Generic)
     path('insurance/', views.insurance_information, name='insurance_information'),
 
-    # Billing Information
+    # Billing Information (Generic)
     path('billing/', views.billing_information, name='billing_information'),
 
-    # Payment History
+    # Payment History (Generic)
     path('payment-history/', views.payment_history, name='payment_history'),
 ]

@@ -8,7 +8,8 @@ from django.utils import timezone
 from .models import (
     Hospital, Patient, Provider, Encounter, VitalSign, Diagnosis,
     Prescription, Department, Allergy, MedicalHistory, SocialHistory,
-    FamilyHistory, LabTest, Message, Notification
+    FamilyHistory, LabTest, Message, Notification, InsuranceInformation,
+    Billing, BillingItem, Payment
 )
 from .forms import UserRegistrationForm
 
@@ -1470,3 +1471,122 @@ def payment_history(request):
 
     # For now, render with sample data shown in template
     return render(request, 'healthcare/payment_history.html')
+
+
+# Billing Information
+@login_required
+def patient_billing_list(request, patient_id):
+    """Display billing information and invoices for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    # Get all billings for the patient
+    billings = Billing.objects.filter(patient=patient).prefetch_related('billing_items', 'payments', 'encounter').order_by('-billing_date')
+
+    # Calculate summary statistics
+    total_billed = sum(b.total_amount for b in billings)
+    total_paid = sum(b.amount_paid for b in billings)
+    total_due = sum(b.amount_due for b in billings)
+
+    context = {
+        'patient': patient,
+        'billings': billings,
+        'total_billed': total_billed,
+        'total_paid': total_paid,
+        'total_due': total_due,
+    }
+
+    return render(request, 'healthcare/billing/index.html', context)
+
+
+@login_required
+def patient_billing_detail(request, patient_id, billing_id):
+    """Display detailed invoice view"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    billing = get_object_or_404(Billing, billing_id=billing_id, patient=patient)
+    billing_items = billing.billing_items.all()
+    payments = billing.payments.all()
+
+    context = {
+        'patient': patient,
+        'billing': billing,
+        'billing_items': billing_items,
+        'payments': payments,
+    }
+
+    return render(request, 'healthcare/billing/show.html', context)
+
+
+# Payment Information
+@login_required
+def patient_payment_list(request, patient_id):
+    """Display payment history for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    # Get all payments for the patient
+    payments = Payment.objects.filter(patient=patient).select_related('billing').order_by('-payment_date')
+
+    # Calculate statistics
+    completed_payments = payments.filter(status='Completed')
+    stats = {
+        'total_payments': sum(p.amount for p in completed_payments),
+        'payment_count': completed_payments.count(),
+        'pending_payments': sum(p.amount for p in payments.filter(status='Pending')),
+        'last_payment_date': completed_payments.first().payment_date if completed_payments.exists() else None,
+    }
+
+    context = {
+        'patient': patient,
+        'payments': payments,
+        'stats': stats,
+    }
+
+    return render(request, 'healthcare/payments/index.html', context)
+
+
+@login_required
+def patient_payment_detail(request, patient_id, payment_id):
+    """Display payment receipt"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    payment = get_object_or_404(Payment, payment_id=payment_id, patient=patient)
+
+    context = {
+        'patient': patient,
+        'payment': payment,
+    }
+
+    return render(request, 'healthcare/payments/show.html', context)
+
+
+# Insurance Information
+@login_required
+def patient_insurance_list(request, patient_id):
+    """Display insurance information for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    # Get all insurance policies
+    insurances = patient.insurance_policies.all().order_by('-is_primary', '-effective_date')
+    primary_insurance = insurances.filter(is_primary=True).first()
+    secondary_insurances = insurances.filter(is_primary=False)
+
+    context = {
+        'patient': patient,
+        'insurances': insurances,
+        'primary_insurance': primary_insurance,
+        'secondary_insurances': secondary_insurances,
+    }
+
+    return render(request, 'healthcare/insurance/index.html', context)
+
+
+@login_required
+def patient_insurance_detail(request, patient_id, insurance_id):
+    """Display detailed insurance policy view"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    insurance = get_object_or_404(InsuranceInformation, insurance_id=insurance_id, patient=patient)
+
+    context = {
+        'patient': patient,
+        'insurance': insurance,
+    }
+
+    return render(request, 'healthcare/insurance/show.html', context)
