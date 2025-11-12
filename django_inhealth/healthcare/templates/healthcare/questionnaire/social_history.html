@@ -1,0 +1,2183 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Social History Questionnaire - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; Social History Questionnaire{% endblock %}
+{% block content %}
+
+{% include 'healthcare/includes/form_styles.html' %}
+
+<style>
+    .questionnaire-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .questionnaire-header {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 30px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .questionnaire-header h1 {
+        margin: 0 0 10px 0;
+        font-size: 32px;
+        font-weight: 300;
+        color: var(--primary);
+    }
+
+    .questionnaire-header .subtitle {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .progress-bar {
+        background: #e9ecef;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 20px;
+    }
+
+    .progress-fill {
+        background: var(--primary);
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    .section-card {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .section-header {
+        background: var(--primary);
+        color: var(--header-link-color);
+        padding: 15px 20px;
+        font-size: 18px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-number {
+        background: rgba(255,255,255,0.2);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    .section-content {
+        padding: 25px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--body-fg);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .checkbox-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+
+    .checkbox-item:hover {
+        background: var(--darkened-bg);
+    }
+
+    .checkbox-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .checkbox-item label {
+        cursor: pointer;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .radio-group {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .radio-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .radio-item input[type="radio"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .radio-item label {
+        cursor: pointer;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .text-input,
+    .textarea-input,
+    .select-input,
+    .number-input,
+    .date-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+    }
+
+    .text-input:focus,
+    .textarea-input:focus,
+    .select-input:focus,
+    .number-input:focus,
+    .date-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(65, 118, 144, 0.1);
+    }
+
+    .textarea-input {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .input-hint {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        font-style: italic;
+    }
+
+    .submit-section {
+        background: white;
+        border: 1px solid var(--hairline-color);
+        border-radius: 4px;
+        padding: 25px;
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .submit-button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 15px 50px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .submit-button:hover {
+        background: #35606f;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .required-mark {
+        color: #dc3545;
+        margin-left: 3px;
+    }
+
+    .info-box {
+        background: #e7f3ff;
+        border-left: 4px solid #2196F3;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 4px;
+    }
+
+    .info-box p {
+        margin: 0;
+        font-size: 13px;
+        color: #0c5460;
+    }
+
+    .warning-box {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 4px;
+    }
+
+    .warning-box p {
+        margin: 0;
+        font-size: 13px;
+        color: #856404;
+    }
+</style>
+
+<div class="questionnaire-container">
+    <div class="questionnaire-header">
+        <h1>Comprehensive Social History Questionnaire</h1>
+        <p class="subtitle">This questionnaire helps us understand your lifestyle, environment, and social factors that may affect your health. All information is confidential.</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <form method="POST" id="questionnaire-form">
+        {% csrf_token %}
+
+        <!-- Section 1: Patient Information -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <div>Patient Information</div>
+            </div>
+            <div class="section-content">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Full Name <span class="required-mark">*</span></label>
+                        <input type="text" name="patient_name" class="text-input" required placeholder="First Middle Last">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date of Birth <span class="required-mark">*</span></label>
+                        <input type="date" name="patient_dob" class="date-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Today's Date <span class="required-mark">*</span></label>
+                        <input type="date" name="questionnaire_date" class="date-input" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Tobacco Use -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <div>Tobacco Use History</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Smoking Status <span class="required-mark">*</span></label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="smoking_status" value="never" id="smoke-never" required>
+                            <label for="smoke-never">Never Smoked</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="smoking_status" value="former" id="smoke-former">
+                            <label for="smoke-former">Former Smoker</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="smoking_status" value="current" id="smoke-current">
+                            <label for="smoke-current">Current Smoker</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">If current or former smoker, at what age did you start?</label>
+                        <input type="number" name="smoking_start_age" class="number-input" min="0" max="100" placeholder="Age started">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">If former smoker, at what age did you quit?</label>
+                        <input type="number" name="smoking_quit_age" class="number-input" min="0" max="100" placeholder="Age quit">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Average number of cigarettes per day</label>
+                        <input type="number" name="cigarettes_per_day" class="number-input" min="0" placeholder="Cigarettes per day">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Pack-years (packs per day × years smoked)</label>
+                        <input type="number" name="pack_years" class="number-input" min="0" step="0.5" placeholder="Pack-years">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Other tobacco products used (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="tobacco_products" value="cigars" id="tobacco-cigars">
+                            <label for="tobacco-cigars">Cigars</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="tobacco_products" value="pipe" id="tobacco-pipe">
+                            <label for="tobacco-pipe">Pipe</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="tobacco_products" value="chewing" id="tobacco-chew">
+                            <label for="tobacco-chew">Chewing Tobacco</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="tobacco_products" value="snuff" id="tobacco-snuff">
+                            <label for="tobacco-snuff">Snuff</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="tobacco_products" value="ecigarette" id="tobacco-ecig">
+                            <label for="tobacco-ecig">E-cigarettes/Vaping</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="tobacco_products" value="hookah" id="tobacco-hookah">
+                            <label for="tobacco-hookah">Hookah/Water Pipe</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Are you interested in quitting tobacco?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="quit_interest" value="yes" id="quit-yes">
+                            <label for="quit-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="quit_interest" value="no" id="quit-no">
+                            <label for="quit-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="quit_interest" value="na" id="quit-na">
+                            <label for="quit-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Secondhand smoke exposure</label>
+                    <textarea name="secondhand_smoke" class="textarea-input" rows="2" placeholder="Do you live with or spend time with smokers? How often are you exposed to secondhand smoke?"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Alcohol Use -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">3</div>
+                <div>Alcohol Use History</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Alcohol Use Status <span class="required-mark">*</span></label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="alcohol_status" value="never" id="alcohol-never" required>
+                            <label for="alcohol-never">Never</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="alcohol_status" value="former" id="alcohol-former">
+                            <label for="alcohol-former">Former User</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="alcohol_status" value="current" id="alcohol-current">
+                            <label for="alcohol-current">Current User</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If current user, how often do you drink?</label>
+                    <select name="alcohol_frequency" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="daily">Daily</option>
+                        <option value="4-6_per_week">4-6 times per week</option>
+                        <option value="2-3_per_week">2-3 times per week</option>
+                        <option value="once_per_week">Once per week</option>
+                        <option value="2-3_per_month">2-3 times per month</option>
+                        <option value="once_per_month">Once per month</option>
+                        <option value="less_than_monthly">Less than monthly</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Average drinks per week</label>
+                        <input type="number" name="drinks_per_week" class="number-input" min="0" placeholder="Number of drinks">
+                        <div class="input-hint">1 drink = 12 oz beer, 5 oz wine, or 1.5 oz liquor</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Maximum drinks in one day (past month)</label>
+                        <input type="number" name="max_drinks_one_day" class="number-input" min="0" placeholder="Maximum drinks">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Type of alcohol consumed (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="alcohol_types" value="beer" id="alc-beer">
+                            <label for="alc-beer">Beer</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="alcohol_types" value="wine" id="alc-wine">
+                            <label for="alc-wine">Wine</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="alcohol_types" value="liquor" id="alc-liquor">
+                            <label for="alc-liquor">Liquor/Spirits</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="alcohol_types" value="mixed" id="alc-mixed">
+                            <label for="alc-mixed">Mixed Drinks</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Have you ever felt you should cut down on drinking?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="cut_down_drinking" value="yes" id="cutdown-yes">
+                            <label for="cutdown-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="cut_down_drinking" value="no" id="cutdown-no">
+                            <label for="cutdown-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Have you ever had treatment for alcohol use?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="alcohol_treatment" value="yes" id="alc-treat-yes">
+                            <label for="alc-treat-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="alcohol_treatment" value="no" id="alc-treat-no">
+                            <label for="alc-treat-no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Substance Use -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">4</div>
+                <div>Substance Use History</div>
+            </div>
+            <div class="section-content">
+                <div class="info-box">
+                    <p><strong>Confidential:</strong> This information is used only for medical purposes and to provide you with appropriate care.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Have you ever used recreational drugs?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="drug_use_ever" value="yes" id="drug-ever-yes">
+                            <label for="drug-ever-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="drug_use_ever" value="no" id="drug-ever-no">
+                            <label for="drug-ever-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Current or past recreational drug use (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drugs_used" value="marijuana" id="drug-marijuana">
+                            <label for="drug-marijuana">Marijuana/Cannabis</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drugs_used" value="cocaine" id="drug-cocaine">
+                            <label for="drug-cocaine">Cocaine</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drugs_used" value="methamphetamine" id="drug-meth">
+                            <label for="drug-meth">Methamphetamine</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drugs_used" value="heroin" id="drug-heroin">
+                            <label for="drug-heroin">Heroin</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drugs_used" value="prescription_opioids" id="drug-opioids">
+                            <label for="drug-opioids">Prescription Opioids (non-prescribed)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drugs_used" value="benzodiazepines" id="drug-benzos">
+                            <label for="drug-benzos">Benzodiazepines (non-prescribed)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drugs_used" value="hallucinogens" id="drug-halluc">
+                            <label for="drug-halluc">Hallucinogens (LSD, Mushrooms, etc.)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drugs_used" value="mdma" id="drug-mdma">
+                            <label for="drug-mdma">MDMA/Ecstasy</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drugs_used" value="inhalants" id="drug-inhalants">
+                            <label for="drug-inhalants">Inhalants</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="drugs_used" value="other" id="drug-other">
+                            <label for="drug-other">Other</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Details about substance use</label>
+                    <textarea name="drug_use_details" class="textarea-input" rows="4" placeholder="For each substance used, please specify: frequency, duration of use, route (oral, injection, etc.), and whether current or past use"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Have you ever injected drugs?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="injection_drug_use" value="yes" id="inject-yes">
+                            <label for="inject-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="injection_drug_use" value="no" id="inject-no">
+                            <label for="inject-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Have you ever had treatment for substance use?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="substance_treatment" value="yes" id="subst-treat-yes">
+                            <label for="subst-treat-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="substance_treatment" value="no" id="subst-treat-no">
+                            <label for="subst-treat-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Are you currently in recovery or a treatment program?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="in_recovery" value="yes" id="recovery-yes">
+                            <label for="recovery-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="in_recovery" value="no" id="recovery-no">
+                            <label for="recovery-no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Occupation and Work History -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">5</div>
+                <div>Occupation and Work History</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Current Employment Status <span class="required-mark">*</span></label>
+                    <select name="employment_status" class="select-input" required>
+                        <option value="">Select...</option>
+                        <option value="employed_full">Employed Full-Time</option>
+                        <option value="employed_part">Employed Part-Time</option>
+                        <option value="self_employed">Self-Employed</option>
+                        <option value="unemployed">Unemployed</option>
+                        <option value="student">Student</option>
+                        <option value="retired">Retired</option>
+                        <option value="disabled">Disabled/Unable to Work</option>
+                        <option value="homemaker">Homemaker</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Current or Most Recent Occupation</label>
+                        <input type="text" name="current_occupation" class="text-input" placeholder="Job title">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Years in this occupation</label>
+                        <input type="number" name="years_in_occupation" class="number-input" min="0" placeholder="Years">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Employer/Company name</label>
+                    <input type="text" name="employer" class="text-input" placeholder="Employer name">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Brief job description and typical work activities</label>
+                    <textarea name="job_description" class="textarea-input" rows="3" placeholder="Describe your main job duties and activities"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Workplace exposures (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="work_exposures" value="chemicals" id="work-chem">
+                            <label for="work-chem">Chemicals</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="work_exposures" value="dust" id="work-dust">
+                            <label for="work-dust">Dust/Particulates</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="work_exposures" value="fumes" id="work-fumes">
+                            <label for="work-fumes">Fumes/Vapors</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="work_exposures" value="loud_noise" id="work-noise">
+                            <label for="work-noise">Loud Noise</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="work_exposures" value="radiation" id="work-rad">
+                            <label for="work-rad">Radiation</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="work_exposures" value="heavy_lifting" id="work-lift">
+                            <label for="work-lift">Heavy Lifting</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="work_exposures" value="repetitive_motion" id="work-rep">
+                            <label for="work-rep">Repetitive Motion</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="work_exposures" value="biohazards" id="work-bio">
+                            <label for="work-bio">Biological Hazards</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Previous occupations and significant exposures</label>
+                    <textarea name="previous_occupations" class="textarea-input" rows="4" placeholder="List previous jobs, especially if they involved any hazardous exposures"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Work-related injuries or illnesses</label>
+                    <textarea name="work_injuries" class="textarea-input" rows="2" placeholder="Any injuries or illnesses related to your work"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6: Education -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">6</div>
+                <div>Education Background</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Highest Level of Education Completed</label>
+                    <select name="education_level" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="less_than_hs">Less than High School</option>
+                        <option value="hs_diploma">High School Diploma/GED</option>
+                        <option value="some_college">Some College</option>
+                        <option value="associate">Associate Degree</option>
+                        <option value="bachelor">Bachelor's Degree</option>
+                        <option value="master">Master's Degree</option>
+                        <option value="doctorate">Doctorate/PhD</option>
+                        <option value="professional">Professional Degree (MD, JD, etc.)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Can you read and understand written health information in English?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="health_literacy" value="yes" id="lit-yes">
+                            <label for="lit-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="health_literacy" value="some" id="lit-some">
+                            <label for="lit-some">Somewhat</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="health_literacy" value="no" id="lit-no">
+                            <label for="lit-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Preferred language for healthcare information</label>
+                    <input type="text" name="preferred_language" class="text-input" placeholder="Preferred language">
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 7: Living Situation and Housing -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">7</div>
+                <div>Living Situation and Housing</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Current Living Situation</label>
+                    <select name="living_situation" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="own_house">Own House/Condo</option>
+                        <option value="rent_house">Rent House/Apartment</option>
+                        <option value="with_family">Living with Family/Friends</option>
+                        <option value="assisted_living">Assisted Living Facility</option>
+                        <option value="nursing_home">Nursing Home</option>
+                        <option value="homeless">Homeless/Unstable Housing</option>
+                        <option value="shelter">Shelter</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Who do you live with?</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="live_with" value="alone" id="live-alone">
+                            <label for="live-alone">Alone</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="live_with" value="spouse" id="live-spouse">
+                            <label for="live-spouse">Spouse/Partner</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="live_with" value="children" id="live-children">
+                            <label for="live-children">Children</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="live_with" value="parents" id="live-parents">
+                            <label for="live-parents">Parents</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="live_with" value="relatives" id="live-relatives">
+                            <label for="live-relatives">Other Relatives</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="live_with" value="roommates" id="live-roommates">
+                            <label for="live-roommates">Roommates/Friends</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="live_with" value="caregiver" id="live-caregiver">
+                            <label for="live-caregiver">Caregiver</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Number of people living in your home</label>
+                    <input type="number" name="household_size" class="number-input" min="1" placeholder="Number of people">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Housing conditions (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="housing_issues" value="mold" id="house-mold">
+                            <label for="house-mold">Mold/Dampness</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="housing_issues" value="pests" id="house-pests">
+                            <label for="house-pests">Pests (Rodents, Insects)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="housing_issues" value="lead_paint" id="house-lead">
+                            <label for="house-lead">Lead Paint</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="housing_issues" value="inadequate_heat" id="house-heat">
+                            <label for="house-heat">Inadequate Heating</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="housing_issues" value="water_issues" id="house-water">
+                            <label for="house-water">Water Quality Issues</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="housing_issues" value="stairs" id="house-stairs">
+                            <label for="house-stairs">Difficulty with Stairs</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you have pets?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="has_pets" value="yes" id="pets-yes">
+                            <label for="pets-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_pets" value="no" id="pets-no">
+                            <label for="pets-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If yes, what type of pets?</label>
+                    <input type="text" name="pets_type" class="text-input" placeholder="Dog, cat, bird, etc.">
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 8: Marital/Relationship Status and Sexual History -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">8</div>
+                <div>Marital/Relationship Status and Sexual History</div>
+            </div>
+            <div class="section-content">
+                <div class="info-box">
+                    <p><strong>Confidential:</strong> This information helps us provide appropriate preventive care and screenings.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Marital/Relationship Status</label>
+                    <select name="marital_status" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="single">Single/Never Married</option>
+                        <option value="married">Married</option>
+                        <option value="domestic_partner">Domestic Partnership</option>
+                        <option value="divorced">Divorced</option>
+                        <option value="separated">Separated</option>
+                        <option value="widowed">Widowed</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Are you sexually active?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="sexually_active" value="yes" id="sex-active-yes">
+                            <label for="sex-active-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="sexually_active" value="no" id="sex-active-no">
+                            <label for="sex-active-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="sexually_active" value="prefer_not" id="sex-active-prefer">
+                            <label for="sex-active-prefer">Prefer Not to Answer</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Number of sexual partners in the past year</label>
+                    <select name="sexual_partners" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2-5">2-5</option>
+                        <option value="6-10">6-10</option>
+                        <option value="more_than_10">More than 10</option>
+                        <option value="prefer_not">Prefer not to answer</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Gender of sexual partners</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="partner_gender" value="male" id="partner-male">
+                            <label for="partner-male">Male</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="partner_gender" value="female" id="partner-female">
+                            <label for="partner-female">Female</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="partner_gender" value="transgender" id="partner-trans">
+                            <label for="partner-trans">Transgender</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="partner_gender" value="prefer_not" id="partner-prefer">
+                            <label for="partner-prefer">Prefer not to answer</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you use contraception/protection?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="contraception" value="always" id="contra-always">
+                            <label for="contra-always">Always</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="contraception" value="sometimes" id="contra-sometimes">
+                            <label for="contra-sometimes">Sometimes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="contraception" value="never" id="contra-never">
+                            <label for="contra-never">Never</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="contraception" value="na" id="contra-na">
+                            <label for="contra-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Have you ever been tested for sexually transmitted infections (STIs)?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="sti_testing" value="yes" id="sti-yes">
+                            <label for="sti-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="sti_testing" value="no" id="sti-no">
+                            <label for="sti-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Have you ever been diagnosed with an STI?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="sti_history" value="yes" id="sti-hist-yes">
+                            <label for="sti-hist-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="sti_history" value="no" id="sti-hist-no">
+                            <label for="sti-hist-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If yes, please specify</label>
+                    <textarea name="sti_details" class="textarea-input" rows="2" placeholder="Type of STI and approximate year"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 9: Physical Activity and Exercise -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">9</div>
+                <div>Physical Activity and Exercise</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Do you exercise regularly?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="exercise_regularly" value="yes" id="exercise-yes">
+                            <label for="exercise-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="exercise_regularly" value="no" id="exercise-no">
+                            <label for="exercise-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How many days per week do you exercise?</label>
+                    <select name="exercise_days_per_week" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="0">0 days</option>
+                        <option value="1">1 day</option>
+                        <option value="2">2 days</option>
+                        <option value="3">3 days</option>
+                        <option value="4">4 days</option>
+                        <option value="5">5 days</option>
+                        <option value="6">6 days</option>
+                        <option value="7">7 days</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Average duration per exercise session</label>
+                    <select name="exercise_duration" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="less_15">Less than 15 minutes</option>
+                        <option value="15-30">15-30 minutes</option>
+                        <option value="30-60">30-60 minutes</option>
+                        <option value="more_60">More than 60 minutes</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Types of exercise (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_types" value="walking" id="ex-walking">
+                            <label for="ex-walking">Walking</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_types" value="jogging" id="ex-jogging">
+                            <label for="ex-jogging">Jogging/Running</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_types" value="cycling" id="ex-cycling">
+                            <label for="ex-cycling">Cycling</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_types" value="swimming" id="ex-swimming">
+                            <label for="ex-swimming">Swimming</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_types" value="weights" id="ex-weights">
+                            <label for="ex-weights">Weight Training</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_types" value="yoga" id="ex-yoga">
+                            <label for="ex-yoga">Yoga/Pilates</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_types" value="sports" id="ex-sports">
+                            <label for="ex-sports">Sports</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_types" value="dance" id="ex-dance">
+                            <label for="ex-dance">Dancing</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">What prevents you from exercising more? (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_barriers" value="time" id="barrier-time">
+                            <label for="barrier-time">Lack of Time</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_barriers" value="motivation" id="barrier-motiv">
+                            <label for="barrier-motiv">Lack of Motivation</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_barriers" value="pain" id="barrier-pain">
+                            <label for="barrier-pain">Pain/Physical Limitations</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_barriers" value="cost" id="barrier-cost">
+                            <label for="barrier-cost">Cost</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_barriers" value="access" id="barrier-access">
+                            <label for="barrier-access">No Access to Facilities</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="exercise_barriers" value="none" id="barrier-none">
+                            <label for="barrier-none">None</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 10: Diet and Nutrition -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">10</div>
+                <div>Diet and Nutrition</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">How would you describe your overall diet?</label>
+                    <select name="diet_quality" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="excellent">Excellent</option>
+                        <option value="good">Good</option>
+                        <option value="fair">Fair</option>
+                        <option value="poor">Poor</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How many servings of fruits and vegetables do you eat per day?</label>
+                    <select name="fruits_vegetables" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="0">0 servings</option>
+                        <option value="1-2">1-2 servings</option>
+                        <option value="3-4">3-4 servings</option>
+                        <option value="5+">5 or more servings</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Dietary patterns (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="dietary_patterns" value="vegetarian" id="diet-veg">
+                            <label for="diet-veg">Vegetarian</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="dietary_patterns" value="vegan" id="diet-vegan">
+                            <label for="diet-vegan">Vegan</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="dietary_patterns" value="gluten_free" id="diet-gluten">
+                            <label for="diet-gluten">Gluten-Free</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="dietary_patterns" value="lactose_free" id="diet-lactose">
+                            <label for="diet-lactose">Lactose-Free</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="dietary_patterns" value="low_sodium" id="diet-sodium">
+                            <label for="diet-sodium">Low Sodium</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="dietary_patterns" value="low_fat" id="diet-fat">
+                            <label for="diet-fat">Low Fat</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="dietary_patterns" value="diabetic" id="diet-diabetic">
+                            <label for="diet-diabetic">Diabetic Diet</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="dietary_patterns" value="mediterranean" id="diet-med">
+                            <label for="diet-med">Mediterranean</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How often do you eat fast food or restaurant meals?</label>
+                    <select name="fast_food_frequency" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="rarely">Rarely/Never</option>
+                        <option value="1-2_per_week">1-2 times per week</option>
+                        <option value="3-4_per_week">3-4 times per week</option>
+                        <option value="5+_per_week">5 or more times per week</option>
+                        <option value="daily">Daily</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Daily water intake</label>
+                    <select name="water_intake" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="less_2">Less than 2 glasses</option>
+                        <option value="2-4">2-4 glasses</option>
+                        <option value="5-7">5-7 glasses</option>
+                        <option value="8+">8 or more glasses</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Daily caffeine intake (coffee, tea, energy drinks)</label>
+                    <select name="caffeine_intake" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="none">None</option>
+                        <option value="1-2">1-2 servings</option>
+                        <option value="3-4">3-4 servings</option>
+                        <option value="5+">5 or more servings</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you have any dietary restrictions or food intolerances?</label>
+                    <textarea name="dietary_restrictions" class="textarea-input" rows="2" placeholder="Any food allergies, intolerances, or restrictions"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you have difficulty affording or accessing healthy food?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="food_insecurity" value="yes" id="food-insec-yes">
+                            <label for="food-insec-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="food_insecurity" value="sometimes" id="food-insec-sometimes">
+                            <label for="food-insec-sometimes">Sometimes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="food_insecurity" value="no" id="food-insec-no">
+                            <label for="food-insec-no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 11: Sleep Patterns -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">11</div>
+                <div>Sleep Patterns</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Average hours of sleep per night</label>
+                    <select name="sleep_hours" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="less_4">Less than 4 hours</option>
+                        <option value="4-5">4-5 hours</option>
+                        <option value="5-6">5-6 hours</option>
+                        <option value="6-7">6-7 hours</option>
+                        <option value="7-8">7-8 hours</option>
+                        <option value="8-9">8-9 hours</option>
+                        <option value="more_9">More than 9 hours</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How would you rate your sleep quality?</label>
+                    <select name="sleep_quality" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="excellent">Excellent</option>
+                        <option value="good">Good</option>
+                        <option value="fair">Fair</option>
+                        <option value="poor">Poor</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Sleep problems (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="sleep_problems" value="difficulty_falling" id="sleep-fall">
+                            <label for="sleep-fall">Difficulty Falling Asleep</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="sleep_problems" value="waking_up" id="sleep-wake">
+                            <label for="sleep-wake">Waking Up During Night</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="sleep_problems" value="snoring" id="sleep-snore">
+                            <label for="sleep-snore">Snoring</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="sleep_problems" value="apnea" id="sleep-apnea">
+                            <label for="sleep-apnea">Sleep Apnea</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="sleep_problems" value="restless_legs" id="sleep-restless">
+                            <label for="sleep-restless">Restless Legs</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="sleep_problems" value="nightmares" id="sleep-nightmares">
+                            <label for="sleep-nightmares">Nightmares</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="sleep_problems" value="none" id="sleep-none">
+                            <label for="sleep-none">None</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you use a CPAP machine?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="cpap_use" value="yes" id="cpap-yes">
+                            <label for="cpap-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="cpap_use" value="no" id="cpap-no">
+                            <label for="cpap-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you take sleep aids or medications for sleep?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="sleep_aids" value="yes" id="sleep-aids-yes">
+                            <label for="sleep-aids-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="sleep_aids" value="no" id="sleep-aids-no">
+                            <label for="sleep-aids-no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 12: Stress and Mental Health -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">12</div>
+                <div>Stress and Mental Health</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">How would you rate your current stress level?</label>
+                    <select name="stress_level" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="minimal">Minimal</option>
+                        <option value="mild">Mild</option>
+                        <option value="moderate">Moderate</option>
+                        <option value="high">High</option>
+                        <option value="severe">Severe</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Major sources of stress (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_sources" value="work" id="stress-work">
+                            <label for="stress-work">Work/Job</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_sources" value="finances" id="stress-money">
+                            <label for="stress-money">Finances</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_sources" value="relationships" id="stress-relationship">
+                            <label for="stress-relationship">Relationships</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_sources" value="family" id="stress-family">
+                            <label for="stress-family">Family</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_sources" value="health" id="stress-health">
+                            <label for="stress-health">Health Issues</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_sources" value="caregiving" id="stress-care">
+                            <label for="stress-care">Caregiving</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_sources" value="other" id="stress-other">
+                            <label for="stress-other">Other</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How do you cope with stress? (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_coping" value="exercise" id="cope-exercise">
+                            <label for="cope-exercise">Exercise</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_coping" value="meditation" id="cope-meditation">
+                            <label for="cope-meditation">Meditation/Prayer</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_coping" value="hobbies" id="cope-hobbies">
+                            <label for="cope-hobbies">Hobbies</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_coping" value="friends" id="cope-friends">
+                            <label for="cope-friends">Talking with Friends/Family</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_coping" value="therapy" id="cope-therapy">
+                            <label for="cope-therapy">Counseling/Therapy</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_coping" value="alcohol" id="cope-alcohol">
+                            <label for="cope-alcohol">Alcohol</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="stress_coping" value="smoking" id="cope-smoke">
+                            <label for="cope-smoke">Smoking</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Are you currently receiving mental health treatment?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="mental_health_treatment" value="yes" id="mh-treat-yes">
+                            <label for="mh-treat-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="mental_health_treatment" value="no" id="mh-treat-no">
+                            <label for="mh-treat-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Are you interested in mental health resources or support?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="interested_mh_support" value="yes" id="mh-support-yes">
+                            <label for="mh-support-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="interested_mh_support" value="no" id="mh-support-no">
+                            <label for="mh-support-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="interested_mh_support" value="maybe" id="mh-support-maybe">
+                            <label for="mh-support-maybe">Maybe</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 13: Social Support System -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">13</div>
+                <div>Social Support System</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Do you have someone you can count on for help when needed?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="social_support" value="yes" id="support-yes">
+                            <label for="support-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="social_support" value="sometimes" id="support-sometimes">
+                            <label for="support-sometimes">Sometimes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="social_support" value="no" id="support-no">
+                            <label for="support-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Who provides your main support? (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="support_sources" value="spouse" id="support-spouse">
+                            <label for="support-spouse">Spouse/Partner</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="support_sources" value="family" id="support-family">
+                            <label for="support-family">Family Members</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="support_sources" value="friends" id="support-friends">
+                            <label for="support-friends">Friends</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="support_sources" value="religious" id="support-religious">
+                            <label for="support-religious">Religious Community</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="support_sources" value="community" id="support-community">
+                            <label for="support-community">Community Groups</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="support_sources" value="none" id="support-none">
+                            <label for="support-none">None</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How often do you socialize with friends or family?</label>
+                    <select name="socialization_frequency" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="rarely">Rarely</option>
+                        <option value="never">Never</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you feel isolated or lonely?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="feel_isolated" value="often" id="isolated-often">
+                            <label for="isolated-often">Often</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="feel_isolated" value="sometimes" id="isolated-sometimes">
+                            <label for="isolated-sometimes">Sometimes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="feel_isolated" value="rarely" id="isolated-rarely">
+                            <label for="isolated-rarely">Rarely</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="feel_isolated" value="never" id="isolated-never">
+                            <label for="isolated-never">Never</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Are you a caregiver for someone else?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="is_caregiver" value="yes" id="caregiver-yes">
+                            <label for="caregiver-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="is_caregiver" value="no" id="caregiver-no">
+                            <label for="caregiver-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If yes, who do you care for and what type of care?</label>
+                    <textarea name="caregiver_details" class="textarea-input" rows="2" placeholder="Person cared for and type of care provided"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 14: Safety and Home Environment -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">14</div>
+                <div>Safety and Home Environment</div>
+            </div>
+            <div class="section-content">
+                <div class="warning-box">
+                    <p><strong>Important:</strong> Your safety is our priority. All information is confidential and used to provide appropriate resources.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you feel safe in your current living situation?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="feel_safe_home" value="yes" id="safe-yes">
+                            <label for="safe-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="feel_safe_home" value="no" id="safe-no">
+                            <label for="safe-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="feel_safe_home" value="sometimes" id="safe-sometimes">
+                            <label for="safe-sometimes">Sometimes</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">In the past year, have you been hit, slapped, kicked, or otherwise physically hurt?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="physical_abuse" value="yes" id="abuse-yes">
+                            <label for="abuse-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="physical_abuse" value="no" id="abuse-no">
+                            <label for="abuse-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="physical_abuse" value="prefer_not" id="abuse-prefer">
+                            <label for="abuse-prefer">Prefer not to answer</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Are you afraid of anyone in your home or who visits your home?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="afraid_someone" value="yes" id="afraid-yes">
+                            <label for="afraid-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="afraid_someone" value="no" id="afraid-no">
+                            <label for="afraid-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="afraid_someone" value="prefer_not" id="afraid-prefer">
+                            <label for="afraid-prefer">Prefer not to answer</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you keep firearms in your home?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="firearms_home" value="yes" id="firearms-yes">
+                            <label for="firearms-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="firearms_home" value="no" id="firearms-no">
+                            <label for="firearms-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If yes, are they stored safely (locked, unloaded)?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="firearms_stored_safely" value="yes" id="firearms-safe-yes">
+                            <label for="firearms-safe-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="firearms_stored_safely" value="no" id="firearms-safe-no">
+                            <label for="firearms-safe-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="firearms_stored_safely" value="na" id="firearms-safe-na">
+                            <label for="firearms-safe-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you always wear a seatbelt in vehicles?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="seatbelt_use" value="always" id="seatbelt-always">
+                            <label for="seatbelt-always">Always</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="seatbelt_use" value="usually" id="seatbelt-usually">
+                            <label for="seatbelt-usually">Usually</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="seatbelt_use" value="sometimes" id="seatbelt-sometimes">
+                            <label for="seatbelt-sometimes">Sometimes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="seatbelt_use" value="never" id="seatbelt-never">
+                            <label for="seatbelt-never">Never</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If you ride a bicycle or motorcycle, do you wear a helmet?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="helmet_use" value="always" id="helmet-always">
+                            <label for="helmet-always">Always</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="helmet_use" value="sometimes" id="helmet-sometimes">
+                            <label for="helmet-sometimes">Sometimes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="helmet_use" value="never" id="helmet-never">
+                            <label for="helmet-never">Never</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="helmet_use" value="na" id="helmet-na">
+                            <label for="helmet-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 15: Travel History -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">15</div>
+                <div>Travel History</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Have you traveled outside the country in the past year?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="international_travel" value="yes" id="travel-yes">
+                            <label for="travel-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="international_travel" value="no" id="travel-no">
+                            <label for="travel-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If yes, where did you travel?</label>
+                    <textarea name="travel_destinations" class="textarea-input" rows="3" placeholder="List countries and approximate dates"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you have any planned international travel?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="planned_travel" value="yes" id="planned-travel-yes">
+                            <label for="planned-travel-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="planned_travel" value="no" id="planned-travel-no">
+                            <label for="planned-travel-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If yes, planned destinations</label>
+                    <textarea name="planned_destinations" class="textarea-input" rows="2" placeholder="Planned destinations and approximate dates"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 16: Spiritual and Religious Beliefs -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">16</div>
+                <div>Spiritual and Religious Beliefs</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Are spiritual or religious beliefs important to you?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="spirituality_important" value="very" id="spirit-very">
+                            <label for="spirit-very">Very Important</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="spirituality_important" value="somewhat" id="spirit-somewhat">
+                            <label for="spirit-somewhat">Somewhat Important</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="spirituality_important" value="not" id="spirit-not">
+                            <label for="spirit-not">Not Important</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Religious affiliation (optional)</label>
+                    <input type="text" name="religious_affiliation" class="text-input" placeholder="Religious affiliation if you wish to share">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Would you like spiritual support or chaplain services during medical care?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="want_spiritual_support" value="yes" id="spirit-support-yes">
+                            <label for="spirit-support-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="want_spiritual_support" value="no" id="spirit-support-no">
+                            <label for="spirit-support-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="want_spiritual_support" value="maybe" id="spirit-support-maybe">
+                            <label for="spirit-support-maybe">Maybe</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Are there any religious or cultural practices that affect your healthcare decisions?</label>
+                    <textarea name="religious_healthcare_practices" class="textarea-input" rows="2" placeholder="Any religious or cultural considerations we should be aware of"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 17: Financial and Economic Status -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">17</div>
+                <div>Financial and Economic Status</div>
+            </div>
+            <div class="section-content">
+                <div class="info-box">
+                    <p><strong>Note:</strong> This information helps us connect you with financial assistance programs and resources.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Annual household income</label>
+                    <select name="annual_income" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="under_25k">Under $25,000</option>
+                        <option value="25k-50k">$25,000 - $50,000</option>
+                        <option value="50k-75k">$50,000 - $75,000</option>
+                        <option value="75k-100k">$75,000 - $100,000</option>
+                        <option value="100k-150k">$100,000 - $150,000</option>
+                        <option value="over_150k">Over $150,000</option>
+                        <option value="prefer_not">Prefer not to answer</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you have health insurance?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="has_insurance" value="yes" id="insurance-yes">
+                            <label for="insurance-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="has_insurance" value="no" id="insurance-no">
+                            <label for="insurance-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">In the past year, have you had difficulty paying for:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="difficulty_paying" value="medical_bills" id="pay-medical">
+                            <label for="pay-medical">Medical Bills</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="difficulty_paying" value="medications" id="pay-meds">
+                            <label for="pay-meds">Medications</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="difficulty_paying" value="rent" id="pay-rent">
+                            <label for="pay-rent">Rent/Mortgage</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="difficulty_paying" value="utilities" id="pay-utilities">
+                            <label for="pay-utilities">Utilities</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="difficulty_paying" value="food" id="pay-food">
+                            <label for="pay-food">Food</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="difficulty_paying" value="none" id="pay-none">
+                            <label for="pay-none">None</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Would you like information about financial assistance programs?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="want_financial_assistance" value="yes" id="fin-assist-yes">
+                            <label for="fin-assist-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="want_financial_assistance" value="no" id="fin-assist-no">
+                            <label for="fin-assist-no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 18: Military Service -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">18</div>
+                <div>Military Service History</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Have you ever served in the military?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="military_service" value="yes" id="military-yes">
+                            <label for="military-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="military_service" value="no" id="military-no">
+                            <label for="military-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">If yes, branch of service</label>
+                    <select name="military_branch" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="army">Army</option>
+                        <option value="navy">Navy</option>
+                        <option value="air_force">Air Force</option>
+                        <option value="marines">Marines</option>
+                        <option value="coast_guard">Coast Guard</option>
+                        <option value="national_guard">National Guard</option>
+                        <option value="reserves">Reserves</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Years of service</label>
+                        <input type="text" name="military_years" class="text-input" placeholder="e.g., 2010-2015">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Highest rank achieved</label>
+                        <input type="text" name="military_rank" class="text-input" placeholder="Rank">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Were you deployed to a combat zone?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="combat_deployment" value="yes" id="combat-yes">
+                            <label for="combat-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="combat_deployment" value="no" id="combat-no">
+                            <label for="combat-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Military-related health issues or exposures</label>
+                    <textarea name="military_health_issues" class="textarea-input" rows="3" placeholder="Any injuries, exposures, or health conditions related to military service"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you receive VA healthcare benefits?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="va_benefits" value="yes" id="va-yes">
+                            <label for="va-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="va_benefits" value="no" id="va-no">
+                            <label for="va-no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 19: Legal History -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">19</div>
+                <div>Legal History</div>
+            </div>
+            <div class="section-content">
+                <div class="info-box">
+                    <p><strong>Confidential:</strong> This information helps us provide appropriate care and connect you with resources.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Have you ever been incarcerated?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="incarceration_history" value="yes" id="incarc-yes">
+                            <label for="incarc-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="incarceration_history" value="no" id="incarc-no">
+                            <label for="incarc-no">No</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="incarceration_history" value="prefer_not" id="incarc-prefer">
+                            <label for="incarc-prefer">Prefer not to answer</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Are you currently on probation or parole?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="probation_parole" value="yes" id="prob-yes">
+                            <label for="prob-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="probation_parole" value="no" id="prob-no">
+                            <label for="prob-no">No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Do you need assistance with legal issues that affect your health?</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="need_legal_assistance" value="yes" id="legal-assist-yes">
+                            <label for="legal-assist-yes">Yes</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="need_legal_assistance" value="no" id="legal-assist-no">
+                            <label for="legal-assist-no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 20: Hobbies and Leisure Activities -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">20</div>
+                <div>Hobbies and Leisure Activities</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">What do you do for recreation and relaxation?</label>
+                    <textarea name="hobbies" class="textarea-input" rows="3" placeholder="List your hobbies and leisure activities"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Activities you enjoy (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="activities" value="reading" id="act-reading">
+                            <label for="act-reading">Reading</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="activities" value="music" id="act-music">
+                            <label for="act-music">Music</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="activities" value="arts_crafts" id="act-arts">
+                            <label for="act-arts">Arts/Crafts</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="activities" value="gardening" id="act-garden">
+                            <label for="act-garden">Gardening</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="activities" value="cooking" id="act-cooking">
+                            <label for="act-cooking">Cooking</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="activities" value="volunteering" id="act-volunteer">
+                            <label for="act-volunteer">Volunteering</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="activities" value="outdoors" id="act-outdoors">
+                            <label for="act-outdoors">Outdoor Activities</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="activities" value="gaming" id="act-gaming">
+                            <label for="act-gaming">Gaming</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How much time do you spend on screens daily (TV, computer, phone)?</label>
+                    <select name="screen_time" class="select-input">
+                        <option value="">Select...</option>
+                        <option value="less_2">Less than 2 hours</option>
+                        <option value="2-4">2-4 hours</option>
+                        <option value="4-6">4-6 hours</option>
+                        <option value="6-8">6-8 hours</option>
+                        <option value="more_8">More than 8 hours</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 21: Additional Information -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-number">21</div>
+                <div>Additional Social History Information</div>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label">Is there anything else about your lifestyle, environment, or social situation that would help us provide better care?</label>
+                    <textarea name="additional_info" class="textarea-input" rows="5" placeholder="Any other relevant social history information not covered above"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">What are your main health goals?</label>
+                    <textarea name="health_goals" class="textarea-input" rows="3" placeholder="What would you like to achieve regarding your health?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">What barriers do you face in managing your health?</label>
+                    <textarea name="health_barriers" class="textarea-input" rows="3" placeholder="Transportation, cost, time, knowledge, etc."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Section -->
+        <div class="submit-section">
+            <p style="margin-bottom: 20px; color: #666;">
+                By submitting this form, I certify that the information provided about my social history is accurate and complete to the best of my knowledge. I understand this information will be kept confidential and used only for medical purposes.
+            </p>
+            <button type="submit" class="submit-button">Submit Social History Questionnaire</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Progress tracking
+    const form = document.getElementById('questionnaire-form');
+    const progressFill = document.getElementById('progress-fill');
+
+    function updateProgress() {
+        const inputs = form.querySelectorAll('input:not([type="checkbox"]):not([type="radio"]), textarea, select');
+        let filled = 0;
+        let total = 0;
+
+        inputs.forEach(input => {
+            total++;
+            if (input.value.trim() !== '') {
+                filled++;
+            }
+        });
+
+        // Count radio groups
+        const radioGroups = new Set();
+        form.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radioGroups.add(radio.name);
+        });
+
+        // Check which radio groups have a selection
+        radioGroups.forEach(groupName => {
+            total++;
+            const selected = form.querySelector(`input[name="${groupName}"]:checked`);
+            if (selected) filled++;
+        });
+
+        const percentage = total > 0 ? (filled / total) * 100 : 0;
+        progressFill.style.width = percentage + '%';
+    }
+
+    // Update progress on any input change
+    form.addEventListener('change', updateProgress);
+    form.addEventListener('input', updateProgress);
+
+    // Initial progress
+    updateProgress();
+</script>
+
+{% endblock %}

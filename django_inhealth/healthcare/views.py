@@ -1256,3 +1256,33 @@ def family_history_questionnaire(request):
 
     # For GET requests, display the questionnaire form
     return render(request, 'healthcare/questionnaire/family_history.html')
+
+
+# Social History Questionnaire
+@login_required
+def social_history_questionnaire(request):
+    """Display and process comprehensive social history questionnaire"""
+    if request.method == 'POST':
+        # TODO: In production, parse form data and create/update SocialHistory record:
+        # - Tobacco use details
+        # - Alcohol use details
+        # - Substance use history
+        # - Occupation and work exposures
+        # - Living situation and housing
+        # - Relationship status and sexual history
+        # - Physical activity and diet
+        # - Sleep patterns
+        # - Stress and mental health
+        # - Social support system
+        # - Safety concerns
+        # - Travel history
+        # - Spiritual beliefs
+        # - Financial status
+        # - Military service
+        # - etc.
+
+        messages.success(request, 'Social history questionnaire submitted successfully. Your social and lifestyle information has been recorded.')
+        return redirect('index')
+
+    # For GET requests, display the questionnaire form
+    return render(request, 'healthcare/questionnaire/social_history.html')
