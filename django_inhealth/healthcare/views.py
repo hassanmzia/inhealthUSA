@@ -1311,3 +1311,162 @@ def allergies_questionnaire(request):
 
     # For GET requests, display the questionnaire form
     return render(request, 'healthcare/questionnaire/allergies.html')
+
+
+# Insurance Information
+@login_required
+def insurance_information(request):
+    """Display and process comprehensive insurance information form"""
+    if request.method == 'POST':
+        # TODO: In production, parse form data and create/update Insurance records:
+        # Primary Insurance:
+        # - Carrier name, plan type, member ID, group number
+        # - BIN, PCN, RxGrp numbers for prescription coverage
+        # - Coverage dates (effective and termination)
+        # - Subscriber information (name, DOB, SSN, relationship)
+        # - Employer information
+        # - Contact information (customer service, claims, pre-auth phones)
+        # - Coverage types (medical, prescription, dental, vision, etc.)
+        # - Copay amounts (PCP, specialist, ER, urgent care, inpatient, outpatient)
+        # - Deductible information (individual, family, amounts met)
+        # - Out-of-pocket maximums
+        # - Coinsurance percentage
+        # - Referral and prior authorization requirements
+        # - PCP information
+        # - Insurance card images (front and back)
+        #
+        # Secondary Insurance (if applicable):
+        # - Same fields as primary
+        #
+        # Tertiary Insurance (if applicable):
+        # - Same fields as primary
+        #
+        # Coordination of Benefits:
+        # - COB rules (birthday rule, active/working, court order)
+        # - COB notes
+        #
+        # Special Coverage:
+        # - Medicare information (number, parts enrolled, effective dates)
+        # - Medicaid information
+        # - Workers' compensation (claim number, injury date, carrier, adjuster info)
+        # - Auto insurance for accidents (carrier, policy, claim info)
+        #
+        # Additional:
+        # - Financial responsibility acceptance
+        # - Assignment of benefits authorization
+        # - Release of information authorization
+        # - Preferred contact method
+        # - Additional notes
+        # - Referral source
+        # - etc.
+
+        messages.success(request, 'Insurance information submitted successfully. Your insurance details have been recorded and will be used for billing purposes.')
+        return redirect('index')
+
+    # For GET requests, display the insurance information form
+    return render(request, 'healthcare/insurance_information.html')
+
+
+# Billing Information
+@login_required
+def billing_information(request):
+    """Display and process comprehensive billing information form"""
+    if request.method == 'POST':
+        # TODO: In production, parse form data and create/update Billing records:
+        # Billing Contact:
+        # - Name, email, phone, address
+        #
+        # Guarantor Information:
+        # - Name, relationship, DOB, SSN, contact information
+        # - Address (if different from billing)
+        # - Employment information
+        # - Income range and dependents (for financial assistance)
+        #
+        # Payment Methods:
+        # - Preferred payment method (credit card, bank account, check, cash)
+        # - Credit/debit card details (encrypted):
+        #   * Cardholder name, card number, expiry, CVV, billing ZIP
+        # - Bank account details (encrypted):
+        #   * Account holder name, bank name, account type, routing number, account number
+        #
+        # Payment Preferences:
+        # - Auto-pay settings
+        # - Statement preference (email, mail, both, portal)
+        # - Payment reminders (email, SMS, phone)
+        # - Reminder timing
+        #
+        # Payment Plans & Financial Assistance:
+        # - Interest in payment plan (yes/no)
+        # - Selected payment plan (3-month, 6-month, 12-month, custom)
+        # - Preferred monthly payment amount
+        # - Financial assistance application
+        # - Assistance reasons (income, unemployment, medical expenses, hardship)
+        # - Additional assistance information
+        # - Charity care program participation (Medicaid, SNAP, WIC, TANF, SSI, unemployment)
+        #
+        # Additional Information:
+        # - Outstanding balance status
+        # - Preferred contact time for billing questions
+        # - Special billing instructions/notes
+        # - Payment authorization
+        # - Financial responsibility acknowledgment
+        # - Payment policy agreement
+        # - etc.
+
+        messages.success(request, 'Billing information submitted successfully. Your billing details have been securely saved and will be used for payment processing.')
+        return redirect('index')
+
+    # For GET requests, display the billing information form
+    return render(request, 'healthcare/billing_information.html')
+
+
+# Payment History
+@login_required
+def payment_history(request):
+    """Display comprehensive payment history, invoices, and statements"""
+    # TODO: In production, fetch actual data from database:
+    # - Patient's payment history records:
+    #   * Payment date, invoice number, description
+    #   * Payment method (last 4 digits of card/account)
+    #   * Amount paid, status (paid, pending, failed, refunded)
+    #   * Receipt number and download link
+    #
+    # - Outstanding invoices:
+    #   * Invoice number, issue date, due date
+    #   * Description of services
+    #   * Total amount, amount paid, balance due
+    #   * Status (unpaid, partial, paid, overdue)
+    #
+    # - Billing statements:
+    #   * Monthly statements with period dates
+    #   * Previous balance, new charges, payments, adjustments
+    #   * Current balance
+    #   * PDF generation and download links
+    #
+    # - Payment receipts:
+    #   * Receipt number, payment date, invoice reference
+    #   * Description, amount paid, payment method
+    #   * PDF receipt generation
+    #
+    # - Account summary:
+    #   * Current balance (total amount due)
+    #   * Total paid year-to-date
+    #   * Overdue amount
+    #   * Last payment date and amount
+    #
+    # - Filtering and pagination:
+    #   * Date range filters (last 30/90 days, 6 months, year, custom)
+    #   * Status filters (paid, pending, failed, refunded)
+    #   * Payment method filters
+    #   * Search by invoice number or description
+    #   * Pagination for large result sets
+    #
+    # - Quick actions:
+    #   * Make a payment (redirect to payment portal)
+    #   * View/download statements
+    #   * Update payment settings
+    #   * Contact billing department
+    # - etc.
+
+    # For now, render with sample data shown in template
+    return render(request, 'healthcare/payment_history.html')

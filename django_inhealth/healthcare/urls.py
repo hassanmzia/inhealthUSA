@@ -97,4 +97,13 @@ urlpatterns = [
 
     # Allergies Questionnaire
     path('questionnaire/allergies/', views.allergies_questionnaire, name='allergies_questionnaire'),
+
+    # Insurance Information
+    path('insurance/', views.insurance_information, name='insurance_information'),
+
+    # Billing Information
+    path('billing/', views.billing_information, name='billing_information'),
+
+    # Payment History
+    path('payment-history/', views.payment_history, name='payment_history'),
 ]
