@@ -47,6 +47,7 @@
                 <th style="text-align: left; padding: 10px; background: #f0f0f0;">Heart Rate</th>
                 <th style="text-align: left; padding: 10px; background: #f0f0f0;">Resp. Rate</th>
                 <th style="text-align: left; padding: 10px; background: #f0f0f0;">O2 Sat</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Source</th>
                 <th style="text-align: left; padding: 10px; background: #f0f0f0;">Actions</th>
             </tr>
         </thead>
@@ -93,12 +94,32 @@
                     {% endif %}
                 </td>
                 <td style="padding: 10px;">
-                    <a href="{% url 'patient_vital_edit' vital.encounter.patient.patient_id vital.vital_signs_id %}">Edit</a>
+                    {% if vital.data_source == 'device' %}
+                        <span style="color: #2196F3; font-size: 12px;">📱 Device</span>
+                    {% else %}
+                        <span style="color: #4caf50; font-size: 12px;">✋ Manual</span>
+                    {% endif %}
+                    <div style="font-size: 11px; color: #666; margin-top: 3px;">
+                        {% if vital.recorded_by_nurse %}
+                            {{ vital.recorded_by_nurse.full_name }}
+                        {% elif vital.recorded_by %}
+                            Dr. {{ vital.recorded_by.full_name }}
+                        {% else %}
+                            Unknown
+                        {% endif %}
+                    </div>
+                </td>
+                <td style="padding: 10px;">
+                    {% if vital.data_source == 'device' %}
+                        <span style="color: #999; font-size: 12px; cursor: not-allowed;" title="Device vitals cannot be edited">🔒 Locked</span>
+                    {% else %}
+                        <a href="{% url 'nurse_vital_edit' vital.vital_signs_id %}" style="color: #2196F3; font-weight: 600;">✏️ Edit</a>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8" style="padding: 20px; text-align: center; color: #999;">
+                <td colspan="9" style="padding: 20px; text-align: center; color: #999;">
                     {% if date_filter or patient_search %}
                         No vital signs found matching your filters.
                     {% else %}
