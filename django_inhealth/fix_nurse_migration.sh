@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Script to fix the nurse migration error
-# Error: relation "nurses" already exists
+# Script to fix migration errors for duplicate tables
+# Errors: relation "nurses" already exists, relation "office_administrators" already exists
 
 echo "=========================================="
-echo "Fixing Nurse Migration Error"
+echo "Fixing Migration Errors"
 echo "=========================================="
 echo ""
 
@@ -23,7 +23,7 @@ echo "Current migration status:"
 python manage.py showmigrations healthcare
 echo ""
 
-# Fake the problematic migration
+# Fake the problematic migrations
 echo "Faking migration 0004_alter_userprofile_role_nurse..."
 python manage.py migrate healthcare 0004_alter_userprofile_role_nurse --fake
 
@@ -31,7 +31,18 @@ if [ $? -eq 0 ]; then
     echo "✓ Successfully faked migration 0004_alter_userprofile_role_nurse"
     echo ""
 else
-    echo "✗ Error faking migration. Please check the error message above."
+    echo "✗ Error faking migration 0004. Please check the error message above."
+    exit 1
+fi
+
+echo "Faking migration 0005_officeadministrator..."
+python manage.py migrate healthcare 0005_officeadministrator --fake
+
+if [ $? -eq 0 ]; then
+    echo "✓ Successfully faked migration 0005_officeadministrator"
+    echo ""
+else
+    echo "✗ Error faking migration 0005. Please check the error message above."
     exit 1
 fi
 
