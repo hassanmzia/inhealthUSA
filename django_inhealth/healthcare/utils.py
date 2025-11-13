@@ -3,6 +3,51 @@ Utility functions for the healthcare app
 """
 import os
 from django.conf import settings
+from django.core.mail import send_mail
+
+
+def send_email_notification(to_email, subject, message_body, from_email=None):
+    """
+    Send email notification using Django's email backend
+
+    Args:
+        to_email (str): Recipient email address
+        subject (str): Email subject
+        message_body (str): Email body content
+        from_email (str, optional): Sender email address
+
+    Returns:
+        tuple: (success: bool, message: str)
+    """
+    # Validate email address
+    if not to_email:
+        return (False, 'Invalid recipient email address')
+
+    # Get from_email from settings if not provided
+    if not from_email:
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@inhealthehr.com')
+
+    try:
+        # Send email using Django's send_mail
+        send_mail(
+            subject=subject,
+            message=message_body,
+            from_email=from_email,
+            recipient_list=[to_email],
+            fail_silently=False,
+        )
+
+        return (True, f'Email sent successfully to {to_email}')
+
+    except Exception as e:
+        error_msg = str(e)
+        # Provide helpful error messages
+        if 'Connection refused' in error_msg:
+            return (False, 'Email server connection failed. Please check EMAIL_HOST and EMAIL_PORT settings.')
+        elif 'authentication' in error_msg.lower():
+            return (False, 'Email authentication failed. Please check EMAIL_HOST_USER and EMAIL_HOST_PASSWORD.')
+        else:
+            return (False, f'Failed to send email: {error_msg}')
 
 
 def send_sms(to_phone, message_body):
