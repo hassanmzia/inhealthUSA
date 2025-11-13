@@ -51,7 +51,8 @@
                     <td style="padding: 10px;">{{ message.subject }}</td>
                     <td style="padding: 10px;">{{ message.created_at|date:"M d, Y H:i" }}</td>
                     <td style="padding: 10px;">
-                        <a href="{% url 'message_show' message.message_id %}" style="color: #2196F3;">View</a>
+                        <a href="{% url 'message_show' message.message_id %}" style="color: #2196F3; margin-right: 10px;">View</a>
+                        <a href="{% url 'patient_compose_message' %}?reply_to={{ message.message_id }}" style="color: #4caf50;">Reply</a>
                     </td>
                 </tr>
                 {% endfor %}
