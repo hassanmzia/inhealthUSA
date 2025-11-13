@@ -54,8 +54,8 @@
             <a href="{% url 'appointment_list' %}" class="button" style="display: block; text-align: center; padding: 15px; background: #00897B; color: white; text-decoration: none; border-radius: 5px;">
                 View Appointments
             </a>
-            <a href="{% url 'diagnosis_list' %}" class="button" style="display: block; text-align: center; padding: 15px; background: #00897B; color: white; text-decoration: none; border-radius: 5px;">
-                View Diagnoses
+            <a href="{% url 'prescription_list' %}" class="button" style="display: block; text-align: center; padding: 15px; background: #00897B; color: white; text-decoration: none; border-radius: 5px;">
+                View Prescriptions
             </a>
             <a href="{% url 'provider_profile' %}" class="button" style="display: block; text-align: center; padding: 15px; background: #00897B; color: white; text-decoration: none; border-radius: 5px;">
                 My Profile
@@ -194,9 +194,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <div style="margin-top: 10px;">
-                <a href="{% url 'diagnosis_list' %}">View All Diagnoses &raquo;</a>
-            </div>
         </div>
 
         <!-- Recent Prescriptions -->
