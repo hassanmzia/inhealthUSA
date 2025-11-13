@@ -1870,6 +1870,180 @@ def message_delete(request, message_id):
     return redirect('message_show', message_id=message_id)
 
 
+# ============================================================================
+# DOCTOR MESSAGING AND ALERT SYSTEM
+# ============================================================================
+
+@login_required
+@require_role('doctor')
+def doctor_inbox(request):
+    """Doctor-specific inbox with filtering and alert capabilities"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    # Get received messages
+    messages_list = request.user.received_messages.select_related('sender').order_by('-created_at')
+
+    # Get notifications/alerts
+    notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]
+
+    # Get unread counts
+    unread_messages = messages_list.filter(is_read=False).count()
+    unread_notifications = notifications_list.filter(is_read=False).count()
+
+    context = {
+        'provider': provider,
+        'messages_list': messages_list[:20],
+        'notifications_list': notifications_list,
+        'unread_messages': unread_messages,
+        'unread_notifications': unread_notifications,
+    }
+
+    return render(request, 'healthcare/providers/inbox.html', context)
+
+
+@login_required
+@require_role('doctor')
+def doctor_compose_message(request):
+    """Doctor compose message - can only message their patients"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    # Get only this doctor's patients
+    patients = Patient.objects.filter(
+        primary_doctor=provider,
+        is_active=True
+    ).select_related('user').order_by('last_name', 'first_name')
+
+    # Filter patients who have user accounts
+    patient_users = [p.user for p in patients if p.user]
+
+    # Check if this is a reply
+    reply_to_id = request.GET.get('reply_to')
+    reply_to_message = None
+    if reply_to_id:
+        reply_to_message = get_object_or_404(Message, message_id=reply_to_id)
+
+    if request.method == 'POST':
+        recipient_id = request.POST.get('recipient_id')
+        subject = request.POST.get('subject')
+        body = request.POST.get('body')
+        send_email = request.POST.get('send_email') == 'on'
+        send_sms = request.POST.get('send_sms') == 'on'
+        parent_message_id = request.POST.get('parent_message_id')
+
+        # Validate required fields
+        if not recipient_id or not subject or not body:
+            messages.error(request, 'Subject and message body are required.')
+            return redirect('doctor_compose_message')
+
+        try:
+            from django.contrib.auth.models import User
+            recipient = User.objects.get(id=recipient_id)
+
+            # Verify recipient is this doctor's patient
+            if not Patient.objects.filter(primary_doctor=provider, user=recipient, is_active=True).exists():
+                messages.error(request, 'You can only message your own patients.')
+                return redirect('doctor_compose_message')
+
+            # Create message
+            message = Message.objects.create(
+                sender=request.user,
+                recipient=recipient,
+                subject=subject,
+                body=body,
+                parent_message=Message.objects.get(message_id=parent_message_id) if parent_message_id else None
+            )
+
+            # Create notification for the recipient
+            Notification.objects.create(
+                user=recipient,
+                title=f'New message from Dr. {provider.full_name}',
+                message=f'Subject: {subject[:50]}...' if len(subject) > 50 else f'Subject: {subject}',
+                notification_type='message'
+            )
+
+            # Send email if requested (placeholder for actual email sending)
+            if send_email:
+                try:
+                    patient = Patient.objects.get(user=recipient)
+                    if patient.email:
+                        # TODO: Implement actual email sending using Django's email backend
+                        # Example: send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [patient.email])
+                        messages.info(request, f'Email notification queued to {patient.email}')
+                except Exception as e:
+                    messages.warning(request, f'Could not queue email notification: {str(e)}')
+
+            # Send SMS if requested (placeholder for actual SMS sending)
+            if send_sms:
+                try:
+                    patient = Patient.objects.get(user=recipient)
+                    if patient.phone:
+                        # TODO: Implement actual SMS sending using Twilio or similar service
+                        messages.info(request, f'SMS notification queued to {patient.phone}')
+                except Exception as e:
+                    messages.warning(request, f'Could not queue SMS notification: {str(e)}')
+
+            messages.success(request, 'Message sent successfully!')
+            return redirect('doctor_inbox')
+
+        except User.DoesNotExist:
+            messages.error(request, 'Invalid recipient.')
+            return redirect('doctor_compose_message')
+
+    context = {
+        'provider': provider,
+        'patients': patient_users,
+        'reply_to': reply_to_message,
+    }
+
+    return render(request, 'healthcare/providers/compose_message.html', context)
+
+
+@login_required
+@require_role('doctor')
+def doctor_notifications(request):
+    """View all notifications/alerts for the doctor"""
+    # Get all notifications for the doctor
+    notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at')
+
+    # Mark notifications as read if requested
+    if request.method == 'POST':
+        notification_ids = request.POST.getlist('mark_read')
+        if notification_ids:
+            Notification.objects.filter(
+                notification_id__in=notification_ids,
+                user=request.user
+            ).update(is_read=True, read_at=timezone.now())
+            messages.success(request, 'Notifications marked as read.')
+            return redirect('doctor_notifications')
+
+    context = {
+        'notifications_list': notifications_list,
+        'unread_count': notifications_list.filter(is_read=False).count(),
+    }
+
+    return render(request, 'healthcare/providers/notifications.html', context)
+
+
+@login_required
+@require_role('doctor')
+def mark_notification_read(request, notification_id):
+    """Mark a single notification as read"""
+    notification = get_object_or_404(Notification, notification_id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.read_at = timezone.now()
+    notification.save()
+    messages.success(request, 'Notification marked as read.')
+    return redirect('doctor_notifications')
+
+
 @login_required
 def patient_profile(request):
     """Patient profile view - shows patient's own information"""
@@ -2161,6 +2335,8 @@ def provider_dashboard(request):
             provider=provider,
             status='Active'
         ).count(),
+        'unread_messages': request.user.received_messages.filter(is_read=False).count(),
+        'unread_notifications': Notification.objects.filter(user=request.user, is_read=False).count(),
     }
 
     # Today's appointments

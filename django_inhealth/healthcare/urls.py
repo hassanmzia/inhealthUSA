@@ -139,6 +139,13 @@ urlpatterns = [
     path('provider/profile/', views.provider_profile, name='provider_profile'),
     path('provider/profile/edit/', views.provider_profile_edit, name='provider_profile_edit'),
     path('provider/dashboard/', views.provider_dashboard, name='provider_dashboard'),
+
+    # Doctor Messaging and Alert System
+    path('provider/inbox/', views.doctor_inbox, name='doctor_inbox'),
+    path('provider/compose/', views.doctor_compose_message, name='doctor_compose_message'),
+    path('provider/notifications/', views.doctor_notifications, name='doctor_notifications'),
+    path('provider/notifications/<int:notification_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
+
     # ============================================================================
     # OFFICE ADMINISTRATOR URLS
     # ============================================================================

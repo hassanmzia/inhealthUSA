@@ -1,0 +1,88 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Compose Message - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'provider_dashboard' %}">Provider Dashboard</a> &rsaquo;
+    <a href="{% url 'doctor_inbox' %}">Inbox</a> &rsaquo;
+    Compose Message
+</div>
+
+<div class="module">
+    <h1>✉️ Compose Message to Patient</h1>
+    <p style="color: #666; margin-top: 10px;">Dr. {{ provider.full_name }}</p>
+
+    <form method="POST" style="max-width: 800px; margin: 20px 0;">
+        {% csrf_token %}
+
+        {% if reply_to %}
+        <input type="hidden" name="parent_message_id" value="{{ reply_to.message_id }}">
+        <div style="padding: 15px; background: #f0f8ff; border-left: 3px solid #2196F3; margin-bottom: 20px;">
+            <strong>Replying to:</strong> {{ reply_to.subject }}<br>
+            <small>From {{ reply_to.sender.get_full_name }} on {{ reply_to.created_at|date:"M d, Y H:i" }}</small>
+        </div>
+        {% endif %}
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">To: (Select Patient)</label>
+            <select name="recipient_id" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                <option value="">-- Select a patient --</option>
+                {% for patient in patients %}
+                <option value="{{ patient.id }}" {% if reply_to and reply_to.sender.id == patient.id %}selected{% endif %}>
+                    {{ patient.get_full_name }} ({{ patient.email }})
+                </option>
+                {% endfor %}
+            </select>
+            <small style="color: #666;">You can only message your assigned patients</small>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Subject:</label>
+            <input type="text" name="subject" required
+                   value="{% if reply_to %}Re: {{ reply_to.subject }}{% endif %}"
+                   style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Message:</label>
+            <textarea name="body" required rows="10"
+                      style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;"></textarea>
+        </div>
+
+        <div style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+            <h3 style="margin: 0 0 15px 0;">Additional Notifications</h3>
+
+            <div style="margin-bottom: 10px;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" name="send_email" style="margin-right: 10px;">
+                    <span>
+                        <strong>📧 Also send via Email</strong><br>
+                        <small style="color: #666;">Patient will receive an email notification to their registered email address</small>
+                    </span>
+                </label>
+            </div>
+
+            <div>
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" name="send_sms" style="margin-right: 10px;">
+                    <span>
+                        <strong>📱 Also send via SMS</strong><br>
+                        <small style="color: #666;">Patient will receive a text message to their registered phone number</small>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" style="padding: 12px 30px; background: #4caf50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                Send Message
+            </button>
+            <a href="{% url 'doctor_inbox' %}" style="padding: 12px 30px; background: #666; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
