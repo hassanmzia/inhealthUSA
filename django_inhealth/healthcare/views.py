@@ -1842,3 +1842,80 @@ def message_delete(request, message_id):
         return redirect('message_sent')
 
     return redirect('message_show', message_id=message_id)
+
+
+@login_required
+def patient_profile(request):
+    """Patient profile view - shows patient's own information"""
+    # Get the patient associated with the logged-in user
+    try:
+        patient = request.user.patient_profile
+    except:
+        messages.error(request, 'No patient profile found for your account.')
+        return redirect('index')
+
+    # Get all patient-related information
+    appointments = Encounter.objects.filter(patient=patient).order_by('-encounter_date')[:10]
+    vitals = VitalSign.objects.filter(encounter__patient=patient).order_by('-recorded_at')[:10]
+    diagnoses = Diagnosis.objects.filter(encounter__patient=patient).order_by('-diagnosed_at')[:10]
+    prescriptions = Prescription.objects.filter(encounter__patient=patient).order_by('-prescribed_at')[:10]
+    allergies = Allergy.objects.filter(patient=patient).order_by('-created_at')
+    medical_history = MedicalHistory.objects.filter(patient=patient).order_by('-diagnosis_date')
+    social_history = SocialHistory.objects.filter(patient=patient).first()
+    lab_tests = LabTest.objects.filter(patient=patient).order_by('-test_date')[:10]
+    billings = Billing.objects.filter(patient=patient).order_by('-billing_date')[:10]
+    payments = Payment.objects.filter(patient=patient).order_by('-payment_date')[:10]
+    insurance_info = InsuranceInformation.objects.filter(patient=patient, is_primary=True).first()
+    devices = Device.objects.filter(patient=patient).order_by('-created_at')
+
+    context = {
+        'patient': patient,
+        'appointments': appointments,
+        'vitals': vitals,
+        'diagnoses': diagnoses,
+        'prescriptions': prescriptions,
+        'allergies': allergies,
+        'medical_history': medical_history,
+        'social_history': social_history,
+        'lab_tests': lab_tests,
+        'billings': billings,
+        'payments': payments,
+        'insurance_info': insurance_info,
+        'devices': devices,
+    }
+
+    return render(request, 'healthcare/patients/profile.html', context)
+
+
+@login_required
+def patient_profile_edit(request):
+    """Edit patient profile - patients can edit their own information"""
+    try:
+        patient = request.user.patient_profile
+    except:
+        messages.error(request, 'No patient profile found for your account.')
+        return redirect('index')
+
+    if request.method == 'POST':
+        # Update patient information
+        patient.phone = request.POST.get('phone', patient.phone)
+        patient.email = request.POST.get('email', patient.email)
+        patient.address = request.POST.get('address', patient.address)
+        patient.city = request.POST.get('city', patient.city)
+        patient.state = request.POST.get('state', patient.state)
+        patient.zip_code = request.POST.get('zip_code', patient.zip_code)
+        patient.emergency_contact_name = request.POST.get('emergency_contact_name', patient.emergency_contact_name)
+        patient.emergency_contact_phone = request.POST.get('emergency_contact_phone', patient.emergency_contact_phone)
+
+        try:
+            patient.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('patient_profile')
+        except Exception as e:
+            messages.error(request, f'Error updating profile: {str(e)}')
+
+    context = {
+        'patient': patient,
+    }
+
+    return render(request, 'healthcare/patients/profile_edit.html', context)

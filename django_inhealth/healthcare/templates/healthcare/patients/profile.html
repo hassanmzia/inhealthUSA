@@ -1,0 +1,450 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}My Profile - InHealth EHR{% endblock %}
+{% block breadcrumbs %}My Profile{% endblock %}
+{% block content %}
+<style>
+.profile-header{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.profile-header h1{margin:0;font-size:28px;font-weight:300}
+.profile-header .meta{font-size:13px;color:#666;margin-top:8px}
+.profile-header .actions{display:flex;gap:10px}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-bottom:20px}
+.info-module{background:white;border:1px solid var(--hairline-color);border-radius:4px;margin-bottom:20px;overflow:hidden}
+.info-module h2{margin:0;padding:12px 20px;font-weight:500;font-size:15px;background:var(--primary);color:var(--header-link-color)}
+.info-module .content{padding:0}
+.info-module dl{margin:0}
+.info-module dl>div{display:grid;grid-template-columns:180px 1fr;gap:20px;padding:12px 20px;border-bottom:1px solid var(--hairline-color)}
+.info-module dl>div:nth-child(even){background:var(--darkened-bg)}
+.info-module dl>div:last-child{border-bottom:none}
+.info-module dt{font-size:13px;font-weight:600;color:#666}
+.info-module dd{font-size:13px;color:var(--body-fg);margin:0}
+.data-table-module{background:white;border:1px solid var(--hairline-color);border-radius:4px;margin-bottom:20px;overflow:hidden}
+.data-table-module h2{margin:0;padding:12px 20px;font-weight:500;font-size:15px;background:var(--primary);color:var(--header-link-color)}
+.data-table-module table{width:100%;border-collapse:collapse}
+.data-table-module thead{background:var(--darkened-bg)}
+.data-table-module thead th{padding:10px 15px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--body-fg);border-bottom:1px solid var(--hairline-color)}
+.data-table-module tbody td{padding:12px 15px;border-bottom:1px solid var(--hairline-color);font-size:13px}
+.data-table-module tbody tr:hover{background:var(--darkened-bg)}
+.data-table-module tbody tr:last-child td{border-bottom:none}
+.data-table-module .empty{text-align:center;padding:40px 20px;color:#999;font-style:italic}
+.badge-item{display:inline-block;padding:6px 12px;border-radius:12px;font-size:12px;font-weight:600;margin-right:8px;margin-bottom:8px}
+.badge-severe{background:#f8d7da;color:#721c24}
+.badge-moderate{background:#fff3cd;color:#856404}
+.badge-mild{background:#d1ecf1;color:#0c5460}
+.status-badge{padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase}
+.status-scheduled{background:#e3f2fd;color:#1565c0}
+.status-completed{background:#e8f5e9;color:#2e7d32}
+.status-cancelled{background:#ffebee;color:#c62828}
+.status-active{background:#e8f5e9;color:#2e7d32}
+.status-pending{background:#fff3e0;color:#e65100}
+.status-paid{background:#e8f5e9;color:#2e7d32}
+</style>
+
+<div class="profile-header">
+    <div>
+        <h1>{{ patient.full_name }}</h1>
+        <div class="meta">
+            <strong>Date of Birth:</strong> {{ patient.date_of_birth|date:"F d, Y" }} |
+            <strong>Patient ID:</strong> {{ patient.patient_id }}
+        </div>
+    </div>
+    <div class="actions">
+        <a href="{% url 'patient_profile_edit' %}" class="button" style="color: white;">Edit My Profile</a>
+    </div>
+</div>
+
+{% if allergies %}
+<div class="info-module">
+    <h2>⚠️ Active Allergies</h2>
+    <div class="content" style="padding:15px 20px">
+        {% for allergy in allergies %}
+        <span class="badge-item {% if allergy.severity == 'Severe' %}badge-severe{% elif allergy.severity == 'Moderate' %}badge-moderate{% else %}badge-mild{% endif %}">
+            {{ allergy.allergen }} ({{ allergy.severity }})
+        </span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="info-grid">
+    <div class="info-module">
+        <h2>Personal Information</h2>
+        <div class="content">
+            <dl>
+                <div><dt>Full Name</dt><dd>{{ patient.full_name }}</dd></div>
+                <div><dt>Date of Birth</dt><dd>{{ patient.date_of_birth|date:"F d, Y" }}</dd></div>
+                <div><dt>Gender</dt><dd>{{ patient.gender }}</dd></div>
+                <div><dt>Email</dt><dd>{{ patient.email|default:"—" }}</dd></div>
+                <div><dt>Phone</dt><dd>{{ patient.phone|default:"—" }}</dd></div>
+            </dl>
+        </div>
+    </div>
+
+    <div class="info-module">
+        <h2>Contact Information</h2>
+        <div class="content">
+            <dl>
+                <div><dt>Address</dt><dd>{{ patient.address|default:"—" }}</dd></div>
+                <div><dt>City</dt><dd>{{ patient.city|default:"—" }}</dd></div>
+                <div><dt>State</dt><dd>{{ patient.state|default:"—" }}</dd></div>
+                <div><dt>Zip Code</dt><dd>{{ patient.zip_code|default:"—" }}</dd></div>
+            </dl>
+        </div>
+    </div>
+</div>
+
+<div class="info-grid">
+    <div class="info-module">
+        <h2>Emergency Contact</h2>
+        <div class="content">
+            <dl>
+                <div><dt>Contact Name</dt><dd>{{ patient.emergency_contact_name|default:"—" }}</dd></div>
+                <div><dt>Contact Phone</dt><dd>{{ patient.emergency_contact_phone|default:"—" }}</dd></div>
+            </dl>
+        </div>
+    </div>
+
+    {% if insurance_info %}
+    <div class="info-module">
+        <h2>Primary Insurance</h2>
+        <div class="content">
+            <dl>
+                <div><dt>Provider</dt><dd>{{ insurance_info.provider_name }}</dd></div>
+                <div><dt>Policy Number</dt><dd>{{ insurance_info.policy_number }}</dd></div>
+                <div><dt>Effective Date</dt><dd>{{ insurance_info.effective_date|date:"M d, Y" }}</dd></div>
+            </dl>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if patient.primary_doctor %}
+<div class="info-module">
+    <h2>Primary Care Physician</h2>
+    <div class="content">
+        <dl>
+            <div><dt>Name</dt><dd>Dr. {{ patient.primary_doctor.full_name }}</dd></div>
+            <div><dt>Specialty</dt><dd>{{ patient.primary_doctor.specialty|default:"—" }}</dd></div>
+            <div><dt>Phone</dt><dd>{{ patient.primary_doctor.phone|default:"—" }}</dd></div>
+            <div><dt>Email</dt><dd>{{ patient.primary_doctor.email|default:"—" }}</dd></div>
+        </dl>
+    </div>
+</div>
+{% endif %}
+
+<div class="data-table-module">
+    <h2>My Appointments</h2>
+    {% if appointments %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date & Time</th>
+                <th>Physician</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Chief Complaint</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appointment in appointments %}
+            <tr>
+                <td>{{ appointment.encounter_date|date:"M d, Y H:i" }}</td>
+                <td>{% if appointment.provider %}Dr. {{ appointment.provider.full_name }}{% else %}—{% endif %}</td>
+                <td>{{ appointment.encounter_type }}</td>
+                <td><span class="status-badge status-{{ appointment.status|lower|cut:' ' }}">{{ appointment.status }}</span></td>
+                <td>{{ appointment.chief_complaint|truncatewords:10|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No appointments found</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Treatment Plans</h2>
+    {% if appointments %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Physician</th>
+                <th>Treatment Plan</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appointment in appointments %}
+            {% if appointment.treatment_plan %}
+            <tr>
+                <td>{{ appointment.encounter_date|date:"M d, Y" }}</td>
+                <td>{% if appointment.provider %}Dr. {{ appointment.provider.full_name }}{% else %}—{% endif %}</td>
+                <td>{{ appointment.treatment_plan|truncatewords:20 }}</td>
+                <td><span class="status-badge status-{{ appointment.status|lower|cut:' ' }}">{{ appointment.status }}</span></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No treatment plans found</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Recent Test Results</h2>
+    {% if lab_tests %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Test Name</th>
+                <th>Result</th>
+                <th>Status</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for test in lab_tests %}
+            <tr>
+                <td>{{ test.test_date|date:"M d, Y" }}</td>
+                <td><strong>{{ test.test_name }}</strong></td>
+                <td>{{ test.result_value|default:"—" }}</td>
+                <td><span class="status-badge status-{{ test.result_status|lower }}">{{ test.result_status }}</span></td>
+                <td>{{ test.notes|truncatewords:10|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No lab tests found</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Recent Vital Signs</h2>
+    {% if vitals %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Blood Pressure</th>
+                <th>Heart Rate</th>
+                <th>Temperature</th>
+                <th>Weight</th>
+                <th>BMI</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vital in vitals %}
+            <tr>
+                <td>{{ vital.recorded_at|date:"M d, Y" }}</td>
+                <td>{{ vital.blood_pressure }}</td>
+                <td>{% if vital.heart_rate %}{{ vital.heart_rate }} bpm{% else %}—{% endif %}</td>
+                <td>{% if vital.temperature_value %}{{ vital.temperature_value }}°{{ vital.temperature_unit }}{% else %}—{% endif %}</td>
+                <td>{% if vital.weight_value %}{{ vital.weight_value }} {{ vital.weight_unit }}{% else %}—{% endif %}</td>
+                <td>{% if vital.bmi %}{{ vital.bmi }}{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No vital signs recorded</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Active Diagnoses</h2>
+    {% if diagnoses %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Diagnosis</th>
+                <th>ICD-10 Code</th>
+                <th>Type</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for diagnosis in diagnoses %}
+            <tr>
+                <td>{{ diagnosis.diagnosed_at|date:"M d, Y" }}</td>
+                <td><strong>{{ diagnosis.diagnosis_description }}</strong></td>
+                <td>{{ diagnosis.icd10_code|default:"—" }}</td>
+                <td>{{ diagnosis.diagnosis_type }}</td>
+                <td><span class="status-badge status-{{ diagnosis.status|lower }}">{{ diagnosis.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No diagnoses found</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Active Prescriptions</h2>
+    {% if prescriptions %}
+    <table>
+        <thead>
+            <tr>
+                <th>Medication</th>
+                <th>Dosage</th>
+                <th>Frequency</th>
+                <th>Start Date</th>
+                <th>Prescriber</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for prescription in prescriptions %}
+            <tr>
+                <td><strong>{{ prescription.medication_name }}</strong></td>
+                <td>{{ prescription.dosage }}</td>
+                <td>{{ prescription.frequency }}</td>
+                <td>{{ prescription.start_date|date:"M d, Y" }}</td>
+                <td>{% if prescription.prescribed_by %}Dr. {{ prescription.prescribed_by.full_name }}{% else %}—{% endif %}</td>
+                <td><span class="status-badge status-{{ prescription.status|lower }}">{{ prescription.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No prescriptions found</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Medical History</h2>
+    {% if medical_history %}
+    <table>
+        <thead>
+            <tr>
+                <th>Condition</th>
+                <th>Diagnosis Date</th>
+                <th>Status</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for history in medical_history %}
+            <tr>
+                <td><strong>{{ history.condition_name }}</strong></td>
+                <td>{{ history.diagnosis_date|date:"M d, Y" }}</td>
+                <td><span class="status-badge status-{{ history.status|lower }}">{{ history.status }}</span></td>
+                <td>{{ history.notes|truncatewords:15|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No medical history found</div>
+    {% endif %}
+</div>
+
+{% if social_history %}
+<div class="info-module">
+    <h2>Social History</h2>
+    <div class="content">
+        <dl>
+            <div><dt>Smoking Status</dt><dd>{{ social_history.smoking_status|default:"—" }}</dd></div>
+            <div><dt>Alcohol Use</dt><dd>{{ social_history.alcohol_use|default:"—" }}</dd></div>
+            <div><dt>Exercise</dt><dd>{{ social_history.exercise_frequency|default:"—" }}</dd></div>
+            <div><dt>Occupation</dt><dd>{{ social_history.occupation|default:"—" }}</dd></div>
+        </dl>
+    </div>
+</div>
+{% endif %}
+
+<div class="data-table-module">
+    <h2>Billing & Payments</h2>
+    {% if billings %}
+    <table>
+        <thead>
+            <tr>
+                <th>Invoice #</th>
+                <th>Date</th>
+                <th>Total Amount</th>
+                <th>Amount Paid</th>
+                <th>Amount Due</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bill in billings %}
+            <tr>
+                <td><strong>{{ bill.invoice_number }}</strong></td>
+                <td>{{ bill.billing_date|date:"M d, Y" }}</td>
+                <td>${{ bill.total_amount }}</td>
+                <td>${{ bill.amount_paid }}</td>
+                <td>${{ bill.amount_due }}</td>
+                <td><span class="status-badge status-{{ bill.status|lower }}">{{ bill.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No billing records found</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Payment History</h2>
+    {% if payments %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Transaction ID</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                <td>${{ payment.amount }}</td>
+                <td>{{ payment.payment_method }}</td>
+                <td>{{ payment.transaction_id|default:"—" }}</td>
+                <td><span class="status-badge status-{{ payment.status|lower }}">{{ payment.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No payment history found</div>
+    {% endif %}
+</div>
+
+{% if devices %}
+<div class="data-table-module">
+    <h2>Connected Medical Devices</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Device Name</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Last Sync</th>
+                <th>Battery Level</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for device in devices %}
+            <tr>
+                <td><strong>{{ device.device_name }}</strong></td>
+                <td>{{ device.device_type }}</td>
+                <td><span class="status-badge status-{{ device.status|lower }}">{{ device.status }}</span></td>
+                <td>{{ device.last_sync|date:"M d, Y H:i"|default:"—" }}</td>
+                <td>{% if device.battery_level %}{{ device.battery_level }}%{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% endblock %}

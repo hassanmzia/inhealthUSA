@@ -1,0 +1,119 @@
+{% extends 'healthcare/base.html' %}
+{% block title %}Edit My Profile - InHealth EHR{% endblock %}
+{% block breadcrumbs %}<a href="{% url 'patient_profile' %}">My Profile</a> &rsaquo; Edit{% endblock %}
+{% block content %}
+<style>
+.form-container{background:white;border:1px solid var(--hairline-color);border-radius:4px;padding:30px;max-width:800px;margin:0 auto}
+.form-container h1{margin:0 0 20px 0;font-size:28px;font-weight:300;color:var(--body-fg)}
+.form-section{margin-bottom:30px}
+.form-section h2{margin:0 0 15px 0;font-size:18px;font-weight:500;color:var(--primary);border-bottom:2px solid var(--primary);padding-bottom:8px}
+.form-row{margin-bottom:20px}
+.form-row label{display:block;font-size:13px;font-weight:600;color:#666;margin-bottom:6px}
+.form-row input[type="text"],.form-row input[type="email"],.form-row input[type="tel"],.form-row textarea{width:100%;padding:10px 12px;border:1px solid var(--border-color);border-radius:4px;font-size:14px;font-family:inherit;transition:border-color 0.2s}
+.form-row input[type="text"]:focus,.form-row input[type="email"]:focus,.form-row input[type="tel"]:focus,.form-row textarea:focus{outline:none;border-color:var(--primary)}
+.form-row textarea{min-height:100px;resize:vertical}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.form-actions{display:flex;gap:10px;margin-top:30px;padding-top:20px;border-top:1px solid var(--hairline-color)}
+.button{padding:10px 20px;border:none;border-radius:4px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-block;transition:background-color 0.2s}
+.button-primary{background:var(--primary);color:white}
+.button-primary:hover{background:var(--primary-dark)}
+.button-secondary{background:#6c757d;color:white}
+.button-secondary:hover{background:#545b62}
+.help-text{font-size:12px;color:#666;margin-top:4px}
+.readonly-field{background:#f5f5f5;padding:10px 12px;border:1px solid var(--border-color);border-radius:4px;font-size:14px;color:#666}
+.alert{padding:12px 20px;border-radius:4px;margin-bottom:20px;font-size:14px}
+.alert-info{background:#d1ecf1;color:#0c5460;border:1px solid #bee5eb}
+</style>
+
+<div class="form-container">
+    <h1>Edit My Profile</h1>
+
+    <div class="alert alert-info">
+        <strong>Note:</strong> You can only edit your contact information and emergency contacts.
+        For changes to personal information (name, date of birth), please contact your healthcare provider.
+    </div>
+
+    <form method="post" action="{% url 'patient_profile_edit' %}">
+        {% csrf_token %}
+
+        <div class="form-section">
+            <h2>Personal Information (Read-Only)</h2>
+            <div class="form-grid">
+                <div class="form-row">
+                    <label>Full Name</label>
+                    <div class="readonly-field">{{ patient.full_name }}</div>
+                </div>
+                <div class="form-row">
+                    <label>Date of Birth</label>
+                    <div class="readonly-field">{{ patient.date_of_birth|date:"F d, Y" }}</div>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="form-row">
+                    <label>Gender</label>
+                    <div class="readonly-field">{{ patient.gender }}</div>
+                </div>
+                <div class="form-row">
+                    <label>Patient ID</label>
+                    <div class="readonly-field">{{ patient.patient_id }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Contact Information</h2>
+            <div class="form-grid">
+                <div class="form-row">
+                    <label for="phone">Phone Number *</label>
+                    <input type="tel" id="phone" name="phone" value="{{ patient.phone }}" required>
+                    <div class="help-text">Your primary contact number</div>
+                </div>
+                <div class="form-row">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" name="email" value="{{ patient.email }}" required>
+                    <div class="help-text">Used for appointment reminders</div>
+                </div>
+            </div>
+            <div class="form-row">
+                <label for="address">Street Address</label>
+                <textarea id="address" name="address">{{ patient.address }}</textarea>
+            </div>
+            <div class="form-grid">
+                <div class="form-row">
+                    <label for="city">City</label>
+                    <input type="text" id="city" name="city" value="{{ patient.city }}">
+                </div>
+                <div class="form-row">
+                    <label for="state">State</label>
+                    <input type="text" id="state" name="state" value="{{ patient.state }}" maxlength="2" placeholder="CA">
+                    <div class="help-text">Two-letter state code</div>
+                </div>
+            </div>
+            <div class="form-row">
+                <label for="zip_code">Zip Code</label>
+                <input type="text" id="zip_code" name="zip_code" value="{{ patient.zip_code }}" maxlength="10" placeholder="12345">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Emergency Contact</h2>
+            <div class="form-grid">
+                <div class="form-row">
+                    <label for="emergency_contact_name">Emergency Contact Name</label>
+                    <input type="text" id="emergency_contact_name" name="emergency_contact_name" value="{{ patient.emergency_contact_name }}">
+                    <div class="help-text">Person to contact in case of emergency</div>
+                </div>
+                <div class="form-row">
+                    <label for="emergency_contact_phone">Emergency Contact Phone</label>
+                    <input type="tel" id="emergency_contact_phone" name="emergency_contact_phone" value="{{ patient.emergency_contact_phone }}">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="button button-primary">Save Changes</button>
+            <a href="{% url 'patient_profile' %}" class="button button-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
