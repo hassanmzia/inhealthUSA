@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Script to fix migration errors for duplicate tables
-# Errors: relation "nurses" already exists, relation "office_administrators" already exists
+# Script to fix migration errors for duplicate tables and columns
+# Errors: relation "nurses" already exists, relation "office_administrators" already exists, column "glucose" already exists
 
 echo "=========================================="
 echo "Fixing Migration Errors"
@@ -43,6 +43,28 @@ if [ $? -eq 0 ]; then
     echo ""
 else
     echo "✗ Error faking migration 0005. Please check the error message above."
+    exit 1
+fi
+
+echo "Faking migration 0006_vitalsign_glucose..."
+python manage.py migrate healthcare 0006_vitalsign_glucose --fake
+
+if [ $? -eq 0 ]; then
+    echo "✓ Successfully faked migration 0006_vitalsign_glucose"
+    echo ""
+else
+    echo "✗ Error faking migration 0006. Please check the error message above."
+    exit 1
+fi
+
+echo "Faking migration 0007_vitalsign_data_source_vitalsign_device_and_more..."
+python manage.py migrate healthcare 0007_vitalsign_data_source_vitalsign_device_and_more --fake
+
+if [ $? -eq 0 ]; then
+    echo "✓ Successfully faked migration 0007_vitalsign_data_source_vitalsign_device_and_more"
+    echo ""
+else
+    echo "✗ Error faking migration 0007. Please check the error message above."
     exit 1
 fi
 
