@@ -5,9 +5,9 @@
 {% block content %}
 <div class="breadcrumbs">
     <a href="{% url 'index' %}">Home</a> &rsaquo;
-    {% if request.user.userprofile.role == 'doctor' %}
+    {% if request.user.profile.role == 'doctor' %}
         <a href="{% url 'doctor_inbox' %}">Inbox</a>
-    {% elif request.user.userprofile.role == 'patient' %}
+    {% elif request.user.profile.role == 'patient' %}
         <a href="{% url 'patient_inbox' %}">Inbox</a>
     {% else %}
         <a href="{% url 'message_inbox' %}">Inbox</a>
@@ -62,10 +62,10 @@
 
     <!-- Action Buttons -->
     <div style="margin: 20px 0; padding: 15px 0; border-top: 1px solid #e8e8e8;">
-        {% if request.user.userprofile.role == 'doctor' %}
+        {% if request.user.profile.role == 'doctor' %}
             <a href="{% url 'doctor_compose_message' %}?reply_to={{ message.message_id }}" class="button" style="margin-right: 10px;">Reply to Message</a>
             <a href="{% url 'doctor_inbox' %}" class="button">Back to Inbox</a>
-        {% elif request.user.userprofile.role == 'patient' %}
+        {% elif request.user.profile.role == 'patient' %}
             <a href="{% url 'patient_compose_message' %}?reply_to={{ message.message_id }}" class="button" style="margin-right: 10px;">Reply to Message</a>
             <a href="{% url 'patient_inbox' %}" class="button">Back to Inbox</a>
         {% else %}
