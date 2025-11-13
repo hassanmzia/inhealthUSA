@@ -106,12 +106,17 @@ chmod +x fix_migration_issue.sh
 cd /home/zia/django_inhealth
 source venv/bin/activate  # if using virtual environment
 
-# Fake the migration to mark it as applied without running it
-python manage.py migrate healthcare 0003 --fake
+# Fake the migration using FULL migration name (not just "0003")
+python manage.py migrate healthcare 0003_billing_alter_userprofile_role_payment_and_more --fake
+
+# Apply remaining migrations
+python manage.py migrate
 
 # Verify the fix
 python manage.py showmigrations healthcare
 ```
+
+**IMPORTANT:** You must use the **full migration name**. Using just "0003" will cause an error: "More than one migration matches '0003'".
 
 **What does `--fake` do?**
 The `--fake` flag tells Django to mark the migration as applied in the `django_migrations` table without actually executing the SQL commands. This is useful when the database changes have already been made but Django doesn't know about them.
