@@ -1,4 +1,4 @@
-# Fix for Migration Errors (Nurses & Office Administrators)
+# Fix for Migration Errors (Nurses, Office Administrators, VitalSign Fields)
 
 ## The Errors
 ```
@@ -11,10 +11,21 @@ psycopg2.errors.DuplicateTable: relation "office_administrators" already exists
 django.db.utils.ProgrammingError: relation "office_administrators" already exists
 ```
 
+```
+psycopg2.errors.DuplicateColumn: column "glucose" of relation "vital_signs" already exists
+django.db.utils.ProgrammingError: column "glucose" of relation "vital_signs" already exists
+```
+
+```
+psycopg2.errors.DuplicateColumn: column "data_source" of relation "vital_signs" already exists
+psycopg2.errors.DuplicateColumn: column "device" of relation "vital_signs" already exists
+psycopg2.errors.DuplicateColumn: column "recorded_by_nurse" of relation "vital_signs" already exists
+```
+
 ## Root Cause
-The migrations `0004_alter_userprofile_role_nurse` and `0005_officeadministrator` are trying to create tables that already exist in your database. This happens when:
-- The tables were created manually
-- The tables were created by previous migrations that weren't tracked
+The migrations `0004`, `0005`, `0006`, and `0007` are trying to create tables/columns that already exist in your database. This happens when:
+- The tables/columns were created manually
+- The tables/columns were created by previous migrations that weren't tracked
 - Database and migration history are out of sync
 
 ## The Solution
@@ -35,6 +46,8 @@ cd /home/zia/django_inhealth
 source venv/bin/activate
 python manage.py migrate healthcare 0004_alter_userprofile_role_nurse --fake
 python manage.py migrate healthcare 0005_officeadministrator --fake
+python manage.py migrate healthcare 0006_vitalsign_glucose --fake
+python manage.py migrate healthcare 0007_vitalsign_data_source_vitalsign_device_and_more --fake
 python manage.py migrate
 ```
 
@@ -102,6 +115,8 @@ After running the fix script, you should see:
 ```
 ✓ Successfully faked migration 0004_alter_userprofile_role_nurse
 ✓ Successfully faked migration 0005_officeadministrator
+✓ Successfully faked migration 0006_vitalsign_glucose
+✓ Successfully faked migration 0007_vitalsign_data_source_vitalsign_device_and_more
 ✓ All migrations completed successfully!
 ```
 
