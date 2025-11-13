@@ -1949,6 +1949,7 @@ def doctor_compose_message(request):
         body = request.POST.get('body')
         send_email = request.POST.get('send_email') == 'on'
         send_sms = request.POST.get('send_sms') == 'on'
+        cc_email = request.POST.get('cc_email', '').strip()
         parent_message_id = request.POST.get('parent_message_id')
 
         # Validate required fields
@@ -2002,7 +2003,7 @@ Please log in to your InHealth EHR account to view and reply to this message.
 InHealth EHR System
 This is an automated notification. Please do not reply to this email."""
 
-                        success, msg = send_email_notification(patient.email, email_subject, email_body)
+                        success, msg = send_email_notification(patient.email, email_subject, email_body, cc_email=cc_email)
                         if success:
                             messages.success(request, f'Email sent to {patient.email}')
                         else:
@@ -2672,6 +2673,7 @@ def patient_compose_message(request):
         body = request.POST.get('body')
         send_email = request.POST.get('send_email') == 'on'
         send_sms = request.POST.get('send_sms') == 'on'
+        cc_email = request.POST.get('cc_email', '').strip()
         parent_message_id = request.POST.get('parent_message_id')
 
         # Validate required fields
@@ -2728,7 +2730,7 @@ Please log in to your InHealth EHR account to view and reply to this message.
 InHealth EHR System
 This is an automated notification. Please do not reply to this email."""
 
-                        success, msg = send_email_notification(patient.primary_doctor.email, email_subject, email_body)
+                        success, msg = send_email_notification(patient.primary_doctor.email, email_subject, email_body, cc_email=cc_email)
                         if success:
                             messages.success(request, f'Email sent to Dr. {patient.primary_doctor.full_name}')
                         else:

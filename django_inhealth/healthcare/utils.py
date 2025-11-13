@@ -3,18 +3,19 @@ Utility functions for the healthcare app
 """
 import os
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 
 
-def send_email_notification(to_email, subject, message_body, from_email=None):
+def send_email_notification(to_email, subject, message_body, from_email=None, cc_email=None):
     """
-    Send email notification using Django's email backend
+    Send email notification using Django's email backend with CC support
 
     Args:
         to_email (str): Recipient email address
         subject (str): Email subject
         message_body (str): Email body content
         from_email (str, optional): Sender email address
+        cc_email (str or list, optional): CC email address(es)
 
     Returns:
         tuple: (success: bool, message: str)
@@ -27,17 +28,34 @@ def send_email_notification(to_email, subject, message_body, from_email=None):
     if not from_email:
         from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@inhealthehr.com')
 
+    # Prepare CC list
+    cc_list = []
+    if cc_email:
+        if isinstance(cc_email, str):
+            cc_list = [cc_email.strip()] if cc_email.strip() else []
+        elif isinstance(cc_email, list):
+            cc_list = [email.strip() for email in cc_email if email.strip()]
+
     try:
-        # Send email using Django's send_mail
-        send_mail(
+        # Create email message with CC support
+        email = EmailMessage(
             subject=subject,
-            message=message_body,
+            body=message_body,
             from_email=from_email,
-            recipient_list=[to_email],
-            fail_silently=False,
+            to=[to_email],
+            cc=cc_list if cc_list else None,
         )
 
-        return (True, f'Email sent successfully to {to_email}')
+        # Send the email
+        email.send(fail_silently=False)
+
+        # Build success message
+        recipients = [to_email]
+        if cc_list:
+            recipients.extend(cc_list)
+        recipients_str = ', '.join(recipients)
+
+        return (True, f'Email sent successfully to {recipients_str}')
 
     except Exception as e:
         error_msg = str(e)
