@@ -53,7 +53,7 @@
                 <td style="padding: 10px;">{{ patient.phone|default:"-" }}</td>
                 <td style="padding: 10px;">
                     <a href="{% url 'patient_detail' patient.patient_id %}" style="margin-right: 10px;">View</a>
-                    <a href="{% url 'patient_vital_create' patient.patient_id %}" style="color: #4caf50;">Add Vitals</a>
+                    <a href="{% url 'nurse_vital_create' patient.patient_id %}" style="color: #4caf50; font-weight: 600;">📋 Add Vitals</a>
                 </td>
             </tr>
             {% empty %}
