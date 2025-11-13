@@ -1,0 +1,122 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Vital Signs - Nurse View - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'nurse_dashboard' %}">Nurse Dashboard</a> &rsaquo;
+    Vital Signs
+</div>
+
+<div class="module">
+    <h1>Vital Signs List</h1>
+
+    <!-- Filter Form -->
+    <div style="margin: 20px 0; padding: 15px; background: #f0f0f0; border-radius: 5px;">
+        <form method="get" action="" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end;">
+            <div>
+                <label for="date" style="display: block; margin-bottom: 5px; font-weight: bold;">Date Range:</label>
+                <select name="date" id="date" class="vTextField" style="width: 100%;">
+                    <option value="">All Time</option>
+                    <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Today</option>
+                    <option value="week" {% if date_filter == 'week' %}selected{% endif %}>Last Week</option>
+                    <option value="month" {% if date_filter == 'month' %}selected{% endif %}>Last Month</option>
+                </select>
+            </div>
+            <div>
+                <label for="patient" style="display: block; margin-bottom: 5px; font-weight: bold;">Patient Name:</label>
+                <input type="text" name="patient" id="patient" placeholder="Search by patient name..." class="vTextField" style="width: 100%;" value="{{ patient_search }}">
+            </div>
+            <div></div>
+            <div>
+                <button type="submit" class="button" style="padding: 8px 20px; background: #417690; color: white; border: none; border-radius: 3px; cursor: pointer;">Filter</button>
+                <a href="{% url 'nurse_vitals_list' %}" class="button" style="padding: 8px 20px; background: #888; color: white; text-decoration: none; border-radius: 3px; display: inline-block;">Clear</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Vitals Table -->
+    <table style="width: 100%; margin-top: 20px;">
+        <thead>
+            <tr>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Date & Time</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Patient</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Temperature</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Blood Pressure</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Heart Rate</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Resp. Rate</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">O2 Sat</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vital in vitals %}
+            <tr style="border-bottom: 1px solid #e8e8e8;">
+                <td style="padding: 10px;">{{ vital.recorded_at|date:"M d, Y H:i" }}</td>
+                <td style="padding: 10px;">
+                    <a href="{% url 'patient_detail' vital.encounter.patient.patient_id %}">{{ vital.encounter.patient.full_name }}</a>
+                </td>
+                <td style="padding: 10px;">
+                    {% if vital.temperature_value %}
+                        {{ vital.temperature_value }}°{{ vital.temperature_unit|default:"F" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td style="padding: 10px;">
+                    {% if vital.blood_pressure_systolic and vital.blood_pressure_diastolic %}
+                        {{ vital.blood_pressure_systolic }}/{{ vital.blood_pressure_diastolic }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td style="padding: 10px;">
+                    {% if vital.heart_rate %}
+                        {{ vital.heart_rate }} bpm
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td style="padding: 10px;">
+                    {% if vital.respiratory_rate %}
+                        {{ vital.respiratory_rate }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td style="padding: 10px;">
+                    {% if vital.oxygen_saturation %}
+                        {{ vital.oxygen_saturation }}%
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td style="padding: 10px;">
+                    <a href="{% url 'patient_vital_edit' vital.encounter.patient.patient_id vital.vital_signs_id %}">Edit</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="padding: 20px; text-align: center; color: #999;">
+                    {% if date_filter or patient_search %}
+                        No vital signs found matching your filters.
+                    {% else %}
+                        No vital signs recorded yet.
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if vitals %}
+    <div style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 5px; text-align: center;">
+        Showing {{ vitals|length }} vital sign record{{ vitals|length|pluralize }}
+        {% if vitals|length == 100 %}
+            (limited to most recent 100)
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

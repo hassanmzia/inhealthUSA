@@ -401,6 +401,9 @@
                 {% if user.profile.is_office_admin %}
                 <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
                 {% endif %}
+                {% if user.profile.is_nurse %}
+                <a href="{% url 'nurse_dashboard' %}">Nurse Dashboard</a>
+                {% endif %}
                 <a href="{% url 'logout' %}">Log out</a>
             </div>
             {% endif %}

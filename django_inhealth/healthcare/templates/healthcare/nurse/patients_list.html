@@ -1,0 +1,79 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Patients - Nurse View - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'nurse_dashboard' %}">Nurse Dashboard</a> &rsaquo;
+    Patients
+</div>
+
+<div class="module">
+    <h1>Patient List</h1>
+
+    <!-- Search Form -->
+    <div style="margin: 20px 0; padding: 15px; background: #f0f0f0; border-radius: 5px;">
+        <form method="get" action="" style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" name="search" placeholder="Search patients by name, email, or SSN..." class="vTextField" style="flex: 1;" value="{{ search }}">
+            <button type="submit" class="button" style="padding: 8px 20px; background: #417690; color: white; border: none; border-radius: 3px; cursor: pointer;">Search</button>
+            {% if search %}
+            <a href="{% url 'nurse_patients_list' %}" class="button" style="padding: 8px 20px; background: #888; color: white; text-decoration: none; border-radius: 3px;">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Patients Table -->
+    <table style="width: 100%; margin-top: 20px;">
+        <thead>
+            <tr>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Patient Name</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Date of Birth</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Gender</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Primary Doctor</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Phone</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for patient in patients %}
+            <tr style="border-bottom: 1px solid #e8e8e8;">
+                <td style="padding: 10px;">
+                    <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a>
+                </td>
+                <td style="padding: 10px;">{{ patient.date_of_birth|date:"M d, Y" }}</td>
+                <td style="padding: 10px;">{{ patient.gender }}</td>
+                <td style="padding: 10px;">
+                    {% if patient.primary_doctor %}
+                        Dr. {{ patient.primary_doctor.full_name }}
+                    {% else %}
+                        Not assigned
+                    {% endif %}
+                </td>
+                <td style="padding: 10px;">{{ patient.phone|default:"-" }}</td>
+                <td style="padding: 10px;">
+                    <a href="{% url 'patient_detail' patient.patient_id %}" style="margin-right: 10px;">View</a>
+                    <a href="{% url 'patient_vital_create' patient.patient_id %}" style="color: #4caf50;">Add Vitals</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="padding: 20px; text-align: center; color: #999;">
+                    {% if search %}
+                        No patients found matching "{{ search }}".
+                    {% else %}
+                        No patients found.
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if patients %}
+    <div style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 5px; text-align: center;">
+        Showing {{ patients|length }} patient{{ patients|length|pluralize }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

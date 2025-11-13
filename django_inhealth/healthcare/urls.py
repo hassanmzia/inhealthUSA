@@ -163,4 +163,19 @@ urlpatterns = [
     # Admin Payment Management
     path('admin/patients/<int:patient_id>/payments/create/', views.admin_payment_create, name='admin_payment_create'),
     path('admin/patients/<int:patient_id>/payments/<int:payment_id>/edit/', views.admin_payment_edit, name='admin_payment_edit'),
+
+    # ============================================================================
+    # NURSE URLS
+    # ============================================================================
+
+    # Nurse Dashboard and Profile
+    path('nurse/dashboard/', views.nurse_dashboard, name='nurse_dashboard'),
+    path('nurse/profile/', views.nurse_profile, name='nurse_profile'),
+    path('nurse/profile/edit/', views.nurse_profile_edit, name='nurse_profile_edit'),
+
+    # Nurse Patient Management
+    path('nurse/patients/', views.nurse_patients_list, name='nurse_patients_list'),
+
+    # Nurse Vital Signs Management
+    path('nurse/vitals/', views.nurse_vitals_list, name='nurse_vitals_list'),
 ]

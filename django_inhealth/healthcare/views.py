@@ -2437,3 +2437,180 @@ def admin_payment_edit(request, patient_id, payment_id):
         'billings': billings,
     }
     return render(request, 'healthcare/admin/payment_edit.html', context)
+
+
+# ============================================================================
+# NURSE VIEWS
+# ============================================================================
+
+@login_required
+@require_role('nurse')
+def nurse_dashboard(request):
+    """Nurse Dashboard - view patients, appointments, and vitals management"""
+    # Get statistics
+    stats = {
+        'total_patients': Patient.objects.filter(is_active=True).count(),
+        'total_appointments_today': Encounter.objects.filter(
+            encounter_date__date=timezone.now().date()
+        ).count(),
+        'total_appointments_upcoming': Encounter.objects.filter(
+            encounter_date__gt=timezone.now(),
+            status='Scheduled'
+        ).count(),
+        'total_vitals_recorded_today': VitalSign.objects.filter(
+            recorded_at__date=timezone.now().date()
+        ).count(),
+    }
+
+    # Recent activity
+    recent_patients = Patient.objects.filter(is_active=True).order_by('-updated_at')[:10]
+    upcoming_appointments = Encounter.objects.filter(
+        encounter_date__gte=timezone.now(),
+        status='Scheduled'
+    ).select_related('patient', 'provider').order_by('encounter_date')[:10]
+
+    recent_vitals = VitalSign.objects.select_related(
+        'encounter__patient', 'encounter__provider'
+    ).order_by('-recorded_at')[:10]
+
+    # Today's appointments
+    todays_appointments = Encounter.objects.filter(
+        encounter_date__date=timezone.now().date()
+    ).select_related('patient', 'provider').order_by('encounter_date')
+
+    context = {
+        'stats': stats,
+        'recent_patients': recent_patients,
+        'upcoming_appointments': upcoming_appointments,
+        'recent_vitals': recent_vitals,
+        'todays_appointments': todays_appointments,
+    }
+
+    return render(request, 'healthcare/nurse/dashboard.html', context)
+
+
+@login_required
+@require_role('nurse')
+def nurse_profile(request):
+    """Nurse profile view - shows nurse's own information"""
+    nurse_profile = request.user.profile
+
+    # Get recent vitals recorded (recent activity)
+    recent_vitals = VitalSign.objects.select_related(
+        'encounter__patient', 'encounter__provider'
+    ).order_by('-recorded_at')[:20]
+
+    # Get statistics for nurse's work
+    stats = {
+        'patients_seen_today': Encounter.objects.filter(
+            encounter_date__date=timezone.now().date()
+        ).values('patient').distinct().count(),
+        'vitals_recorded_today': VitalSign.objects.filter(
+            recorded_at__date=timezone.now().date()
+        ).count(),
+        'appointments_today': Encounter.objects.filter(
+            encounter_date__date=timezone.now().date()
+        ).count(),
+    }
+
+    context = {
+        'nurse_profile': nurse_profile,
+        'recent_vitals': recent_vitals,
+        'stats': stats,
+    }
+
+    return render(request, 'healthcare/nurse/profile.html', context)
+
+
+@login_required
+@require_role('nurse')
+def nurse_profile_edit(request):
+    """Edit nurse profile - nurses can edit their own information"""
+    nurse_profile = request.user.profile
+
+    if request.method == 'POST':
+        # Update user information
+        request.user.first_name = request.POST.get('first_name', request.user.first_name)
+        request.user.last_name = request.POST.get('last_name', request.user.last_name)
+        request.user.email = request.POST.get('email', request.user.email)
+        request.user.save()
+
+        # Update profile information
+        nurse_profile.phone = request.POST.get('phone', nurse_profile.phone)
+        nurse_profile.date_of_birth = request.POST.get('date_of_birth') or nurse_profile.date_of_birth
+        nurse_profile.save()
+
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('nurse_profile')
+
+    context = {
+        'nurse_profile': nurse_profile,
+    }
+
+    return render(request, 'healthcare/nurse/profile_edit.html', context)
+
+
+@login_required
+@require_role('nurse')
+def nurse_patients_list(request):
+    """Nurse view of all patients - with quick access to add vitals"""
+    search = request.GET.get('search', '')
+    patients = Patient.objects.filter(is_active=True).select_related('primary_doctor', 'primary_doctor__hospital')
+
+    if search:
+        patients = patients.filter(
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(ssn__icontains=search)
+        )
+
+    patients = patients.order_by('last_name', 'first_name')
+
+    context = {
+        'patients': patients,
+        'search': search,
+    }
+
+    return render(request, 'healthcare/nurse/patients_list.html', context)
+
+
+@login_required
+@require_role('nurse')
+def nurse_vitals_list(request):
+    """Nurse view of all recent vital signs"""
+    # Filter options
+    date_filter = request.GET.get('date', '')
+    patient_search = request.GET.get('patient', '')
+
+    vitals = VitalSign.objects.select_related(
+        'encounter__patient', 'encounter__provider', 'recorded_by'
+    ).order_by('-recorded_at')
+
+    if date_filter == 'today':
+        vitals = vitals.filter(recorded_at__date=timezone.now().date())
+    elif date_filter == 'week':
+        from datetime import timedelta
+        week_ago = timezone.now() - timedelta(days=7)
+        vitals = vitals.filter(recorded_at__gte=week_ago)
+    elif date_filter == 'month':
+        from datetime import timedelta
+        month_ago = timezone.now() - timedelta(days=30)
+        vitals = vitals.filter(recorded_at__gte=month_ago)
+
+    if patient_search:
+        vitals = vitals.filter(
+            Q(encounter__patient__first_name__icontains=patient_search) |
+            Q(encounter__patient__last_name__icontains=patient_search)
+        )
+
+    # Paginate results
+    vitals = vitals[:100]  # Limit to recent 100
+
+    context = {
+        'vitals': vitals,
+        'date_filter': date_filter,
+        'patient_search': patient_search,
+    }
+
+    return render(request, 'healthcare/nurse/vitals_list.html', context)
