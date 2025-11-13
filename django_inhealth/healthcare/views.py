@@ -1993,15 +1993,23 @@ def doctor_compose_message(request):
                 except Exception as e:
                     messages.warning(request, f'Could not queue email notification: {str(e)}')
 
-            # Send SMS if requested (placeholder for actual SMS sending)
+            # Send SMS if requested
             if send_sms:
                 try:
+                    from .utils import send_sms as send_sms_message, format_phone_number
                     patient = Patient.objects.get(user=recipient)
                     if patient.phone:
-                        # TODO: Implement actual SMS sending using Twilio or similar service
-                        messages.info(request, f'SMS notification queued to {patient.phone}')
+                        formatted_phone = format_phone_number(patient.phone)
+                        sms_body = f"New message from Dr. {provider.full_name}\nSubject: {subject}\n\nLog in to view your message."
+                        success, msg = send_sms_message(formatted_phone, sms_body)
+                        if success:
+                            messages.success(request, f'SMS sent to {patient.phone}')
+                        else:
+                            messages.warning(request, f'SMS not sent: {msg}')
+                    else:
+                        messages.warning(request, 'Patient does not have a phone number on file.')
                 except Exception as e:
-                    messages.warning(request, f'Could not queue SMS notification: {str(e)}')
+                    messages.warning(request, f'Could not send SMS notification: {str(e)}')
 
             messages.success(request, 'Message sent successfully!')
             return redirect('doctor_inbox')
@@ -2691,14 +2699,22 @@ def patient_compose_message(request):
                 except Exception as e:
                     messages.warning(request, f'Could not queue email notification: {str(e)}')
 
-            # Send SMS if requested (placeholder for actual SMS sending)
+            # Send SMS if requested
             if send_sms:
                 try:
+                    from .utils import send_sms as send_sms_message, format_phone_number
                     if patient.primary_doctor.phone:
-                        # TODO: Implement actual SMS sending using Twilio or similar service
-                        messages.info(request, f'SMS notification queued to {patient.primary_doctor.phone}')
+                        formatted_phone = format_phone_number(patient.primary_doctor.phone)
+                        sms_body = f"New message from patient {patient.full_name}\nSubject: {subject}\n\nLog in to view your message."
+                        success, msg = send_sms_message(formatted_phone, sms_body)
+                        if success:
+                            messages.success(request, f'SMS sent to Dr. {patient.primary_doctor.full_name}')
+                        else:
+                            messages.warning(request, f'SMS not sent: {msg}')
+                    else:
+                        messages.warning(request, 'Doctor does not have a phone number on file.')
                 except Exception as e:
-                    messages.warning(request, f'Could not queue SMS notification: {str(e)}')
+                    messages.warning(request, f'Could not send SMS notification: {str(e)}')
 
             messages.success(request, 'Message sent successfully!')
             return redirect('patient_inbox')
