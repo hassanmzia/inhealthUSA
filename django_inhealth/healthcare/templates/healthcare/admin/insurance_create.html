@@ -1,0 +1,122 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Create Insurance - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo;
+    <a href="{% url 'patient_insurance_list' patient.patient_id %}">Insurance</a> &rsaquo;
+    Create Insurance
+</div>
+
+<div class="module">
+    <h1>Create Insurance for {{ patient.full_name }}</h1>
+
+    <form method="post" action="" style="max-width: 800px;">
+        {% csrf_token %}
+
+        <fieldset class="module aligned">
+            <h2>Insurance Information</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="insurance_company" class="required">Insurance Company:</label>
+                    <input type="text" name="insurance_company" id="insurance_company" class="vTextField" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="policy_number" class="required">Policy Number:</label>
+                    <input type="text" name="policy_number" id="policy_number" class="vTextField" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="group_number">Group Number:</label>
+                    <input type="text" name="group_number" id="group_number" class="vTextField">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="is_primary">Primary Insurance:</label>
+                    <input type="checkbox" name="is_primary" id="is_primary">
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="module aligned">
+            <h2>Subscriber Information</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="subscriber_name" class="required">Subscriber Name:</label>
+                    <input type="text" name="subscriber_name" id="subscriber_name" class="vTextField" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="subscriber_relationship">Relationship to Patient:</label>
+                    <select name="subscriber_relationship" id="subscriber_relationship" class="vTextField">
+                        <option value="">---------</option>
+                        <option value="Self">Self</option>
+                        <option value="Spouse">Spouse</option>
+                        <option value="Parent">Parent</option>
+                        <option value="Child">Child</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="subscriber_dob">Subscriber Date of Birth:</label>
+                    <input type="date" name="subscriber_dob" id="subscriber_dob" class="vTextField">
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="module aligned">
+            <h2>Coverage Details</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="effective_date">Effective Date:</label>
+                    <input type="date" name="effective_date" id="effective_date" class="vTextField">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="termination_date">Termination Date:</label>
+                    <input type="date" name="termination_date" id="termination_date" class="vTextField">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="copay_amount">Copay Amount:</label>
+                    <input type="number" name="copay_amount" id="copay_amount" class="vTextField" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="deductible_amount">Deductible Amount:</label>
+                    <input type="number" name="deductible_amount" id="deductible_amount" class="vTextField" step="0.01" min="0">
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="Save" class="default">
+            <a href="{% url 'patient_insurance_list' patient.patient_id %}" class="button cancel-link">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

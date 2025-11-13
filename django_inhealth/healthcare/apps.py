@@ -6,4 +6,5 @@ class HealthcareConfig(AppConfig):
     name = 'healthcare'
 
     def ready(self):
+        """Import signals when the app is ready"""
         import healthcare.signals
