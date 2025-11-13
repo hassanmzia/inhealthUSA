@@ -133,4 +133,31 @@ urlpatterns = [
     # Patient Profile URLs (for logged-in patients)
     path('profile/', views.patient_profile, name='patient_profile'),
     path('profile/edit/', views.patient_profile_edit, name='patient_profile_edit'),
+
+    # ============================================================================
+    # OFFICE ADMINISTRATOR URLS
+    # ============================================================================
+
+    # Admin Dashboard
+    path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+
+    # Admin Provider Management
+    path('admin/providers/create/', views.admin_provider_create, name='admin_provider_create'),
+    path('admin/providers/<int:provider_id>/edit/', views.admin_provider_edit, name='admin_provider_edit'),
+
+    # Admin Hospital Management
+    path('admin/hospitals/create/', views.admin_hospital_create, name='admin_hospital_create'),
+    path('admin/hospitals/<int:hospital_id>/edit/', views.admin_hospital_edit, name='admin_hospital_edit'),
+
+    # Admin Insurance Management
+    path('admin/patients/<int:patient_id>/insurance/create/', views.admin_insurance_create, name='admin_insurance_create'),
+    path('admin/patients/<int:patient_id>/insurance/<int:insurance_id>/edit/', views.admin_insurance_edit, name='admin_insurance_edit'),
+
+    # Admin Billing Management
+    path('admin/patients/<int:patient_id>/billing/create/', views.admin_billing_create, name='admin_billing_create'),
+    path('admin/patients/<int:patient_id>/billing/<int:billing_id>/edit/', views.admin_billing_edit, name='admin_billing_edit'),
+
+    # Admin Payment Management
+    path('admin/patients/<int:patient_id>/payments/create/', views.admin_payment_create, name='admin_payment_create'),
+    path('admin/patients/<int:patient_id>/payments/<int:payment_id>/edit/', views.admin_payment_edit, name='admin_payment_edit'),
 ]

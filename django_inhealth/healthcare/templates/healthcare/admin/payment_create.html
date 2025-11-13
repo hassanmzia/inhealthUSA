@@ -1,0 +1,101 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Create Payment - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo;
+    <a href="{% url 'patient_payment_list' patient.patient_id %}">Payments</a> &rsaquo;
+    Create Payment
+</div>
+
+<div class="module">
+    <h1>Create Payment for {{ patient.full_name }}</h1>
+
+    <form method="post" action="" style="max-width: 800px;">
+        {% csrf_token %}
+
+        <fieldset class="module aligned">
+            <h2>Payment Information</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="billing_id">Related Billing:</label>
+                    <select name="billing_id" id="billing_id" class="vTextField">
+                        <option value="">---------</option>
+                        {% for billing in billings %}
+                        <option value="{{ billing.billing_id }}">
+                            {{ billing.billing_date|date:"M d, Y" }} - ${{ billing.amount_due }} due (Status: {{ billing.status }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <p class="help">Select the billing invoice this payment is for</p>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="payment_date" class="required">Payment Date:</label>
+                    <input type="date" name="payment_date" id="payment_date" class="vTextField" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="amount" class="required">Amount:</label>
+                    <input type="number" name="amount" id="amount" class="vTextField" step="0.01" min="0" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="payment_method" class="required">Payment Method:</label>
+                    <select name="payment_method" id="payment_method" class="vTextField" required>
+                        <option value="Cash">Cash</option>
+                        <option value="Check">Check</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="Debit Card">Debit Card</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Insurance">Insurance</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="transaction_id">Transaction ID:</label>
+                    <input type="text" name="transaction_id" id="transaction_id" class="vTextField">
+                    <p class="help">Reference number, check number, or transaction ID</p>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="status">Status:</label>
+                    <select name="status" id="status" class="vTextField">
+                        <option value="Completed" selected>Completed</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Failed">Failed</option>
+                        <option value="Refunded">Refunded</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="notes">Notes:</label>
+                    <textarea name="notes" id="notes" class="vLargeTextField" rows="4"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="Save" class="default">
+            <a href="{% url 'patient_payment_list' patient.patient_id %}" class="button cancel-link">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Create Provider - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'physician_list' %}">Providers</a> &rsaquo;
+    Create Provider
+</div>
+
+<div class="module">
+    <h1>Create New Provider</h1>
+
+    <form method="post" action="" style="max-width: 800px;">
+        {% csrf_token %}
+
+        <fieldset class="module aligned">
+            <h2>Basic Information</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="first_name" class="required">First Name:</label>
+                    <input type="text" name="first_name" id="first_name" class="vTextField" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="last_name" class="required">Last Name:</label>
+                    <input type="text" name="last_name" id="last_name" class="vTextField" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="npi" class="required">NPI:</label>
+                    <input type="text" name="npi" id="npi" class="vTextField" required>
+                    <p class="help">National Provider Identifier (10 digits)</p>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="specialty">Specialty:</label>
+                    <input type="text" name="specialty" id="specialty" class="vTextField">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="license_number">License Number:</label>
+                    <input type="text" name="license_number" id="license_number" class="vTextField">
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="module aligned">
+            <h2>Contact Information</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="email">Email:</label>
+                    <input type="email" name="email" id="email" class="vTextField">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="phone">Phone:</label>
+                    <input type="text" name="phone" id="phone" class="vTextField">
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="module aligned">
+            <h2>Organization</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="hospital_id">Hospital:</label>
+                    <select name="hospital_id" id="hospital_id" class="vTextField">
+                        <option value="">---------</option>
+                        {% for hospital in hospitals %}
+                        <option value="{{ hospital.hospital_id }}">{{ hospital.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="department_id">Department:</label>
+                    <select name="department_id" id="department_id" class="vTextField">
+                        <option value="">---------</option>
+                        {% for department in departments %}
+                        <option value="{{ department.department_id }}">{{ department.department_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="Save" class="default">
+            <a href="{% url 'physician_list' %}" class="button cancel-link">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

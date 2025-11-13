@@ -1,0 +1,122 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Edit Insurance - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo;
+    <a href="{% url 'patient_insurance_list' patient.patient_id %}">Insurance</a> &rsaquo;
+    Edit Insurance
+</div>
+
+<div class="module">
+    <h1>Edit Insurance for {{ patient.full_name }}</h1>
+
+    <form method="post" action="" style="max-width: 800px;">
+        {% csrf_token %}
+
+        <fieldset class="module aligned">
+            <h2>Insurance Information</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="insurance_company" class="required">Insurance Company:</label>
+                    <input type="text" name="insurance_company" id="insurance_company" class="vTextField" value="{{ insurance.insurance_company }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="policy_number" class="required">Policy Number:</label>
+                    <input type="text" name="policy_number" id="policy_number" class="vTextField" value="{{ insurance.policy_number }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="group_number">Group Number:</label>
+                    <input type="text" name="group_number" id="group_number" class="vTextField" value="{{ insurance.group_number|default:'' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="is_primary">Primary Insurance:</label>
+                    <input type="checkbox" name="is_primary" id="is_primary" {% if insurance.is_primary %}checked{% endif %}>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="module aligned">
+            <h2>Subscriber Information</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="subscriber_name" class="required">Subscriber Name:</label>
+                    <input type="text" name="subscriber_name" id="subscriber_name" class="vTextField" value="{{ insurance.subscriber_name }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="subscriber_relationship">Relationship to Patient:</label>
+                    <select name="subscriber_relationship" id="subscriber_relationship" class="vTextField">
+                        <option value="">---------</option>
+                        <option value="Self" {% if insurance.subscriber_relationship == 'Self' %}selected{% endif %}>Self</option>
+                        <option value="Spouse" {% if insurance.subscriber_relationship == 'Spouse' %}selected{% endif %}>Spouse</option>
+                        <option value="Parent" {% if insurance.subscriber_relationship == 'Parent' %}selected{% endif %}>Parent</option>
+                        <option value="Child" {% if insurance.subscriber_relationship == 'Child' %}selected{% endif %}>Child</option>
+                        <option value="Other" {% if insurance.subscriber_relationship == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="subscriber_dob">Subscriber Date of Birth:</label>
+                    <input type="date" name="subscriber_dob" id="subscriber_dob" class="vTextField" value="{{ insurance.subscriber_dob|date:'Y-m-d' }}">
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="module aligned">
+            <h2>Coverage Details</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="effective_date">Effective Date:</label>
+                    <input type="date" name="effective_date" id="effective_date" class="vTextField" value="{{ insurance.effective_date|date:'Y-m-d' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="termination_date">Termination Date:</label>
+                    <input type="date" name="termination_date" id="termination_date" class="vTextField" value="{{ insurance.termination_date|date:'Y-m-d' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="copay_amount">Copay Amount:</label>
+                    <input type="number" name="copay_amount" id="copay_amount" class="vTextField" value="{{ insurance.copay_amount|default:'' }}" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="deductible_amount">Deductible Amount:</label>
+                    <input type="number" name="deductible_amount" id="deductible_amount" class="vTextField" value="{{ insurance.deductible_amount|default:'' }}" step="0.01" min="0">
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="Save" class="default">
+            <a href="{% url 'patient_insurance_list' patient.patient_id %}" class="button cancel-link">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
