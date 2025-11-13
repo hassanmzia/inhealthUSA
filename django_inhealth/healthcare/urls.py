@@ -129,4 +129,8 @@ urlpatterns = [
     path('messages/compose/', views.message_compose, name='message_compose'),
     path('messages/<int:message_id>/', views.message_show, name='message_show'),
     path('messages/<int:message_id>/delete/', views.message_delete, name='message_delete'),
+
+    # Patient Profile URLs (for logged-in patients)
+    path('profile/', views.patient_profile, name='patient_profile'),
+    path('profile/edit/', views.patient_profile_edit, name='patient_profile_edit'),
 ]
