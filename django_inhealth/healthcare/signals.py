@@ -80,9 +80,13 @@ def create_profile_records(sender, instance, created, **kwargs):
 def create_user_profile(sender, instance, created, **kwargs):
     """
     Automatically create a UserProfile when a new User is created.
+    By default, all new users are assigned the 'patient' role.
     """
     if created:
-        UserProfile.objects.get_or_create(user=instance)
+        UserProfile.objects.get_or_create(
+            user=instance,
+            defaults={'role': 'patient'}
+        )
 
 
 @receiver(post_save, sender=User)
