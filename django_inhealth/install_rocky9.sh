@@ -9,10 +9,6 @@ echo "========================================="
 echo "InHealth EHR Installation for Rocky Linux 9"
 echo "========================================="
 
-# Update system packages
-echo "Updating system packages..."
-sudo dnf update -y
-
 # Install EPEL repository
 echo "Installing EPEL repository..."
 sudo dnf install -y epel-release
