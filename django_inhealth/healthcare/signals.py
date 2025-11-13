@@ -13,7 +13,8 @@ def create_profile_records(sender, instance, created, **kwargs):
     with the appropriate role
     """
     # Only process for newly created profiles or when role changes
-    if created or 'role' in kwargs.get('update_fields', []):
+    update_fields = kwargs.get('update_fields') or []
+    if created or 'role' in update_fields:
         user = instance.user
 
         # Create Patient record for patient role
