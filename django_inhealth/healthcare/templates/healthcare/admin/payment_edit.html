@@ -1,0 +1,101 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Edit Payment - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo;
+    <a href="{% url 'patient_payment_list' patient.patient_id %}">Payments</a> &rsaquo;
+    Edit Payment
+</div>
+
+<div class="module">
+    <h1>Edit Payment for {{ patient.full_name }}</h1>
+
+    <form method="post" action="" style="max-width: 800px;">
+        {% csrf_token %}
+
+        <fieldset class="module aligned">
+            <h2>Payment Information</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="billing_id">Related Billing:</label>
+                    <select name="billing_id" id="billing_id" class="vTextField">
+                        <option value="">---------</option>
+                        {% for billing in billings %}
+                        <option value="{{ billing.billing_id }}" {% if payment.billing_id == billing.billing_id %}selected{% endif %}>
+                            {{ billing.billing_date|date:"M d, Y" }} - ${{ billing.amount_due }} due (Status: {{ billing.status }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <p class="help">Select the billing invoice this payment is for</p>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="payment_date" class="required">Payment Date:</label>
+                    <input type="date" name="payment_date" id="payment_date" class="vTextField" value="{{ payment.payment_date|date:'Y-m-d' }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="amount" class="required">Amount:</label>
+                    <input type="number" name="amount" id="amount" class="vTextField" value="{{ payment.amount }}" step="0.01" min="0" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="payment_method" class="required">Payment Method:</label>
+                    <select name="payment_method" id="payment_method" class="vTextField" required>
+                        <option value="Cash" {% if payment.payment_method == 'Cash' %}selected{% endif %}>Cash</option>
+                        <option value="Check" {% if payment.payment_method == 'Check' %}selected{% endif %}>Check</option>
+                        <option value="Credit Card" {% if payment.payment_method == 'Credit Card' %}selected{% endif %}>Credit Card</option>
+                        <option value="Debit Card" {% if payment.payment_method == 'Debit Card' %}selected{% endif %}>Debit Card</option>
+                        <option value="Bank Transfer" {% if payment.payment_method == 'Bank Transfer' %}selected{% endif %}>Bank Transfer</option>
+                        <option value="Insurance" {% if payment.payment_method == 'Insurance' %}selected{% endif %}>Insurance</option>
+                        <option value="Other" {% if payment.payment_method == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="transaction_id">Transaction ID:</label>
+                    <input type="text" name="transaction_id" id="transaction_id" class="vTextField" value="{{ payment.transaction_id|default:'' }}">
+                    <p class="help">Reference number, check number, or transaction ID</p>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="status">Status:</label>
+                    <select name="status" id="status" class="vTextField">
+                        <option value="Completed" {% if payment.status == 'Completed' %}selected{% endif %}>Completed</option>
+                        <option value="Pending" {% if payment.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Failed" {% if payment.status == 'Failed' %}selected{% endif %}>Failed</option>
+                        <option value="Refunded" {% if payment.status == 'Refunded' %}selected{% endif %}>Refunded</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="notes">Notes:</label>
+                    <textarea name="notes" id="notes" class="vLargeTextField" rows="4">{{ payment.notes }}</textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="Save" class="default">
+            <a href="{% url 'patient_payment_detail' patient.patient_id payment.payment_id %}" class="button cancel-link">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

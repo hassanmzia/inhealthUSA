@@ -1945,3 +1945,394 @@ def patient_profile_edit(request):
     }
 
     return render(request, 'healthcare/patients/profile_edit.html', context)
+
+
+# ============================================================================
+# OFFICE ADMINISTRATOR VIEWS
+# ============================================================================
+
+@login_required
+@require_role('office_admin')
+def admin_dashboard(request):
+    """Office Administrator Dashboard - comprehensive management overview"""
+    # Get statistics
+    stats = {
+        'total_patients': Patient.objects.filter(is_active=True).count(),
+        'total_providers': Provider.objects.filter(is_active=True).count(),
+        'total_hospitals': Hospital.objects.filter(is_active=True).count(),
+        'total_appointments_today': Encounter.objects.filter(
+            encounter_date__date=timezone.now().date()
+        ).count(),
+        'total_appointments_upcoming': Encounter.objects.filter(
+            encounter_date__gt=timezone.now(),
+            status='Scheduled'
+        ).count(),
+        'total_pending_billing': Billing.objects.filter(
+            status='Pending'
+        ).aggregate(total=models.Sum('amount_due'))['total'] or 0,
+        'total_unpaid_billing': Billing.objects.filter(
+            status__in=['Pending', 'Partially Paid']
+        ).aggregate(total=models.Sum('amount_due'))['total'] or 0,
+    }
+
+    # Recent activity
+    recent_patients = Patient.objects.filter(is_active=True).order_by('-created_at')[:5]
+    recent_appointments = Encounter.objects.select_related('patient', 'provider').order_by('-created_at')[:10]
+    recent_billings = Billing.objects.select_related('patient').order_by('-created_at')[:10]
+    upcoming_appointments = Encounter.objects.filter(
+        encounter_date__gte=timezone.now(),
+        status='Scheduled'
+    ).select_related('patient', 'provider').order_by('encounter_date')[:10]
+
+    context = {
+        'stats': stats,
+        'recent_patients': recent_patients,
+        'recent_appointments': recent_appointments,
+        'recent_billings': recent_billings,
+        'upcoming_appointments': upcoming_appointments,
+    }
+
+    return render(request, 'healthcare/admin/dashboard.html', context)
+
+
+# ============================================================================
+# ADMIN - PROVIDER MANAGEMENT
+# ============================================================================
+
+@login_required
+@require_role('office_admin')
+def admin_provider_create(request):
+    """Admin: Create new provider"""
+    if request.method == 'POST':
+        provider = Provider.objects.create(
+            first_name=request.POST['first_name'],
+            last_name=request.POST['last_name'],
+            npi=request.POST['npi'],
+            specialty=request.POST.get('specialty', ''),
+            email=request.POST.get('email', ''),
+            phone=request.POST.get('phone', ''),
+            license_number=request.POST.get('license_number', ''),
+            hospital_id=request.POST.get('hospital_id') or None,
+            department_id=request.POST.get('department_id') or None,
+        )
+        messages.success(request, f'Provider {provider.full_name} created successfully.')
+        return redirect('physician_detail', provider_id=provider.provider_id)
+
+    hospitals = Hospital.objects.filter(is_active=True).order_by('name')
+    departments = Department.objects.filter(is_active=True).order_by('department_name')
+
+    context = {
+        'hospitals': hospitals,
+        'departments': departments,
+    }
+    return render(request, 'healthcare/admin/provider_create.html', context)
+
+
+@login_required
+@require_role('office_admin')
+def admin_provider_edit(request, provider_id):
+    """Admin: Edit provider"""
+    provider = get_object_or_404(Provider, provider_id=provider_id)
+
+    if request.method == 'POST':
+        provider.first_name = request.POST['first_name']
+        provider.last_name = request.POST['last_name']
+        provider.npi = request.POST['npi']
+        provider.specialty = request.POST.get('specialty', '')
+        provider.email = request.POST.get('email', '')
+        provider.phone = request.POST.get('phone', '')
+        provider.license_number = request.POST.get('license_number', '')
+        provider.hospital_id = request.POST.get('hospital_id') or None
+        provider.department_id = request.POST.get('department_id') or None
+        provider.is_active = request.POST.get('is_active', 'on') == 'on'
+        provider.save()
+
+        messages.success(request, f'Provider {provider.full_name} updated successfully.')
+        return redirect('physician_detail', provider_id=provider.provider_id)
+
+    hospitals = Hospital.objects.filter(is_active=True).order_by('name')
+    departments = Department.objects.filter(is_active=True).order_by('department_name')
+
+    context = {
+        'provider': provider,
+        'hospitals': hospitals,
+        'departments': departments,
+    }
+    return render(request, 'healthcare/admin/provider_edit.html', context)
+
+
+# ============================================================================
+# ADMIN - HOSPITAL MANAGEMENT
+# ============================================================================
+
+@login_required
+@require_role('office_admin')
+def admin_hospital_create(request):
+    """Admin: Create new hospital"""
+    if request.method == 'POST':
+        hospital = Hospital.objects.create(
+            name=request.POST['name'],
+            address=request.POST['address'],
+            city=request.POST['city'],
+            state=request.POST['state'],
+            zip_code=request.POST['zip_code'],
+            phone=request.POST['phone'],
+            email=request.POST.get('email', ''),
+            website=request.POST.get('website', ''),
+        )
+        messages.success(request, f'Hospital {hospital.name} created successfully.')
+        return redirect('hospital_detail', hospital_id=hospital.hospital_id)
+
+    return render(request, 'healthcare/admin/hospital_create.html')
+
+
+@login_required
+@require_role('office_admin')
+def admin_hospital_edit(request, hospital_id):
+    """Admin: Edit hospital"""
+    hospital = get_object_or_404(Hospital, hospital_id=hospital_id)
+
+    if request.method == 'POST':
+        hospital.name = request.POST['name']
+        hospital.address = request.POST['address']
+        hospital.city = request.POST['city']
+        hospital.state = request.POST['state']
+        hospital.zip_code = request.POST['zip_code']
+        hospital.phone = request.POST['phone']
+        hospital.email = request.POST.get('email', '')
+        hospital.website = request.POST.get('website', '')
+        hospital.is_active = request.POST.get('is_active', 'on') == 'on'
+        hospital.save()
+
+        messages.success(request, f'Hospital {hospital.name} updated successfully.')
+        return redirect('hospital_detail', hospital_id=hospital.hospital_id)
+
+    context = {
+        'hospital': hospital,
+    }
+    return render(request, 'healthcare/admin/hospital_edit.html', context)
+
+
+# ============================================================================
+# ADMIN - INSURANCE MANAGEMENT
+# ============================================================================
+
+@login_required
+@require_role('office_admin')
+def admin_insurance_create(request, patient_id):
+    """Admin: Create insurance for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    if request.method == 'POST':
+        insurance = InsuranceInformation.objects.create(
+            patient=patient,
+            insurance_company=request.POST['insurance_company'],
+            policy_number=request.POST['policy_number'],
+            group_number=request.POST.get('group_number', ''),
+            subscriber_name=request.POST['subscriber_name'],
+            subscriber_relationship=request.POST.get('subscriber_relationship', ''),
+            subscriber_dob=request.POST.get('subscriber_dob') or None,
+            effective_date=request.POST.get('effective_date') or None,
+            termination_date=request.POST.get('termination_date') or None,
+            copay_amount=request.POST.get('copay_amount') or None,
+            deductible_amount=request.POST.get('deductible_amount') or None,
+            is_primary=request.POST.get('is_primary', 'off') == 'on',
+        )
+        messages.success(request, f'Insurance policy created successfully for {patient.full_name}.')
+        return redirect('patient_insurance_list', patient_id=patient.patient_id)
+
+    context = {
+        'patient': patient,
+    }
+    return render(request, 'healthcare/admin/insurance_create.html', context)
+
+
+@login_required
+@require_role('office_admin')
+def admin_insurance_edit(request, patient_id, insurance_id):
+    """Admin: Edit insurance for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    insurance = get_object_or_404(InsuranceInformation, insurance_id=insurance_id, patient=patient)
+
+    if request.method == 'POST':
+        insurance.insurance_company = request.POST['insurance_company']
+        insurance.policy_number = request.POST['policy_number']
+        insurance.group_number = request.POST.get('group_number', '')
+        insurance.subscriber_name = request.POST['subscriber_name']
+        insurance.subscriber_relationship = request.POST.get('subscriber_relationship', '')
+        insurance.subscriber_dob = request.POST.get('subscriber_dob') or None
+        insurance.effective_date = request.POST.get('effective_date') or None
+        insurance.termination_date = request.POST.get('termination_date') or None
+        insurance.copay_amount = request.POST.get('copay_amount') or None
+        insurance.deductible_amount = request.POST.get('deductible_amount') or None
+        insurance.is_primary = request.POST.get('is_primary', 'off') == 'on'
+        insurance.save()
+
+        messages.success(request, f'Insurance policy updated successfully for {patient.full_name}.')
+        return redirect('patient_insurance_list', patient_id=patient.patient_id)
+
+    context = {
+        'patient': patient,
+        'insurance': insurance,
+    }
+    return render(request, 'healthcare/admin/insurance_edit.html', context)
+
+
+# ============================================================================
+# ADMIN - BILLING MANAGEMENT
+# ============================================================================
+
+@login_required
+@require_role('office_admin')
+def admin_billing_create(request, patient_id):
+    """Admin: Create billing for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    encounters = patient.encounters.all().order_by('-encounter_date')
+
+    if request.method == 'POST':
+        billing = Billing.objects.create(
+            patient=patient,
+            encounter_id=request.POST.get('encounter_id') or None,
+            billing_date=request.POST['billing_date'],
+            total_amount=request.POST['total_amount'],
+            insurance_amount=request.POST.get('insurance_amount', 0),
+            patient_responsibility=request.POST.get('patient_responsibility', 0),
+            amount_paid=request.POST.get('amount_paid', 0),
+            amount_due=request.POST.get('amount_due', 0),
+            status=request.POST.get('status', 'Pending'),
+            notes=request.POST.get('notes', ''),
+        )
+        messages.success(request, f'Billing created successfully for {patient.full_name}.')
+        return redirect('patient_billing_detail', patient_id=patient.patient_id, billing_id=billing.billing_id)
+
+    context = {
+        'patient': patient,
+        'encounters': encounters,
+    }
+    return render(request, 'healthcare/admin/billing_create.html', context)
+
+
+@login_required
+@require_role('office_admin')
+def admin_billing_edit(request, patient_id, billing_id):
+    """Admin: Edit billing for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    billing = get_object_or_404(Billing, billing_id=billing_id, patient=patient)
+
+    if request.method == 'POST':
+        billing.billing_date = request.POST['billing_date']
+        billing.total_amount = request.POST['total_amount']
+        billing.insurance_amount = request.POST.get('insurance_amount', 0)
+        billing.patient_responsibility = request.POST.get('patient_responsibility', 0)
+        billing.amount_paid = request.POST.get('amount_paid', 0)
+        billing.amount_due = request.POST.get('amount_due', 0)
+        billing.status = request.POST.get('status', 'Pending')
+        billing.notes = request.POST.get('notes', '')
+        billing.save()
+
+        messages.success(request, f'Billing updated successfully for {patient.full_name}.')
+        return redirect('patient_billing_detail', patient_id=patient.patient_id, billing_id=billing.billing_id)
+
+    context = {
+        'patient': patient,
+        'billing': billing,
+    }
+    return render(request, 'healthcare/admin/billing_edit.html', context)
+
+
+# ============================================================================
+# ADMIN - PAYMENT MANAGEMENT
+# ============================================================================
+
+@login_required
+@require_role('office_admin')
+def admin_payment_create(request, patient_id):
+    """Admin: Create payment for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    billings = Billing.objects.filter(patient=patient).order_by('-billing_date')
+
+    if request.method == 'POST':
+        payment = Payment.objects.create(
+            patient=patient,
+            billing_id=request.POST.get('billing_id') or None,
+            payment_date=request.POST['payment_date'],
+            amount=request.POST['amount'],
+            payment_method=request.POST.get('payment_method', 'Cash'),
+            transaction_id=request.POST.get('transaction_id', ''),
+            status=request.POST.get('status', 'Completed'),
+            notes=request.POST.get('notes', ''),
+        )
+
+        # Update billing amount_paid if billing is selected
+        if payment.billing:
+            billing = payment.billing
+            billing.amount_paid = float(billing.amount_paid or 0) + float(payment.amount)
+            billing.amount_due = float(billing.total_amount) - float(billing.amount_paid)
+            if billing.amount_due <= 0:
+                billing.status = 'Paid'
+            elif billing.amount_paid > 0:
+                billing.status = 'Partially Paid'
+            billing.save()
+
+        messages.success(request, f'Payment recorded successfully for {patient.full_name}.')
+        return redirect('patient_payment_list', patient_id=patient.patient_id)
+
+    context = {
+        'patient': patient,
+        'billings': billings,
+    }
+    return render(request, 'healthcare/admin/payment_create.html', context)
+
+
+@login_required
+@require_role('office_admin')
+def admin_payment_edit(request, patient_id, payment_id):
+    """Admin: Edit payment for a patient"""
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+    payment = get_object_or_404(Payment, payment_id=payment_id, patient=patient)
+    billings = Billing.objects.filter(patient=patient).order_by('-billing_date')
+
+    if request.method == 'POST':
+        old_amount = payment.amount
+        old_billing = payment.billing
+
+        payment.billing_id = request.POST.get('billing_id') or None
+        payment.payment_date = request.POST['payment_date']
+        payment.amount = request.POST['amount']
+        payment.payment_method = request.POST.get('payment_method', 'Cash')
+        payment.transaction_id = request.POST.get('transaction_id', '')
+        payment.status = request.POST.get('status', 'Completed')
+        payment.notes = request.POST.get('notes', '')
+        payment.save()
+
+        # Update billing amounts
+        if old_billing:
+            old_billing.amount_paid = float(old_billing.amount_paid or 0) - float(old_amount)
+            old_billing.amount_due = float(old_billing.total_amount) - float(old_billing.amount_paid)
+            if old_billing.amount_due <= 0:
+                old_billing.status = 'Paid'
+            elif old_billing.amount_paid > 0:
+                old_billing.status = 'Partially Paid'
+            else:
+                old_billing.status = 'Pending'
+            old_billing.save()
+
+        if payment.billing:
+            billing = payment.billing
+            billing.amount_paid = float(billing.amount_paid or 0) + float(payment.amount)
+            billing.amount_due = float(billing.total_amount) - float(billing.amount_paid)
+            if billing.amount_due <= 0:
+                billing.status = 'Paid'
+            elif billing.amount_paid > 0:
+                billing.status = 'Partially Paid'
+            billing.save()
+
+        messages.success(request, f'Payment updated successfully for {patient.full_name}.')
+        return redirect('patient_payment_list', patient_id=patient.patient_id)
+
+    context = {
+        'patient': patient,
+        'payment': payment,
+        'billings': billings,
+    }
+    return render(request, 'healthcare/admin/payment_edit.html', context)

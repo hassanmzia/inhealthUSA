@@ -37,6 +37,17 @@
         </table>
     </div>
 
+    <!-- Admin Dashboard Link (for Office Administrators) -->
+    {% if user.profile.is_office_admin %}
+    <div class="module" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; margin-bottom: 20px;">
+        <a href="{% url 'admin_dashboard' %}" style="display: block; text-align: center; color: white; text-decoration: none;">
+            <div style="font-size: 48px; margin-bottom: 10px;">⚙️</div>
+            <h2 style="color: white; margin: 0; font-size: 24px;">Office Administrator Dashboard</h2>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Manage providers, patients, hospitals, appointments, billing, and payments</p>
+        </a>
+    </div>
+    {% endif %}
+
     <!-- Quick Links -->
     <div class="module">
         <h2>Quick Access</h2>

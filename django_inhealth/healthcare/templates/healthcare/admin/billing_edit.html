@@ -1,0 +1,109 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Edit Billing - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo;
+    <a href="{% url 'patient_billing_list' patient.patient_id %}">Billing</a> &rsaquo;
+    Edit Billing
+</div>
+
+<div class="module">
+    <h1>Edit Billing for {{ patient.full_name }}</h1>
+
+    <form method="post" action="" style="max-width: 800px;">
+        {% csrf_token %}
+
+        <fieldset class="module aligned">
+            <h2>Billing Information</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="billing_date" class="required">Billing Date:</label>
+                    <input type="date" name="billing_date" id="billing_date" class="vTextField" value="{{ billing.billing_date|date:'Y-m-d' }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="total_amount" class="required">Total Amount:</label>
+                    <input type="number" name="total_amount" id="total_amount" class="vTextField" value="{{ billing.total_amount }}" step="0.01" min="0" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="insurance_amount">Insurance Amount:</label>
+                    <input type="number" name="insurance_amount" id="insurance_amount" class="vTextField" value="{{ billing.insurance_amount|default:'0' }}" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="patient_responsibility">Patient Responsibility:</label>
+                    <input type="number" name="patient_responsibility" id="patient_responsibility" class="vTextField" value="{{ billing.patient_responsibility|default:'0' }}" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="amount_paid">Amount Paid:</label>
+                    <input type="number" name="amount_paid" id="amount_paid" class="vTextField" value="{{ billing.amount_paid|default:'0' }}" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="amount_due">Amount Due:</label>
+                    <input type="number" name="amount_due" id="amount_due" class="vTextField" value="{{ billing.amount_due|default:'0' }}" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="status">Status:</label>
+                    <select name="status" id="status" class="vTextField">
+                        <option value="Pending" {% if billing.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Partially Paid" {% if billing.status == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
+                        <option value="Paid" {% if billing.status == 'Paid' %}selected{% endif %}>Paid</option>
+                        <option value="Cancelled" {% if billing.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="notes">Notes:</label>
+                    <textarea name="notes" id="notes" class="vLargeTextField" rows="4">{{ billing.notes }}</textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="Save" class="default">
+            <a href="{% url 'patient_billing_detail' patient.patient_id billing.billing_id %}" class="button cancel-link">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Auto-calculate amount due based on total amount and amount paid
+document.addEventListener('DOMContentLoaded', function() {
+    const totalAmount = document.getElementById('total_amount');
+    const amountPaid = document.getElementById('amount_paid');
+    const amountDue = document.getElementById('amount_due');
+
+    function calculateAmountDue() {
+        const total = parseFloat(totalAmount.value) || 0;
+        const paid = parseFloat(amountPaid.value) || 0;
+        amountDue.value = (total - paid).toFixed(2);
+    }
+
+    totalAmount.addEventListener('input', calculateAmountDue);
+    amountPaid.addEventListener('input', calculateAmountDue);
+});
+</script>
+{% endblock %}

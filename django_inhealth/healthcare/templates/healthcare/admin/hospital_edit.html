@@ -1,0 +1,97 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Edit Hospital - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'hospital_list' %}">Hospitals</a> &rsaquo;
+    <a href="{% url 'hospital_detail' hospital.hospital_id %}">{{ hospital.name }}</a> &rsaquo;
+    Edit
+</div>
+
+<div class="module">
+    <h1>Edit Hospital: {{ hospital.name }}</h1>
+
+    <form method="post" action="" style="max-width: 800px;">
+        {% csrf_token %}
+
+        <fieldset class="module aligned">
+            <h2>Basic Information</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="name" class="required">Hospital Name:</label>
+                    <input type="text" name="name" id="name" class="vTextField" value="{{ hospital.name }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="address" class="required">Address:</label>
+                    <textarea name="address" id="address" class="vLargeTextField" rows="3" required>{{ hospital.address }}</textarea>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="city" class="required">City:</label>
+                    <input type="text" name="city" id="city" class="vTextField" value="{{ hospital.city }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="state" class="required">State:</label>
+                    <input type="text" name="state" id="state" class="vTextField" value="{{ hospital.state }}" maxlength="50" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="zip_code" class="required">ZIP Code:</label>
+                    <input type="text" name="zip_code" id="zip_code" class="vTextField" value="{{ hospital.zip_code }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="is_active">Active:</label>
+                    <input type="checkbox" name="is_active" id="is_active" {% if hospital.is_active %}checked{% endif %}>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="module aligned">
+            <h2>Contact Information</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="phone" class="required">Phone:</label>
+                    <input type="text" name="phone" id="phone" class="vTextField" value="{{ hospital.phone }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="email">Email:</label>
+                    <input type="email" name="email" id="email" class="vTextField" value="{{ hospital.email|default:'' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="website">Website:</label>
+                    <input type="url" name="website" id="website" class="vTextField" value="{{ hospital.website|default:'' }}" placeholder="https://">
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="Save" class="default">
+            <a href="{% url 'hospital_detail' hospital.hospital_id %}" class="button cancel-link">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
