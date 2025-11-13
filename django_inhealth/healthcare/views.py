@@ -1836,7 +1836,17 @@ def message_show(request, message_id):
     # Check if user has access to this message
     if message.sender != request.user and message.recipient != request.user:
         messages.error(request, 'You do not have permission to view this message.')
-        return redirect('message_inbox')
+        # Redirect based on user role
+        try:
+            user_role = request.user.userprofile.role
+            if user_role == 'doctor':
+                return redirect('doctor_inbox')
+            elif user_role == 'patient':
+                return redirect('patient_inbox')
+            else:
+                return redirect('message_inbox')
+        except:
+            return redirect('index')
 
     # Mark as read if user is the recipient
     if message.recipient == request.user and not message.is_read:
