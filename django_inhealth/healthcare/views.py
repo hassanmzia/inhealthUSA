@@ -1923,18 +1923,19 @@ def patient_profile_edit(request):
 
 @login_required
 def provider_profile(request):
-    """Provider profile view - shows provider's own information and patient data"""
+    """Provider profile view - shows provider's own information and ALL patient data"""
     try:
         provider = request.user.provider_profile
     except:
         messages.error(request, 'No provider profile found for your account.')
         return redirect('index')
 
-    # Get all provider-related information
-    appointments = Encounter.objects.filter(provider=provider).select_related('patient', 'department').order_by('-encounter_date')[:20]
-
     # Get unique patients for this provider
     patients = Patient.objects.filter(encounters__provider=provider).distinct().order_by('last_name', 'first_name')
+    patient_ids = patients.values_list('patient_id', flat=True)
+
+    # Get all provider-related information
+    appointments = Encounter.objects.filter(provider=provider).select_related('patient', 'department').order_by('-encounter_date')[:20]
 
     # Get prescriptions written by this provider
     prescriptions = Prescription.objects.filter(provider=provider).select_related('patient', 'encounter').order_by('-start_date')[:20]
@@ -1944,6 +1945,23 @@ def provider_profile(request):
 
     # Get recent vital signs for provider's patients
     vitals = VitalSign.objects.filter(encounter__provider=provider).select_related('encounter__patient').order_by('-recorded_at')[:20]
+
+    # Get ALL information about provider's patients
+    allergies = Allergy.objects.filter(patient__in=patients).select_related('patient').order_by('patient__last_name', '-severity')
+
+    medical_history = MedicalHistory.objects.filter(patient__in=patients).select_related('patient').order_by('patient__last_name', '-diagnosis_date')[:30]
+
+    social_history = SocialHistory.objects.filter(patient__in=patients).select_related('patient').order_by('patient__last_name')[:20]
+
+    lab_tests = LabTest.objects.filter(patient__in=patients).select_related('patient').order_by('-test_date')[:30]
+
+    billings = Billing.objects.filter(patient__in=patients).select_related('patient').order_by('-billing_date')[:30]
+
+    payments = Payment.objects.filter(patient__in=patients).select_related('patient').order_by('-payment_date')[:30]
+
+    insurance_info = InsuranceInformation.objects.filter(patient__in=patients).select_related('patient').order_by('patient__last_name', '-is_primary')[:20]
+
+    devices = Device.objects.filter(patient__in=patients).select_related('patient').order_by('-created_at')[:20]
 
     # Get statistics
     total_patients = patients.count()
@@ -1961,6 +1979,14 @@ def provider_profile(request):
         'prescriptions': prescriptions,
         'diagnoses': diagnoses,
         'vitals': vitals,
+        'allergies': allergies,
+        'medical_history': medical_history,
+        'social_history': social_history,
+        'lab_tests': lab_tests,
+        'billings': billings,
+        'payments': payments,
+        'insurance_info': insurance_info,
+        'devices': devices,
         'total_patients': total_patients,
         'total_appointments': total_appointments,
         'upcoming_appointments': upcoming_appointments,

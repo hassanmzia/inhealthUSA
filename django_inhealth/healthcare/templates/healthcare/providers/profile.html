@@ -327,4 +327,262 @@
     {% endif %}
 </div>
 
+<div class="data-table-module">
+    <h2>Patient Allergies</h2>
+    {% if allergies %}
+    <table>
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Allergen</th>
+                <th>Reaction</th>
+                <th>Severity</th>
+                <th>Onset Date</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for allergy in allergies %}
+            <tr>
+                <td><strong>{{ allergy.patient.full_name }}</strong></td>
+                <td>{{ allergy.allergen }}</td>
+                <td>{{ allergy.reaction|truncatewords:10|default:"—" }}</td>
+                <td>
+                    <span class="status-badge {% if allergy.severity == 'Severe' %}status-cancelled{% elif allergy.severity == 'Moderate' %}status-pending{% else %}status-active{% endif %}">
+                        {{ allergy.severity }}
+                    </span>
+                </td>
+                <td>{{ allergy.onset_date|date:"M d, Y"|default:"—" }}</td>
+                <td>{{ allergy.notes|truncatewords:10|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No allergies recorded for your patients</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Patient Medical History</h2>
+    {% if medical_history %}
+    <table>
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Condition</th>
+                <th>Diagnosis Date</th>
+                <th>Status</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for history in medical_history %}
+            <tr>
+                <td><strong>{{ history.patient.full_name }}</strong></td>
+                <td>{{ history.condition_name }}</td>
+                <td>{{ history.diagnosis_date|date:"M d, Y" }}</td>
+                <td><span class="status-badge status-{{ history.status|lower }}">{{ history.status }}</span></td>
+                <td>{{ history.notes|truncatewords:15|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No medical history found</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Patient Social History</h2>
+    {% if social_history %}
+    <table>
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Smoking Status</th>
+                <th>Alcohol Use</th>
+                <th>Exercise</th>
+                <th>Occupation</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for history in social_history %}
+            <tr>
+                <td><strong>{{ history.patient.full_name }}</strong></td>
+                <td>{{ history.smoking_status|default:"—" }}</td>
+                <td>{{ history.alcohol_use|default:"—" }}</td>
+                <td>{{ history.exercise_frequency|default:"—" }}</td>
+                <td>{{ history.occupation|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No social history found</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Patient Lab Tests & Results</h2>
+    {% if lab_tests %}
+    <table>
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Test Date</th>
+                <th>Test Name</th>
+                <th>Result Value</th>
+                <th>Status</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for test in lab_tests %}
+            <tr>
+                <td><strong>{{ test.patient.full_name }}</strong></td>
+                <td>{{ test.test_date|date:"M d, Y" }}</td>
+                <td>{{ test.test_name }}</td>
+                <td>{{ test.result_value|default:"—" }}</td>
+                <td><span class="status-badge status-{{ test.result_status|lower }}">{{ test.result_status }}</span></td>
+                <td>{{ test.notes|truncatewords:10|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No lab tests found</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Patient Billing Information</h2>
+    {% if billings %}
+    <table>
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Invoice #</th>
+                <th>Date</th>
+                <th>Total Amount</th>
+                <th>Amount Paid</th>
+                <th>Amount Due</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bill in billings %}
+            <tr>
+                <td><strong>{{ bill.patient.full_name }}</strong></td>
+                <td>{{ bill.invoice_number }}</td>
+                <td>{{ bill.billing_date|date:"M d, Y" }}</td>
+                <td>${{ bill.total_amount }}</td>
+                <td>${{ bill.amount_paid }}</td>
+                <td>${{ bill.amount_due }}</td>
+                <td><span class="status-badge status-{{ bill.status|lower }}">{{ bill.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No billing records found</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Patient Payment History</h2>
+    {% if payments %}
+    <table>
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Transaction ID</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td><strong>{{ payment.patient.full_name }}</strong></td>
+                <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                <td>${{ payment.amount }}</td>
+                <td>{{ payment.payment_method }}</td>
+                <td>{{ payment.transaction_id|default:"—" }}</td>
+                <td><span class="status-badge status-{{ payment.status|lower }}">{{ payment.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No payment history found</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Patient Insurance Information</h2>
+    {% if insurance_info %}
+    <table>
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Provider</th>
+                <th>Policy Number</th>
+                <th>Group Number</th>
+                <th>Effective Date</th>
+                <th>Primary</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for insurance in insurance_info %}
+            <tr>
+                <td><strong>{{ insurance.patient.full_name }}</strong></td>
+                <td>{{ insurance.provider_name }}</td>
+                <td>{{ insurance.policy_number }}</td>
+                <td>{{ insurance.group_number|default:"—" }}</td>
+                <td>{{ insurance.effective_date|date:"M d, Y" }}</td>
+                <td>{% if insurance.is_primary %}<span class="status-badge status-active">Yes</span>{% else %}No{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No insurance information found</div>
+    {% endif %}
+</div>
+
+<div class="data-table-module">
+    <h2>Patient Medical Devices</h2>
+    {% if devices %}
+    <table>
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Device Name</th>
+                <th>Type</th>
+                <th>Manufacturer</th>
+                <th>Registration Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for device in devices %}
+            <tr>
+                <td><strong>{{ device.patient.full_name }}</strong></td>
+                <td>{{ device.device_name }}</td>
+                <td>{{ device.device_type }}</td>
+                <td>{{ device.manufacturer|default:"—" }}</td>
+                <td>{{ device.registration_date|date:"M d, Y" }}</td>
+                <td><span class="status-badge status-{{ device.status|lower }}">{{ device.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No medical devices found</div>
+    {% endif %}
+</div>
+
 {% endblock %}
