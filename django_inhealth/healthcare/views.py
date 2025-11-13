@@ -1982,16 +1982,35 @@ def doctor_compose_message(request):
                 notification_type='message'
             )
 
-            # Send email if requested (placeholder for actual email sending)
+            # Send email if requested
             if send_email:
                 try:
+                    from .utils import send_email_notification
                     patient = Patient.objects.get(user=recipient)
                     if patient.email:
-                        # TODO: Implement actual email sending using Django's email backend
-                        # Example: send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [patient.email])
-                        messages.info(request, f'Email notification queued to {patient.email}')
+                        email_subject = f"New message from Dr. {provider.full_name}"
+                        email_body = f"""You have received a new message from Dr. {provider.full_name}
+
+Subject: {subject}
+
+Message:
+{body}
+
+Please log in to your InHealth EHR account to view and reply to this message.
+
+---
+InHealth EHR System
+This is an automated notification. Please do not reply to this email."""
+
+                        success, msg = send_email_notification(patient.email, email_subject, email_body)
+                        if success:
+                            messages.success(request, f'Email sent to {patient.email}')
+                        else:
+                            messages.warning(request, f'Email not sent: {msg}')
+                    else:
+                        messages.warning(request, 'Patient does not have an email address on file.')
                 except Exception as e:
-                    messages.warning(request, f'Could not queue email notification: {str(e)}')
+                    messages.warning(request, f'Could not send email notification: {str(e)}')
 
             # Send SMS if requested
             if send_sms:
@@ -2690,14 +2709,34 @@ def patient_compose_message(request):
                 notification_type='message'
             )
 
-            # Send email if requested (placeholder for actual email sending)
+            # Send email if requested
             if send_email:
                 try:
+                    from .utils import send_email_notification
                     if patient.primary_doctor.email:
-                        # TODO: Implement actual email sending using Django's email backend
-                        messages.info(request, f'Email notification queued to {patient.primary_doctor.email}')
+                        email_subject = f"New message from patient {patient.full_name}"
+                        email_body = f"""You have received a new message from patient {patient.full_name}
+
+Subject: {subject}
+
+Message:
+{body}
+
+Please log in to your InHealth EHR account to view and reply to this message.
+
+---
+InHealth EHR System
+This is an automated notification. Please do not reply to this email."""
+
+                        success, msg = send_email_notification(patient.primary_doctor.email, email_subject, email_body)
+                        if success:
+                            messages.success(request, f'Email sent to Dr. {patient.primary_doctor.full_name}')
+                        else:
+                            messages.warning(request, f'Email not sent: {msg}')
+                    else:
+                        messages.warning(request, 'Doctor does not have an email address on file.')
                 except Exception as e:
-                    messages.warning(request, f'Could not queue email notification: {str(e)}')
+                    messages.warning(request, f'Could not send email notification: {str(e)}')
 
             # Send SMS if requested
             if send_sms:
