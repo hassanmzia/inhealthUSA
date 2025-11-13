@@ -39,24 +39,24 @@
 
     <!-- Role-Specific Dashboard Links -->
 
-    <!-- Patient Profile Link (for Patients) -->
+    <!-- Patient Dashboard Link (for Patients) -->
     {% if user.profile.is_patient %}
     <div class="module" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); padding: 20px; margin-bottom: 20px;">
-        <a href="{% url 'patient_profile' %}" style="display: block; text-align: center; color: white; text-decoration: none;">
-            <div style="font-size: 48px; margin-bottom: 10px;">👤</div>
-            <h2 style="color: white; margin: 0; font-size: 24px;">My Patient Profile</h2>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">View your medical records, appointments, prescriptions, and billing information</p>
+        <a href="{% url 'patient_dashboard' %}" style="display: block; text-align: center; color: white; text-decoration: none;">
+            <div style="font-size: 48px; margin-bottom: 10px;">📊</div>
+            <h2 style="color: white; margin: 0; font-size: 24px;">My Health Dashboard</h2>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">View your medical records, appointments, prescriptions, vitals, and billing information</p>
         </a>
     </div>
     {% endif %}
 
-    <!-- Doctor/Provider Profile Link (for Doctors) -->
+    <!-- Doctor/Provider Dashboard Link (for Doctors) -->
     {% if user.profile.is_doctor %}
     <div class="module" style="background: linear-gradient(135deg, #00897B 0%, #00695C 100%); padding: 20px; margin-bottom: 20px;">
-        <a href="{% url 'provider_profile' %}" style="display: block; text-align: center; color: white; text-decoration: none;">
-            <div style="font-size: 48px; margin-bottom: 10px;">👨‍⚕️</div>
-            <h2 style="color: white; margin: 0; font-size: 24px;">My Provider Profile</h2>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">View your schedule, patients, appointments, and professional information</p>
+        <a href="{% url 'provider_dashboard' %}" style="display: block; text-align: center; color: white; text-decoration: none;">
+            <div style="font-size: 48px; margin-bottom: 10px;">⚕️</div>
+            <h2 style="color: white; margin: 0; font-size: 24px;">Provider Dashboard</h2>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">View today's schedule, patients, appointments, diagnoses, and prescriptions</p>
         </a>
     </div>
     {% endif %}

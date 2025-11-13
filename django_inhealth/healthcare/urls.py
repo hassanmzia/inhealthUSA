@@ -133,16 +133,22 @@ urlpatterns = [
     # Patient Profile URLs (for logged-in patients)
     path('profile/', views.patient_profile, name='patient_profile'),
     path('profile/edit/', views.patient_profile_edit, name='patient_profile_edit'),
+    path('patient/dashboard/', views.patient_dashboard, name='patient_dashboard'),
 
     # Provider Profile URLs (for logged-in providers/doctors)
     path('provider/profile/', views.provider_profile, name='provider_profile'),
     path('provider/profile/edit/', views.provider_profile_edit, name='provider_profile_edit'),
+    path('provider/dashboard/', views.provider_dashboard, name='provider_dashboard'),
     # ============================================================================
     # OFFICE ADMINISTRATOR URLS
     # ============================================================================
 
     # Admin Dashboard
     path('office-admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+
+    # Admin Profile
+    path('office-admin/profile/', views.admin_profile, name='admin_profile'),
+    path('office-admin/profile/edit/', views.admin_profile_edit, name='admin_profile_edit'),
 
     # Admin Provider Management
     path('office-admin/providers/create/', views.admin_provider_create, name='admin_provider_create'),
