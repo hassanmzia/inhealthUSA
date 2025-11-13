@@ -399,9 +399,11 @@
                 <a href="/admin/">Admin Panel</a>
                 {% endif %}
                 {% if user.profile.is_patient %}
+                <a href="{% url 'patient_dashboard' %}">My Dashboard</a> |
                 <a href="{% url 'patient_profile' %}">My Profile</a>
                 {% endif %}
                 {% if user.profile.is_doctor %}
+                <a href="{% url 'provider_dashboard' %}">My Dashboard</a> |
                 <a href="{% url 'provider_profile' %}">My Profile</a>
                 {% endif %}
                 {% if user.profile.is_office_admin %}

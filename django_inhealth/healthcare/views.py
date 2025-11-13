@@ -1948,6 +1948,82 @@ def patient_profile_edit(request):
 
 
 @login_required
+@require_role('patient')
+def patient_dashboard(request):
+    """Patient Dashboard - personalized health overview"""
+    try:
+        patient = request.user.patient_profile
+    except:
+        messages.error(request, 'No patient profile found for your account.')
+        return redirect('index')
+
+    # Get statistics
+    stats = {
+        'total_appointments': Encounter.objects.filter(patient=patient).count(),
+        'upcoming_appointments': Encounter.objects.filter(
+            patient=patient,
+            encounter_date__gte=timezone.now(),
+            status='Scheduled'
+        ).count(),
+        'total_prescriptions': Prescription.objects.filter(patient=patient, status='Active').count(),
+        'pending_bills': Billing.objects.filter(
+            patient=patient,
+            status__in=['Pending', 'Partially Paid']
+        ).count(),
+        'total_allergies': Allergy.objects.filter(patient=patient, is_active=True).count(),
+    }
+
+    # Recent and upcoming data
+    upcoming_appointments = Encounter.objects.filter(
+        patient=patient,
+        encounter_date__gte=timezone.now(),
+        status='Scheduled'
+    ).select_related('provider').order_by('encounter_date')[:5]
+
+    recent_appointments = Encounter.objects.filter(
+        patient=patient,
+        encounter_date__lt=timezone.now()
+    ).select_related('provider').order_by('-encounter_date')[:5]
+
+    recent_vitals = VitalSign.objects.filter(
+        encounter__patient=patient
+    ).select_related('encounter').order_by('-recorded_at')[:5]
+
+    active_prescriptions = Prescription.objects.filter(
+        patient=patient,
+        status='Active'
+    ).select_related('provider').order_by('-start_date')[:10]
+
+    recent_lab_tests = LabTest.objects.filter(
+        patient=patient
+    ).order_by('-ordered_date')[:5]
+
+    pending_billings = Billing.objects.filter(
+        patient=patient,
+        status__in=['Pending', 'Partially Paid']
+    ).order_by('-billing_date')[:5]
+
+    allergies = Allergy.objects.filter(
+        patient=patient,
+        is_active=True
+    ).order_by('-severity', 'allergen')
+
+    context = {
+        'patient': patient,
+        'stats': stats,
+        'upcoming_appointments': upcoming_appointments,
+        'recent_appointments': recent_appointments,
+        'recent_vitals': recent_vitals,
+        'active_prescriptions': active_prescriptions,
+        'recent_lab_tests': recent_lab_tests,
+        'pending_billings': pending_billings,
+        'allergies': allergies,
+    }
+
+    return render(request, 'healthcare/patients/dashboard.html', context)
+
+
+@login_required
 def provider_profile(request):
     """Provider profile view - shows provider's own information and ALL patient data"""
     try:
@@ -2048,6 +2124,106 @@ def provider_profile_edit(request):
     }
 
     return render(request, 'healthcare/providers/profile_edit.html', context)
+
+
+@login_required
+@require_role('doctor')
+def provider_dashboard(request):
+    """Provider/Doctor Dashboard - comprehensive patient care overview"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    # Get all patients for this provider
+    patients = Patient.objects.filter(primary_doctor=provider, is_active=True)
+    patient_ids = patients.values_list('patient_id', flat=True)
+
+    # Get statistics
+    stats = {
+        'total_patients': patients.count(),
+        'appointments_today': Encounter.objects.filter(
+            provider=provider,
+            encounter_date__date=timezone.now().date()
+        ).count(),
+        'appointments_upcoming': Encounter.objects.filter(
+            provider=provider,
+            encounter_date__gt=timezone.now(),
+            status='Scheduled'
+        ).count(),
+        'diagnoses_this_month': Diagnosis.objects.filter(
+            diagnosed_by=provider,
+            diagnosed_at__month=timezone.now().month,
+            diagnosed_at__year=timezone.now().year
+        ).count(),
+        'prescriptions_active': Prescription.objects.filter(
+            provider=provider,
+            status='Active'
+        ).count(),
+    }
+
+    # Today's appointments
+    todays_appointments = Encounter.objects.filter(
+        provider=provider,
+        encounter_date__date=timezone.now().date()
+    ).select_related('patient').order_by('encounter_date')
+
+    # Upcoming appointments
+    upcoming_appointments = Encounter.objects.filter(
+        provider=provider,
+        encounter_date__gt=timezone.now(),
+        status='Scheduled'
+    ).select_related('patient').order_by('encounter_date')[:10]
+
+    # Recent appointments
+    recent_appointments = Encounter.objects.filter(
+        provider=provider,
+        encounter_date__lt=timezone.now()
+    ).select_related('patient').order_by('-encounter_date')[:10]
+
+    # Recent diagnoses
+    recent_diagnoses = Diagnosis.objects.filter(
+        diagnosed_by=provider
+    ).select_related('encounter__patient').order_by('-diagnosed_at')[:10]
+
+    # Recent prescriptions
+    recent_prescriptions = Prescription.objects.filter(
+        provider=provider
+    ).select_related('patient').order_by('-start_date')[:10]
+
+    # Recent vitals from provider's patients
+    recent_vitals = VitalSign.objects.filter(
+        encounter__provider=provider
+    ).select_related('encounter__patient').order_by('-recorded_at')[:10]
+
+    # Patients needing attention (recent vitals with abnormal values)
+    critical_patients = Patient.objects.filter(
+        patient_id__in=VitalSign.objects.filter(
+            encounter__provider=provider,
+            recorded_at__gte=timezone.now() - timezone.timedelta(days=7)
+        ).filter(
+            Q(systolic_bp__gt=140) | Q(diastolic_bp__gt=90) |
+            Q(heart_rate__gt=100) | Q(heart_rate__lt=60) |
+            Q(temperature__gt=100.4)
+        ).values_list('encounter__patient_id', flat=True)
+    ).distinct()[:5]
+
+    context = {
+        'provider': provider,
+        'stats': stats,
+        'todays_appointments': todays_appointments,
+        'upcoming_appointments': upcoming_appointments,
+        'recent_appointments': recent_appointments,
+        'recent_diagnoses': recent_diagnoses,
+        'recent_prescriptions': recent_prescriptions,
+        'recent_vitals': recent_vitals,
+        'critical_patients': critical_patients,
+    }
+
+    return render(request, 'healthcare/providers/dashboard.html', context)
+
+
 # ============================================================================
 # OFFICE ADMINISTRATOR VIEWS
 # ============================================================================
