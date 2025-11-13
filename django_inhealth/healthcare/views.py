@@ -1888,7 +1888,7 @@ def patient_profile(request):
     allergies = Allergy.objects.filter(patient=patient).order_by('-created_at')
     medical_history = MedicalHistory.objects.filter(patient=patient).order_by('-diagnosis_date')
     social_history = SocialHistory.objects.filter(patient=patient).first()
-    lab_tests = LabTest.objects.filter(patient=patient).order_by('-test_date')[:10]
+    lab_tests = LabTest.objects.filter(patient=patient).order_by('-ordered_date')[:10]
     billings = Billing.objects.filter(patient=patient).order_by('-billing_date')[:10]
     payments = Payment.objects.filter(patient=patient).order_by('-payment_date')[:10]
     insurance_info = InsuranceInformation.objects.filter(patient=patient, is_primary=True).first()
@@ -1979,7 +1979,7 @@ def provider_profile(request):
 
     social_history = SocialHistory.objects.filter(patient__in=patients).select_related('patient').order_by('patient__last_name')[:20]
 
-    lab_tests = LabTest.objects.filter(patient__in=patients).select_related('patient').order_by('-test_date')[:30]
+    lab_tests = LabTest.objects.filter(patient__in=patients).select_related('patient').order_by('-ordered_date')[:30]
 
     billings = Billing.objects.filter(patient__in=patients).select_related('patient').order_by('-billing_date')[:30]
 
