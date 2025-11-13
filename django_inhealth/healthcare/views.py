@@ -1884,7 +1884,7 @@ def patient_profile(request):
     appointments = Encounter.objects.filter(patient=patient).order_by('-encounter_date')[:10]
     vitals = VitalSign.objects.filter(encounter__patient=patient).order_by('-recorded_at')[:10]
     diagnoses = Diagnosis.objects.filter(encounter__patient=patient).order_by('-diagnosed_at')[:10]
-    prescriptions = Prescription.objects.filter(encounter__patient=patient).order_by('-prescribed_at')[:10]
+    prescriptions = Prescription.objects.filter(encounter__patient=patient).order_by('-start_date')[:10]
     allergies = Allergy.objects.filter(patient=patient).order_by('-created_at')
     medical_history = MedicalHistory.objects.filter(patient=patient).order_by('-diagnosis_date')
     social_history = SocialHistory.objects.filter(patient=patient).first()
