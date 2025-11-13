@@ -1887,12 +1887,15 @@ def doctor_inbox(request):
     # Get received messages
     messages_list = request.user.received_messages.select_related('sender').order_by('-created_at')
 
-    # Get notifications/alerts
-    notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]
+    # Get notifications/alerts (base QuerySet without slicing)
+    notifications_queryset = Notification.objects.filter(user=request.user).order_by('-created_at')
 
-    # Get unread counts
+    # Get unread counts (before slicing)
     unread_messages = messages_list.filter(is_read=False).count()
-    unread_notifications = notifications_list.filter(is_read=False).count()
+    unread_notifications = notifications_queryset.filter(is_read=False).count()
+
+    # Slice for display
+    notifications_list = notifications_queryset[:20]
 
     context = {
         'provider': provider,
@@ -2584,12 +2587,15 @@ def patient_inbox(request):
     # Get received messages
     messages_list = request.user.received_messages.select_related('sender').order_by('-created_at')
 
-    # Get notifications/alerts
-    notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]
+    # Get notifications/alerts (base QuerySet without slicing)
+    notifications_queryset = Notification.objects.filter(user=request.user).order_by('-created_at')
 
-    # Get unread counts
+    # Get unread counts (before slicing)
     unread_messages = messages_list.filter(is_read=False).count()
-    unread_notifications = notifications_list.filter(is_read=False).count()
+    unread_notifications = notifications_queryset.filter(is_read=False).count()
+
+    # Slice for display
+    notifications_list = notifications_queryset[:20]
 
     context = {
         'patient': patient,
