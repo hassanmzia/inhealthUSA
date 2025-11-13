@@ -152,6 +152,9 @@ urlpatterns = [
     path('provider/notifications/', views.doctor_notifications, name='doctor_notifications'),
     path('provider/notifications/<int:notification_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
 
+    # Doctor Vitals Management
+    path('provider/vitals/all/', views.doctor_view_all_vitals, name='doctor_view_all_vitals'),
+
     # ============================================================================
     # OFFICE ADMINISTRATOR URLS
     # ============================================================================

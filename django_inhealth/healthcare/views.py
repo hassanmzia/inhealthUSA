@@ -2045,6 +2045,55 @@ def mark_notification_read(request, notification_id):
 
 
 @login_required
+@require_role('doctor')
+def doctor_view_all_vitals(request):
+    """View all vital signs for doctor's patients - latest to oldest"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    # Get all patients for this provider
+    patients = Patient.objects.filter(primary_doctor=provider, is_active=True)
+    patient_ids = patients.values_list('patient_id', flat=True)
+
+    # Get all vital signs for these patients, ordered by latest first
+    vitals_list = VitalSign.objects.filter(
+        encounter__patient_id__in=patient_ids
+    ).select_related(
+        'encounter__patient',
+        'encounter__provider',
+        'recorded_by'
+    ).order_by('-recorded_at')
+
+    # Pagination (optional, but recommended for large datasets)
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    paginator = Paginator(vitals_list, 50)  # Show 50 vitals per page
+    page = request.GET.get('page')
+
+    try:
+        vitals = paginator.page(page)
+    except PageNotAnInteger:
+        vitals = paginator.page(1)
+    except EmptyPage:
+        vitals = paginator.page(paginator.num_pages)
+
+    # Get statistics
+    total_vitals = vitals_list.count()
+    critical_vitals = sum(1 for v in vitals_list if v.has_critical_values())
+
+    context = {
+        'provider': provider,
+        'vitals': vitals,
+        'total_vitals': total_vitals,
+        'critical_vitals': critical_vitals,
+    }
+
+    return render(request, 'healthcare/providers/all_vitals.html', context)
+
+
+@login_required
 def patient_profile(request):
     """Patient profile view - shows patient's own information"""
     # Get the patient associated with the logged-in user

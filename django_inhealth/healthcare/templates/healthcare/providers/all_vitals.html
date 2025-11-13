@@ -1,0 +1,268 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}All Patient Vitals - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'provider_dashboard' %}">Provider Dashboard</a> &rsaquo;
+    All Patient Vitals
+</div>
+
+<div class="module">
+    <h1>📊 All Patient Vitals</h1>
+    <p style="color: #666; margin-top: 10px;">Dr. {{ provider.full_name }}</p>
+
+    <!-- Statistics -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
+        <div style="padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; border-radius: 5px;">
+            <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Total Vitals Recorded</div>
+            <div style="font-size: 28px; font-weight: bold; color: #2196F3;">{{ total_vitals }}</div>
+        </div>
+        <div style="padding: 15px; background: #ffebee; border-left: 4px solid #f44336; border-radius: 5px;">
+            <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Critical Values</div>
+            <div style="font-size: 28px; font-weight: bold; color: #f44336;">{{ critical_vitals }}</div>
+        </div>
+        <div style="padding: 15px; background: #e8f5e9; border-left: 4px solid #4caf50; border-radius: 5px;">
+            <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Patients with Vitals</div>
+            <div style="font-size: 28px; font-weight: bold; color: #4caf50;">{{ vitals.paginator.count }}</div>
+        </div>
+    </div>
+
+    <div style="margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+        <div style="font-size: 12px; font-weight: bold; margin-bottom: 10px;">Color Legend:</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 11px;">
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <div style="width: 15px; height: 15px; background: #4caf50; border-radius: 3px;"></div>
+                <span>Green = Normal</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <div style="width: 15px; height: 15px; background: #ff9800; border-radius: 3px;"></div>
+                <span>Orange = Contact Nurse</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <div style="width: 15px; height: 15px; background: #f44336; border-radius: 3px;"></div>
+                <span>Red = Contact Doctor</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <div style="width: 15px; height: 15px; background: #2196F3; border-radius: 3px;"></div>
+                <span>Blue = Emergency</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vitals Table -->
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f0f0f0;">
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Patient</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Date/Time</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Pulse/HR</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">SBP</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">DBP</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Temp</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Resp</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">O2 Sat</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Glucose</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Alert</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vital in vitals %}
+                <tr style="border-bottom: 1px solid #e8e8e8; {% if vital.has_critical_values %}background: #fff5f5;{% endif %}">
+                    <!-- Patient Info -->
+                    <td style="padding: 12px;">
+                        <a href="{% url 'patient_detail' vital.encounter.patient.patient_id %}" style="font-weight: bold; color: #2196F3;">
+                            {{ vital.encounter.patient.full_name }}
+                        </a>
+                        <div style="font-size: 11px; color: #666;">{{ vital.encounter.patient.date_of_birth|date:"m/d/Y" }}</div>
+                    </td>
+
+                    <!-- Date/Time -->
+                    <td style="padding: 12px; text-align: center;">
+                        <div style="font-size: 12px;">{{ vital.recorded_at|date:"m/d/Y" }}</div>
+                        <div style="font-size: 11px; color: #666;">{{ vital.recorded_at|date:"H:i" }}</div>
+                    </td>
+
+                    <!-- Heart Rate -->
+                    {% with status=vital.get_heart_rate_status %}
+                    <td style="padding: 12px; text-align: center; background:
+                        {% if status.0 == 'blue' %}#e3f2fd
+                        {% elif status.0 == 'red' %}#ffebee
+                        {% elif status.0 == 'orange' %}#fff3e0
+                        {% elif status.0 == 'green' %}#e8f5e9
+                        {% else %}#fff{% endif %};">
+                        {% if vital.heart_rate %}
+                        <div style="font-weight: bold; font-size: 16px;">{{ vital.heart_rate }}</div>
+                        <div style="font-size: 10px; color: #666;">bpm</div>
+                        {% else %}
+                        <span style="color: #ccc;">-</span>
+                        {% endif %}
+                    </td>
+                    {% endwith %}
+
+                    <!-- SBP -->
+                    {% with status=vital.get_sbp_status %}
+                    <td style="padding: 12px; text-align: center; background:
+                        {% if status.0 == 'blue' %}#e3f2fd
+                        {% elif status.0 == 'red' %}#ffebee
+                        {% elif status.0 == 'orange' %}#fff3e0
+                        {% elif status.0 == 'green' %}#e8f5e9
+                        {% else %}#fff{% endif %};">
+                        {% if vital.blood_pressure_systolic %}
+                        <div style="font-weight: bold; font-size: 16px;">{{ vital.blood_pressure_systolic }}</div>
+                        <div style="font-size: 10px; color: #666;">mmHg</div>
+                        {% else %}
+                        <span style="color: #ccc;">-</span>
+                        {% endif %}
+                    </td>
+                    {% endwith %}
+
+                    <!-- DBP -->
+                    {% with status=vital.get_dbp_status %}
+                    <td style="padding: 12px; text-align: center; background:
+                        {% if status.0 == 'blue' %}#e3f2fd
+                        {% elif status.0 == 'red' %}#ffebee
+                        {% elif status.0 == 'orange' %}#fff3e0
+                        {% elif status.0 == 'green' %}#e8f5e9
+                        {% else %}#fff{% endif %};">
+                        {% if vital.blood_pressure_diastolic %}
+                        <div style="font-weight: bold; font-size: 16px;">{{ vital.blood_pressure_diastolic }}</div>
+                        <div style="font-size: 10px; color: #666;">mmHg</div>
+                        {% else %}
+                        <span style="color: #ccc;">-</span>
+                        {% endif %}
+                    </td>
+                    {% endwith %}
+
+                    <!-- Temperature -->
+                    {% with status=vital.get_temperature_status %}
+                    <td style="padding: 12px; text-align: center; background:
+                        {% if status.0 == 'blue' %}#e3f2fd
+                        {% elif status.0 == 'red' %}#ffebee
+                        {% elif status.0 == 'orange' %}#fff3e0
+                        {% elif status.0 == 'green' %}#e8f5e9
+                        {% else %}#fff{% endif %};">
+                        {% if vital.temperature_value %}
+                        <div style="font-weight: bold; font-size: 16px;">{{ vital.temperature_value }}</div>
+                        <div style="font-size: 10px; color: #666;">°{{ vital.temperature_unit }}</div>
+                        {% else %}
+                        <span style="color: #ccc;">-</span>
+                        {% endif %}
+                    </td>
+                    {% endwith %}
+
+                    <!-- Respiratory Rate -->
+                    {% with status=vital.get_respiratory_rate_status %}
+                    <td style="padding: 12px; text-align: center; background:
+                        {% if status.0 == 'blue' %}#e3f2fd
+                        {% elif status.0 == 'red' %}#ffebee
+                        {% elif status.0 == 'orange' %}#fff3e0
+                        {% elif status.0 == 'green' %}#e8f5e9
+                        {% else %}#fff{% endif %};">
+                        {% if vital.respiratory_rate %}
+                        <div style="font-weight: bold; font-size: 16px;">{{ vital.respiratory_rate }}</div>
+                        <div style="font-size: 10px; color: #666;">bpm</div>
+                        {% else %}
+                        <span style="color: #ccc;">-</span>
+                        {% endif %}
+                    </td>
+                    {% endwith %}
+
+                    <!-- O2 Saturation -->
+                    {% with status=vital.get_oxygen_saturation_status %}
+                    <td style="padding: 12px; text-align: center; background:
+                        {% if status.0 == 'blue' %}#e3f2fd
+                        {% elif status.0 == 'red' %}#ffebee
+                        {% elif status.0 == 'orange' %}#fff3e0
+                        {% elif status.0 == 'green' %}#e8f5e9
+                        {% else %}#fff{% endif %};">
+                        {% if vital.oxygen_saturation %}
+                        <div style="font-weight: bold; font-size: 16px;">{{ vital.oxygen_saturation }}</div>
+                        <div style="font-size: 10px; color: #666;">%</div>
+                        {% else %}
+                        <span style="color: #ccc;">-</span>
+                        {% endif %}
+                    </td>
+                    {% endwith %}
+
+                    <!-- Glucose -->
+                    {% with status=vital.get_glucose_status %}
+                    <td style="padding: 12px; text-align: center; background:
+                        {% if status.0 == 'blue' %}#e3f2fd
+                        {% elif status.0 == 'red' %}#ffebee
+                        {% elif status.0 == 'orange' %}#fff3e0
+                        {% elif status.0 == 'green' %}#e8f5e9
+                        {% else %}#fff{% endif %};">
+                        {% if vital.glucose %}
+                        <div style="font-weight: bold; font-size: 16px;">{{ vital.glucose }}</div>
+                        <div style="font-size: 10px; color: #666;">mg/dL</div>
+                        {% else %}
+                        <span style="color: #ccc;">-</span>
+                        {% endif %}
+                    </td>
+                    {% endwith %}
+
+                    <!-- Alert Level -->
+                    <td style="padding: 12px; text-align: center;">
+                        {% with alert_level=vital.get_highest_alert_level %}
+                        {% if alert_level == 'Emergency' %}
+                        <span style="padding: 5px 10px; background: #2196F3; color: white; border-radius: 3px; font-size: 11px; font-weight: bold;">
+                            🚨 {{ alert_level }}
+                        </span>
+                        {% elif alert_level == 'Doctor' %}
+                        <span style="padding: 5px 10px; background: #f44336; color: white; border-radius: 3px; font-size: 11px; font-weight: bold;">
+                            📞 {{ alert_level }}
+                        </span>
+                        {% elif alert_level == 'Nurse' %}
+                        <span style="padding: 5px 10px; background: #ff9800; color: white; border-radius: 3px; font-size: 11px; font-weight: bold;">
+                            📋 {{ alert_level }}
+                        </span>
+                        {% else %}
+                        <span style="padding: 5px 10px; background: #4caf50; color: white; border-radius: 3px; font-size: 11px;">
+                            ✓ Normal
+                        </span>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+
+                    <!-- Actions -->
+                    <td style="padding: 12px; text-align: center;">
+                        <a href="{% url 'patient_detail' vital.encounter.patient.patient_id %}" style="color: #2196F3; font-size: 12px;">View Patient</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="11" style="padding: 40px; text-align: center; color: #999;">
+                        No vital signs recorded for your patients yet
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if vitals.has_other_pages %}
+    <div style="margin-top: 30px; text-align: center;">
+        <div style="display: inline-block; background: #f5f5f5; padding: 10px; border-radius: 5px;">
+            {% if vitals.has_previous %}
+            <a href="?page=1" style="padding: 8px 12px; margin: 0 2px; background: white; border: 1px solid #ddd; text-decoration: none; color: #333; border-radius: 3px;">First</a>
+            <a href="?page={{ vitals.previous_page_number }}" style="padding: 8px 12px; margin: 0 2px; background: white; border: 1px solid #ddd; text-decoration: none; color: #333; border-radius: 3px;">Previous</a>
+            {% endif %}
+
+            <span style="padding: 8px 12px; margin: 0 2px; background: #2196F3; color: white; border-radius: 3px;">
+                Page {{ vitals.number }} of {{ vitals.paginator.num_pages }}
+            </span>
+
+            {% if vitals.has_next %}
+            <a href="?page={{ vitals.next_page_number }}" style="padding: 8px 12px; margin: 0 2px; background: white; border: 1px solid #ddd; text-decoration: none; color: #333; border-radius: 3px;">Next</a>
+            <a href="?page={{ vitals.paginator.num_pages }}" style="padding: 8px 12px; margin: 0 2px; background: white; border: 1px solid #ddd; text-decoration: none; color: #333; border-radius: 3px;">Last</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
