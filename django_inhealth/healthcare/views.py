@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.utils import timezone
 from .models import (
     Hospital, Patient, Provider, Encounter, VitalSign, Diagnosis,
@@ -1884,11 +1884,11 @@ def patient_profile(request):
     appointments = Encounter.objects.filter(patient=patient).order_by('-encounter_date')[:10]
     vitals = VitalSign.objects.filter(encounter__patient=patient).order_by('-recorded_at')[:10]
     diagnoses = Diagnosis.objects.filter(encounter__patient=patient).order_by('-diagnosed_at')[:10]
-    prescriptions = Prescription.objects.filter(encounter__patient=patient).order_by('-prescribed_at')[:10]
+    prescriptions = Prescription.objects.filter(encounter__patient=patient).order_by('-start_date')[:10]
     allergies = Allergy.objects.filter(patient=patient).order_by('-created_at')
     medical_history = MedicalHistory.objects.filter(patient=patient).order_by('-diagnosis_date')
     social_history = SocialHistory.objects.filter(patient=patient).first()
-    lab_tests = LabTest.objects.filter(patient=patient).order_by('-test_date')[:10]
+    lab_tests = LabTest.objects.filter(patient=patient).order_by('-ordered_date')[:10]
     billings = Billing.objects.filter(patient=patient).order_by('-billing_date')[:10]
     payments = Payment.objects.filter(patient=patient).order_by('-payment_date')[:10]
     insurance_info = InsuranceInformation.objects.filter(patient=patient, is_primary=True).first()
@@ -1979,7 +1979,7 @@ def provider_profile(request):
 
     social_history = SocialHistory.objects.filter(patient__in=patients).select_related('patient').order_by('patient__last_name')[:20]
 
-    lab_tests = LabTest.objects.filter(patient__in=patients).select_related('patient').order_by('-test_date')[:30]
+    lab_tests = LabTest.objects.filter(patient__in=patients).select_related('patient').order_by('-ordered_date')[:30]
 
     billings = Billing.objects.filter(patient__in=patients).select_related('patient').order_by('-billing_date')[:30]
 
@@ -2070,15 +2070,15 @@ def admin_dashboard(request):
         ).count(),
         'total_pending_billing': Billing.objects.filter(
             status='Pending'
-        ).aggregate(total=models.Sum('amount_due'))['total'] or 0,
+        ).aggregate(total=Sum('amount_due'))['total'] or 0,
         'total_unpaid_billing': Billing.objects.filter(
             status__in=['Pending', 'Partially Paid']
-        ).aggregate(total=models.Sum('amount_due'))['total'] or 0,
+        ).aggregate(total=Sum('amount_due'))['total'] or 0,
     }
 
     # Recent activity
-    recent_patients = Patient.objects.filter(is_active=True).order_by('-created_at')[:5]
-    recent_appointments = Encounter.objects.select_related('patient', 'provider').order_by('-created_at')[:10]
+    recent_patients = Patient.objects.filter(is_active=True).order_by('-patient_id')[:5]
+    recent_appointments = Encounter.objects.select_related('patient', 'provider').order_by('-encounter_date')[:10]
     recent_billings = Billing.objects.select_related('patient').order_by('-created_at')[:10]
     upcoming_appointments = Encounter.objects.filter(
         encounter_date__gte=timezone.now(),
@@ -2463,7 +2463,7 @@ def nurse_dashboard(request):
     }
 
     # Recent activity
-    recent_patients = Patient.objects.filter(is_active=True).order_by('-updated_at')[:10]
+    recent_patients = Patient.objects.filter(is_active=True).order_by('-patient_id')[:10]
     upcoming_appointments = Encounter.objects.filter(
         encounter_date__gte=timezone.now(),
         status='Scheduled'
