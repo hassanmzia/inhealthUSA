@@ -204,4 +204,6 @@ urlpatterns = [
 
     # Nurse Vital Signs Management
     path('nurse/vitals/', views.nurse_vitals_list, name='nurse_vitals_list'),
+    path('nurse/patients/<int:patient_id>/vitals/create/', views.nurse_vital_create, name='nurse_vital_create'),
+    path('nurse/vitals/<int:vital_signs_id>/edit/', views.nurse_vital_edit, name='nurse_vital_edit'),
 ]

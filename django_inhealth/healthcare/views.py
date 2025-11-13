@@ -3569,3 +3569,119 @@ def nurse_vitals_list(request):
     }
 
     return render(request, 'healthcare/nurse/vitals_list.html', context)
+
+
+@login_required
+@require_role('nurse')
+def nurse_vital_create(request, patient_id):
+    """Nurse can add vitals for any patient in their hospital"""
+    try:
+        nurse = request.user.nurse_profile
+    except:
+        messages.error(request, 'No nurse profile found for your account.')
+        return redirect('index')
+
+    # Get the patient
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    # Verify patient is in the same hospital as the nurse
+    if patient.primary_doctor and patient.primary_doctor.hospital != nurse.hospital:
+        messages.error(request, 'You can only add vitals for patients in your hospital.')
+        return redirect('nurse_patients_list')
+
+    if request.method == 'POST':
+        # Get or create an encounter for this patient
+        # Create a vitals recording encounter if none exists
+        encounter, created = Encounter.objects.get_or_create(
+            patient=patient,
+            provider=patient.primary_doctor,
+            encounter_type='Vitals Check',
+            encounter_date=timezone.now(),
+            status='Completed',
+            defaults={
+                'chief_complaint': 'Routine vitals recording by nurse'
+            }
+        )
+
+        # Create vital signs
+        vital = VitalSign.objects.create(
+            encounter=encounter,
+            temperature_value=request.POST.get('temperature_value') or None,
+            temperature_unit=request.POST.get('temperature_unit') or 'F',
+            blood_pressure_systolic=request.POST.get('blood_pressure_systolic') or None,
+            blood_pressure_diastolic=request.POST.get('blood_pressure_diastolic') or None,
+            heart_rate=request.POST.get('heart_rate') or None,
+            respiratory_rate=request.POST.get('respiratory_rate') or None,
+            oxygen_saturation=request.POST.get('oxygen_saturation') or None,
+            glucose=request.POST.get('glucose') or None,
+            weight_value=request.POST.get('weight_value') or None,
+            weight_unit=request.POST.get('weight_unit') or 'lbs',
+            height_value=request.POST.get('height_value') or None,
+            height_unit=request.POST.get('height_unit') or 'in',
+            notes=request.POST.get('notes') or None,
+            recorded_by_nurse=nurse,
+            data_source='manual',
+            recorded_at=timezone.now()
+        )
+
+        messages.success(request, f'Vital signs recorded successfully for {patient.full_name}')
+        return redirect('nurse_vitals_list')
+
+    context = {
+        'nurse': nurse,
+        'patient': patient,
+    }
+
+    return render(request, 'healthcare/nurse/vital_create.html', context)
+
+
+@login_required
+@require_role('nurse')
+def nurse_vital_edit(request, vital_signs_id):
+    """Nurse can edit vitals that were manually entered (by any nurse in the hospital)"""
+    try:
+        nurse = request.user.nurse_profile
+    except:
+        messages.error(request, 'No nurse profile found for your account.')
+        return redirect('index')
+
+    # Get the vital sign
+    vital = get_object_or_404(VitalSign, vital_signs_id=vital_signs_id)
+
+    # Verify vital was manually entered (not from device)
+    if vital.data_source == 'device':
+        messages.error(request, 'Cannot edit vitals from IoT devices.')
+        return redirect('nurse_vitals_list')
+
+    # Verify patient is in the same hospital
+    if vital.encounter.patient.primary_doctor and vital.encounter.patient.primary_doctor.hospital != nurse.hospital:
+        messages.error(request, 'You can only edit vitals for patients in your hospital.')
+        return redirect('nurse_vitals_list')
+
+    if request.method == 'POST':
+        # Update vital signs
+        vital.temperature_value = request.POST.get('temperature_value') or None
+        vital.temperature_unit = request.POST.get('temperature_unit') or 'F'
+        vital.blood_pressure_systolic = request.POST.get('blood_pressure_systolic') or None
+        vital.blood_pressure_diastolic = request.POST.get('blood_pressure_diastolic') or None
+        vital.heart_rate = request.POST.get('heart_rate') or None
+        vital.respiratory_rate = request.POST.get('respiratory_rate') or None
+        vital.oxygen_saturation = request.POST.get('oxygen_saturation') or None
+        vital.glucose = request.POST.get('glucose') or None
+        vital.weight_value = request.POST.get('weight_value') or None
+        vital.weight_unit = request.POST.get('weight_unit') or 'lbs'
+        vital.height_value = request.POST.get('height_value') or None
+        vital.height_unit = request.POST.get('height_unit') or 'in'
+        vital.notes = request.POST.get('notes') or None
+        vital.save()
+
+        messages.success(request, 'Vital signs updated successfully')
+        return redirect('nurse_vitals_list')
+
+    context = {
+        'nurse': nurse,
+        'vital': vital,
+        'patient': vital.encounter.patient,
+    }
+
+    return render(request, 'healthcare/nurse/vital_edit.html', context)

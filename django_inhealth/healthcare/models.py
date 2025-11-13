@@ -268,6 +268,9 @@ class VitalSign(models.Model):
     bmi = models.DecimalField(max_digits=5, decimal_places=1, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     recorded_by = models.ForeignKey(Provider, on_delete=models.SET_NULL, null=True, blank=True)
+    recorded_by_nurse = models.ForeignKey('Nurse', on_delete=models.SET_NULL, null=True, blank=True, related_name='recorded_vitals')
+    data_source = models.CharField(max_length=10, choices=[('manual', 'Manual Entry'), ('device', 'IoT Device')], default='manual')
+    device = models.ForeignKey('Device', on_delete=models.SET_NULL, null=True, blank=True, related_name='vitals_recorded')
     recorded_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
@@ -499,6 +502,17 @@ class VitalSign(models.Model):
                     highest_level = contact_level
 
         return highest_level
+
+    def get_data_source_display_with_name(self):
+        """Returns the data source with the name of who/what recorded it"""
+        if self.data_source == 'device' and self.device:
+            return f"IoT Device: {self.device.device_name}"
+        elif self.data_source == 'manual' and self.recorded_by_nurse:
+            return f"Nurse: {self.recorded_by_nurse.full_name}"
+        elif self.recorded_by:
+            return f"Doctor: {self.recorded_by.full_name}"
+        else:
+            return "Unknown Source"
 
 
 class Diagnosis(models.Model):

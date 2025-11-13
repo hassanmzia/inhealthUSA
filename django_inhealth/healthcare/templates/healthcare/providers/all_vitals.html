@@ -65,6 +65,7 @@
                     <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Resp</th>
                     <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">O2 Sat</th>
                     <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Glucose</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Source</th>
                     <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Alert</th>
                     <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Actions</th>
                 </tr>
@@ -205,6 +206,20 @@
                     </td>
                     {% endwith %}
 
+                    <!-- Source -->
+                    <td style="padding: 12px; text-align: center;">
+                        <div style="font-size: 11px;">
+                            {% if vital.data_source == 'device' %}
+                                <span style="color: #2196F3;">📱 Device</span>
+                            {% else %}
+                                <span style="color: #4caf50;">✋ Manual</span>
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 10px; color: #666; margin-top: 3px;">
+                            {{ vital.get_data_source_display_with_name|truncatewords:3 }}
+                        </div>
+                    </td>
+
                     <!-- Alert Level -->
                     <td style="padding: 12px; text-align: center;">
                         {% with alert_level=vital.get_highest_alert_level %}
@@ -236,7 +251,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="11" style="padding: 40px; text-align: center; color: #999;">
+                    <td colspan="12" style="padding: 40px; text-align: center; color: #999;">
                         No vital signs recorded for your patients yet
                     </td>
                 </tr>
