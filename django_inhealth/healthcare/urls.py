@@ -141,6 +141,9 @@ urlpatterns = [
     path('patient/notifications/', views.patient_notifications, name='patient_notifications'),
     path('patient/notifications/<int:notification_id>/mark-read/', views.patient_mark_notification_read, name='patient_mark_notification_read'),
 
+    # Patient Vitals Management
+    path('patient/vitals/chart/', views.patient_my_vitals_chart, name='patient_my_vitals_chart'),
+
     # Provider Profile URLs (for logged-in providers/doctors)
     path('provider/profile/', views.provider_profile, name='provider_profile'),
     path('provider/profile/edit/', views.provider_profile_edit, name='provider_profile_edit'),
