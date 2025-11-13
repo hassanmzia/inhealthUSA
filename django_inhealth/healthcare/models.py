@@ -111,6 +111,34 @@ class Provider(models.Model):
         return f"{self.first_name} {self.last_name}"
 
 
+class Nurse(models.Model):
+    """Nurse model"""
+    nurse_id = models.AutoField(primary_key=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='nurse_profile', null=True, blank=True)
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='nurses')
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    license_number = models.CharField(max_length=100, unique=True)
+    specialty = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField(max_length=255, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='nurses')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'nurses'
+        ordering = ['last_name', 'first_name']
+
+    def __str__(self):
+        return f"{self.last_name}, {self.first_name} (RN)"
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+
 class Patient(models.Model):
     """Patient model representing patient demographic information"""
     patient_id = models.AutoField(primary_key=True)

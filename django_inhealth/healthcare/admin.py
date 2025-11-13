@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from .models import (
-    Hospital, UserProfile, Patient, Department, Provider, Encounter, VitalSign,
+    Hospital, UserProfile, Patient, Department, Provider, Nurse, Encounter, VitalSign,
     Diagnosis, Prescription, Allergy, MedicalHistory, SocialHistory, FamilyHistory,
     Message, LabTest, Notification, InsuranceInformation, Billing, BillingItem, Payment, Device
 )
@@ -109,6 +109,33 @@ class ProviderAdmin(admin.ModelAdmin):
         }),
         ('Organization', {
             'fields': ('hospital', 'department')
+        }),
+        ('Contact Information', {
+            'fields': ('email', 'phone')
+        }),
+        ('Status', {
+            'fields': ('is_active',)
+        }),
+    )
+
+
+@admin.register(Nurse)
+class NurseAdmin(admin.ModelAdmin):
+    list_display = ['nurse_id', 'full_name', 'user', 'hospital', 'specialty', 'license_number', 'email', 'is_active']
+    list_filter = ['specialty', 'is_active', 'department', 'hospital']
+    search_fields = ['first_name', 'last_name', 'license_number', 'user__username', 'user__email']
+    autocomplete_fields = ['user', 'hospital', 'department']
+    fieldsets = (
+        ('User Account Link', {
+            'fields': ('user',),
+            'description': 'Link this nurse to a User account. The user\'s role should be set to "Nurse" in User Profiles.'
+        }),
+        ('Nurse Information', {
+            'fields': ('first_name', 'last_name', 'license_number', 'specialty')
+        }),
+        ('Organization', {
+            'fields': ('hospital', 'department'),
+            'description': 'Hospital assignment is required. Each nurse must be assigned to an existing hospital.'
         }),
         ('Contact Information', {
             'fields': ('email', 'phone')
