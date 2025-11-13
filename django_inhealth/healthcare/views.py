@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.utils import timezone
 from .models import (
     Hospital, Patient, Provider, Encounter, VitalSign, Diagnosis,
@@ -2070,10 +2070,10 @@ def admin_dashboard(request):
         ).count(),
         'total_pending_billing': Billing.objects.filter(
             status='Pending'
-        ).aggregate(total=models.Sum('amount_due'))['total'] or 0,
+        ).aggregate(total=Sum('amount_due'))['total'] or 0,
         'total_unpaid_billing': Billing.objects.filter(
             status__in=['Pending', 'Partially Paid']
-        ).aggregate(total=models.Sum('amount_due'))['total'] or 0,
+        ).aggregate(total=Sum('amount_due'))['total'] or 0,
     }
 
     # Recent activity
