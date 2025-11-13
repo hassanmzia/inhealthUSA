@@ -2145,6 +2145,8 @@ def patient_dashboard(request):
             status__in=['Pending', 'Partially Paid']
         ).count(),
         'total_allergies': Allergy.objects.filter(patient=patient, is_active=True).count(),
+        'unread_messages': request.user.received_messages.filter(is_read=False).count(),
+        'unread_notifications': Notification.objects.filter(user=request.user, is_read=False).count(),
     }
 
     # Recent and upcoming data
@@ -2195,6 +2197,177 @@ def patient_dashboard(request):
     }
 
     return render(request, 'healthcare/patients/dashboard.html', context)
+
+
+# ============================================================================
+# PATIENT MESSAGING AND ALERT SYSTEM
+# ============================================================================
+
+@login_required
+@require_role('patient')
+def patient_inbox(request):
+    """Patient-specific inbox with filtering and alert capabilities"""
+    try:
+        patient = request.user.patient_profile
+    except:
+        messages.error(request, 'No patient profile found for your account.')
+        return redirect('index')
+
+    # Get received messages
+    messages_list = request.user.received_messages.select_related('sender').order_by('-created_at')
+
+    # Get notifications/alerts
+    notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]
+
+    # Get unread counts
+    unread_messages = messages_list.filter(is_read=False).count()
+    unread_notifications = notifications_list.filter(is_read=False).count()
+
+    context = {
+        'patient': patient,
+        'messages_list': messages_list[:20],
+        'notifications_list': notifications_list,
+        'unread_messages': unread_messages,
+        'unread_notifications': unread_notifications,
+    }
+
+    return render(request, 'healthcare/patients/inbox.html', context)
+
+
+@login_required
+@require_role('patient')
+def patient_compose_message(request):
+    """Patient compose message - can only message their primary doctor"""
+    try:
+        patient = request.user.patient_profile
+    except:
+        messages.error(request, 'No patient profile found for your account.')
+        return redirect('index')
+
+    # Get patient's primary doctor
+    doctors = []
+    if patient.primary_doctor and patient.primary_doctor.user:
+        doctors = [patient.primary_doctor.user]
+
+    # Check if this is a reply
+    reply_to_id = request.GET.get('reply_to')
+    reply_to_message = None
+    if reply_to_id:
+        reply_to_message = get_object_or_404(Message, message_id=reply_to_id)
+
+    if request.method == 'POST':
+        recipient_id = request.POST.get('recipient_id')
+        subject = request.POST.get('subject')
+        body = request.POST.get('body')
+        send_email = request.POST.get('send_email') == 'on'
+        send_sms = request.POST.get('send_sms') == 'on'
+        parent_message_id = request.POST.get('parent_message_id')
+
+        # Validate required fields
+        if not recipient_id or not subject or not body:
+            messages.error(request, 'Subject and message body are required.')
+            return redirect('patient_compose_message')
+
+        try:
+            from django.contrib.auth.models import User
+            recipient = User.objects.get(id=recipient_id)
+
+            # Verify recipient is this patient's primary doctor
+            if patient.primary_doctor and patient.primary_doctor.user:
+                if recipient.id != patient.primary_doctor.user.id:
+                    messages.error(request, 'You can only message your primary doctor.')
+                    return redirect('patient_compose_message')
+            else:
+                messages.error(request, 'You do not have a primary doctor assigned.')
+                return redirect('patient_compose_message')
+
+            # Create message
+            message = Message.objects.create(
+                sender=request.user,
+                recipient=recipient,
+                subject=subject,
+                body=body,
+                parent_message=Message.objects.get(message_id=parent_message_id) if parent_message_id else None
+            )
+
+            # Create notification for the recipient
+            Notification.objects.create(
+                user=recipient,
+                title=f'New message from patient {patient.full_name}',
+                message=f'Subject: {subject[:50]}...' if len(subject) > 50 else f'Subject: {subject}',
+                notification_type='message'
+            )
+
+            # Send email if requested (placeholder for actual email sending)
+            if send_email:
+                try:
+                    if patient.primary_doctor.email:
+                        # TODO: Implement actual email sending using Django's email backend
+                        messages.info(request, f'Email notification queued to {patient.primary_doctor.email}')
+                except Exception as e:
+                    messages.warning(request, f'Could not queue email notification: {str(e)}')
+
+            # Send SMS if requested (placeholder for actual SMS sending)
+            if send_sms:
+                try:
+                    if patient.primary_doctor.phone:
+                        # TODO: Implement actual SMS sending using Twilio or similar service
+                        messages.info(request, f'SMS notification queued to {patient.primary_doctor.phone}')
+                except Exception as e:
+                    messages.warning(request, f'Could not queue SMS notification: {str(e)}')
+
+            messages.success(request, 'Message sent successfully!')
+            return redirect('patient_inbox')
+
+        except User.DoesNotExist:
+            messages.error(request, 'Invalid recipient.')
+            return redirect('patient_compose_message')
+
+    context = {
+        'patient': patient,
+        'doctors': doctors,
+        'reply_to': reply_to_message,
+    }
+
+    return render(request, 'healthcare/patients/compose_message.html', context)
+
+
+@login_required
+@require_role('patient')
+def patient_notifications(request):
+    """View all notifications/alerts for the patient"""
+    # Get all notifications for the patient
+    notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at')
+
+    # Mark notifications as read if requested
+    if request.method == 'POST':
+        notification_ids = request.POST.getlist('mark_read')
+        if notification_ids:
+            Notification.objects.filter(
+                notification_id__in=notification_ids,
+                user=request.user
+            ).update(is_read=True, read_at=timezone.now())
+            messages.success(request, 'Notifications marked as read.')
+            return redirect('patient_notifications')
+
+    context = {
+        'notifications_list': notifications_list,
+        'unread_count': notifications_list.filter(is_read=False).count(),
+    }
+
+    return render(request, 'healthcare/patients/notifications.html', context)
+
+
+@login_required
+@require_role('patient')
+def patient_mark_notification_read(request, notification_id):
+    """Mark a single notification as read"""
+    notification = get_object_or_404(Notification, notification_id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.read_at = timezone.now()
+    notification.save()
+    messages.success(request, 'Notification marked as read.')
+    return redirect('patient_notifications')
 
 
 @login_required

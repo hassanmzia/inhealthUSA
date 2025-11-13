@@ -135,6 +135,12 @@ urlpatterns = [
     path('profile/edit/', views.patient_profile_edit, name='patient_profile_edit'),
     path('patient/dashboard/', views.patient_dashboard, name='patient_dashboard'),
 
+    # Patient Messaging and Alert System
+    path('patient/inbox/', views.patient_inbox, name='patient_inbox'),
+    path('patient/compose/', views.patient_compose_message, name='patient_compose_message'),
+    path('patient/notifications/', views.patient_notifications, name='patient_notifications'),
+    path('patient/notifications/<int:notification_id>/mark-read/', views.patient_mark_notification_read, name='patient_mark_notification_read'),
+
     # Provider Profile URLs (for logged-in providers/doctors)
     path('provider/profile/', views.provider_profile, name='provider_profile'),
     path('provider/profile/edit/', views.provider_profile_edit, name='provider_profile_edit'),
