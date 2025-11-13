@@ -135,10 +135,30 @@ urlpatterns = [
     path('profile/edit/', views.patient_profile_edit, name='patient_profile_edit'),
     path('patient/dashboard/', views.patient_dashboard, name='patient_dashboard'),
 
+    # Patient Messaging and Alert System
+    path('patient/inbox/', views.patient_inbox, name='patient_inbox'),
+    path('patient/compose/', views.patient_compose_message, name='patient_compose_message'),
+    path('patient/notifications/', views.patient_notifications, name='patient_notifications'),
+    path('patient/notifications/<int:notification_id>/mark-read/', views.patient_mark_notification_read, name='patient_mark_notification_read'),
+
+    # Patient Vitals Management
+    path('patient/vitals/chart/', views.patient_my_vitals_chart, name='patient_my_vitals_chart'),
+
     # Provider Profile URLs (for logged-in providers/doctors)
     path('provider/profile/', views.provider_profile, name='provider_profile'),
     path('provider/profile/edit/', views.provider_profile_edit, name='provider_profile_edit'),
     path('provider/dashboard/', views.provider_dashboard, name='provider_dashboard'),
+
+    # Doctor Messaging and Alert System
+    path('provider/inbox/', views.doctor_inbox, name='doctor_inbox'),
+    path('provider/compose/', views.doctor_compose_message, name='doctor_compose_message'),
+    path('provider/notifications/', views.doctor_notifications, name='doctor_notifications'),
+    path('provider/notifications/<int:notification_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
+
+    # Doctor Vitals Management
+    path('provider/vitals/all/', views.doctor_view_all_vitals, name='doctor_view_all_vitals'),
+    path('provider/patients/<int:patient_id>/vitals/chart/', views.patient_vitals_chart, name='patient_vitals_chart'),
+
     # ============================================================================
     # OFFICE ADMINISTRATOR URLS
     # ============================================================================
@@ -184,4 +204,6 @@ urlpatterns = [
 
     # Nurse Vital Signs Management
     path('nurse/vitals/', views.nurse_vitals_list, name='nurse_vitals_list'),
+    path('nurse/patients/<int:patient_id>/vitals/create/', views.nurse_vital_create, name='nurse_vital_create'),
+    path('nurse/vitals/<int:vital_signs_id>/edit/', views.nurse_vital_edit, name='nurse_vital_edit'),
 ]

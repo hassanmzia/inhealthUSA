@@ -1,0 +1,114 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Message Inbox - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'patient_dashboard' %}">My Dashboard</a> &rsaquo;
+    Message Inbox
+</div>
+
+<div class="module">
+    <h1>📬 Message Inbox</h1>
+    <p style="color: #666; margin-top: 10px;">{{ patient.full_name }}</p>
+
+    <div style="display: flex; gap: 15px; margin: 20px 0;">
+        <a href="{% url 'patient_inbox' %}" class="button" style="padding: 10px 20px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px;">
+            Messages ({{ unread_messages }})
+        </a>
+        <a href="{% url 'patient_compose_message' %}" class="button" style="padding: 10px 20px; background: #4caf50; color: white; text-decoration: none; border-radius: 5px;">
+            Message My Doctor
+        </a>
+        <a href="{% url 'patient_notifications' %}" class="button" style="padding: 10px 20px; background: #ff9800; color: white; text-decoration: none; border-radius: 5px;">
+            Alerts ({{ unread_notifications }})
+        </a>
+    </div>
+
+    <!-- Messages Section -->
+    <div class="module" style="margin-top: 30px;">
+        <h2>Recent Messages ({{ unread_messages }} unread)</h2>
+        {% if messages_list %}
+        <table style="width: 100%; margin-top: 10px;">
+            <thead>
+                <tr>
+                    <th style="text-align: left; padding: 10px; background: #f0f0f0; width: 50px;"></th>
+                    <th style="text-align: left; padding: 10px; background: #f0f0f0;">From</th>
+                    <th style="text-align: left; padding: 10px; background: #f0f0f0;">Subject</th>
+                    <th style="text-align: left; padding: 10px; background: #f0f0f0;">Date</th>
+                    <th style="text-align: left; padding: 10px; background: #f0f0f0;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for message in messages_list %}
+                <tr style="border-bottom: 1px solid #e8e8e8; {% if not message.is_read %}background: #f0f8ff; font-weight: bold;{% endif %}">
+                    <td style="padding: 10px; text-align: center;">
+                        {% if not message.is_read %}
+                        <span style="display: inline-block; width: 10px; height: 10px; background: #2196F3; border-radius: 50%;"></span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 10px;">{{ message.sender.get_full_name }}</td>
+                    <td style="padding: 10px;">{{ message.subject }}</td>
+                    <td style="padding: 10px;">{{ message.created_at|date:"M d, Y H:i" }}</td>
+                    <td style="padding: 10px;">
+                        <a href="{% url 'message_show' message.message_id %}" style="color: #2196F3;">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="padding: 20px; text-align: center; color: #999;">No messages yet</p>
+        {% endif %}
+    </div>
+
+    <!-- Notifications Preview -->
+    <div class="module" style="margin-top: 30px;">
+        <h2>Recent Alerts ({{ unread_notifications }} unread)</h2>
+        {% if notifications_list %}
+        <table style="width: 100%; margin-top: 10px;">
+            <thead>
+                <tr>
+                    <th style="text-align: left; padding: 10px; background: #f0f0f0; width: 50px;"></th>
+                    <th style="text-align: left; padding: 10px; background: #f0f0f0;">Type</th>
+                    <th style="text-align: left; padding: 10px; background: #f0f0f0;">Alert</th>
+                    <th style="text-align: left; padding: 10px; background: #f0f0f0;">Date</th>
+                    <th style="text-align: left; padding: 10px; background: #f0f0f0;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for notification in notifications_list %}
+                <tr style="border-bottom: 1px solid #e8e8e8; {% if not notification.is_read %}background: #fff5f5; font-weight: bold;{% endif %}">
+                    <td style="padding: 10px; text-align: center;">
+                        {% if not notification.is_read %}
+                        <span style="display: inline-block; width: 10px; height: 10px; background: #f44336; border-radius: 50%;"></span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 10px;">
+                        <span style="padding: 3px 8px; border-radius: 3px; background: #ffe7e7; font-size: 12px;">
+                            {{ notification.get_notification_type_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 10px;">
+                        <strong>{{ notification.title }}</strong><br>
+                        <small style="color: #666;">{{ notification.message|truncatewords:15 }}</small>
+                    </td>
+                    <td style="padding: 10px;">{{ notification.created_at|date:"M d, Y H:i" }}</td>
+                    <td style="padding: 10px;">
+                        {% if not notification.is_read %}
+                        <a href="{% url 'patient_mark_notification_read' notification.notification_id %}" style="color: #2196F3;">Mark Read</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="margin-top: 10px;">
+            <a href="{% url 'patient_notifications' %}">View All Alerts &raquo;</a>
+        </div>
+        {% else %}
+        <p style="padding: 20px; text-align: center; color: #999;">No alerts</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

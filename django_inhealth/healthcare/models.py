@@ -111,6 +111,64 @@ class Provider(models.Model):
         return f"{self.first_name} {self.last_name}"
 
 
+class Nurse(models.Model):
+    """Nurse model"""
+    nurse_id = models.AutoField(primary_key=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='nurse_profile', null=True, blank=True)
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='nurses')
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    license_number = models.CharField(max_length=100, unique=True)
+    specialty = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField(max_length=255, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='nurses')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'nurses'
+        ordering = ['last_name', 'first_name']
+
+    def __str__(self):
+        return f"{self.last_name}, {self.first_name} (RN)"
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+
+class OfficeAdministrator(models.Model):
+    """Office Administrator model"""
+    admin_id = models.AutoField(primary_key=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='office_admin_profile', null=True, blank=True)
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='office_administrators')
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    employee_id = models.CharField(max_length=100, unique=True)
+    position = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField(max_length=255, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='office_administrators')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'office_administrators'
+        ordering = ['last_name', 'first_name']
+        verbose_name = 'Office Administrator'
+        verbose_name_plural = 'Office Administrators'
+
+    def __str__(self):
+        return f"{self.last_name}, {self.first_name} (Admin)"
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+
 class Patient(models.Model):
     """Patient model representing patient demographic information"""
     patient_id = models.AutoField(primary_key=True)
@@ -202,6 +260,7 @@ class VitalSign(models.Model):
     heart_rate = models.IntegerField(blank=True, null=True)
     respiratory_rate = models.IntegerField(blank=True, null=True)
     oxygen_saturation = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    glucose = models.DecimalField(max_digits=6, decimal_places=1, blank=True, null=True)  # Blood glucose in mg/dL
     weight_value = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
     weight_unit = models.CharField(max_length=3, choices=[('lbs', 'Pounds'), ('kg', 'Kilograms')], blank=True, null=True)
     height_value = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
@@ -209,6 +268,9 @@ class VitalSign(models.Model):
     bmi = models.DecimalField(max_digits=5, decimal_places=1, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     recorded_by = models.ForeignKey(Provider, on_delete=models.SET_NULL, null=True, blank=True)
+    recorded_by_nurse = models.ForeignKey('Nurse', on_delete=models.SET_NULL, null=True, blank=True, related_name='recorded_vitals')
+    data_source = models.CharField(max_length=10, choices=[('manual', 'Manual Entry'), ('device', 'IoT Device')], default='manual')
+    device = models.ForeignKey('Device', on_delete=models.SET_NULL, null=True, blank=True, related_name='vitals_recorded')
     recorded_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
@@ -223,6 +285,234 @@ class VitalSign(models.Model):
         if self.blood_pressure_systolic and self.blood_pressure_diastolic:
             return f"{self.blood_pressure_systolic}/{self.blood_pressure_diastolic}"
         return "N/A"
+
+    # Heart Rate (Pulse/HR) Color and Contact
+    def get_heart_rate_status(self):
+        """Returns (color, contact_level, is_critical) for heart rate"""
+        if not self.heart_rate:
+            return None, None, False
+        hr = self.heart_rate
+        if hr >= 150:
+            return 'blue', 'Emergency', True
+        elif 120 <= hr <= 149:
+            return 'red', 'Doctor', True
+        elif 100 <= hr <= 119:
+            return 'orange', 'Nurse', True
+        elif 50 <= hr <= 99:
+            return 'green', 'Normal', False
+        elif 40 <= hr <= 49:
+            return 'orange', 'Nurse', True
+        elif 30 <= hr <= 39:
+            return 'red', 'Doctor', True
+        else:  # < 30
+            return 'blue', 'Emergency', True
+
+    # Systolic Blood Pressure Color and Contact
+    def get_sbp_status(self):
+        """Returns (color, contact_level, is_critical) for systolic BP"""
+        if not self.blood_pressure_systolic:
+            return None, None, False
+        sbp = self.blood_pressure_systolic
+        if sbp > 220:
+            return 'blue', 'Emergency', True
+        elif 180 <= sbp <= 219:
+            return 'red', 'Doctor', True
+        elif 150 <= sbp <= 179:
+            return 'orange', 'Nurse', True
+        elif 100 <= sbp <= 149:
+            return 'green', 'Normal', False
+        elif 90 <= sbp <= 100:
+            return 'orange', 'Nurse', True
+        elif 80 <= sbp <= 89:
+            return 'red', 'Doctor', True
+        else:  # < 80
+            return 'blue', 'Emergency', True
+
+    # Diastolic Blood Pressure Color and Contact
+    def get_dbp_status(self):
+        """Returns (color, contact_level, is_critical) for diastolic BP"""
+        if not self.blood_pressure_diastolic:
+            return None, None, False
+        dbp = self.blood_pressure_diastolic
+        if dbp > 120:
+            return 'blue', 'Emergency', True
+        elif 110 <= dbp <= 119:
+            return 'red', 'Doctor', True
+        elif 100 <= dbp <= 109:
+            return 'orange', 'Nurse', True
+        elif 50 <= dbp <= 99:
+            return 'green', 'Normal', False
+        elif 40 <= dbp <= 49:
+            return 'orange', 'Nurse', True
+        elif 30 <= dbp <= 39:
+            return 'red', 'Doctor', True
+        else:  # < 30
+            return 'blue', 'Emergency', True
+
+    # Temperature Color and Contact
+    def get_temperature_status(self):
+        """Returns (color, contact_level, is_critical) for temperature (in Fahrenheit)"""
+        if not self.temperature_value:
+            return None, None, False
+        # Convert to Fahrenheit if needed
+        temp = float(self.temperature_value)
+        if self.temperature_unit == 'C':
+            temp = (temp * 9/5) + 32
+
+        if temp > 105:
+            return 'blue', 'Emergency', True
+        elif 102 <= temp <= 104.9:
+            return 'red', 'Doctor', True
+        elif 100.4 <= temp <= 101.9:
+            return 'orange', 'Nurse', True
+        elif 97 <= temp <= 100.4:
+            return 'green', 'Normal', False
+        elif 95 <= temp <= 96.9:
+            return 'orange', 'Nurse', True
+        elif 93 <= temp <= 94.9:
+            return 'red', 'Doctor', True
+        else:  # < 93
+            return 'blue', 'Emergency', True
+
+    # Respiration Rate Color and Contact
+    def get_respiratory_rate_status(self):
+        """Returns (color, contact_level, is_critical) for respiration rate"""
+        if not self.respiratory_rate:
+            return None, None, False
+        rr = self.respiratory_rate
+        if rr > 50:
+            return 'blue', 'Emergency', True
+        elif 40 <= rr <= 49:
+            return 'red', 'Doctor', True
+        elif 30 <= rr <= 39:
+            return 'orange', 'Nurse', True
+        elif 12 <= rr <= 29:
+            return 'green', 'Normal', False
+        elif 9 <= rr <= 11:
+            return 'orange', 'Nurse', True
+        elif 7 <= rr <= 8:
+            return 'red', 'Doctor', True
+        else:  # < 6
+            return 'blue', 'Emergency', True
+
+    # O2 Saturation Color and Contact
+    def get_oxygen_saturation_status(self):
+        """Returns (color, contact_level, is_critical) for O2 saturation"""
+        if not self.oxygen_saturation:
+            return None, None, False
+        o2 = float(self.oxygen_saturation)
+        if 92 <= o2 <= 100:
+            return 'green', 'Normal', False
+        elif 88 <= o2 < 92:
+            return 'orange', 'Nurse', True
+        elif 81 <= o2 < 88:
+            return 'red', 'Doctor', True
+        else:  # < 80
+            return 'blue', 'Emergency', True
+
+    # Glucose Color and Contact
+    def get_glucose_status(self):
+        """Returns (color, contact_level, is_critical) for glucose (mg/dL)"""
+        if not self.glucose:
+            return None, None, False
+        glc = float(self.glucose)
+        if glc > 750:
+            return 'blue', 'Emergency', True
+        elif 400 <= glc <= 749:
+            return 'red', 'Doctor', True
+        elif 300 <= glc <= 399:
+            return 'orange', 'Nurse', True
+        elif 120 <= glc <= 299:
+            return 'green', 'Normal', False
+        elif 50 <= glc <= 119:
+            return 'orange', 'Nurse', True
+        elif 30 <= glc <= 49:
+            return 'red', 'Doctor', True
+        else:  # < 30
+            return 'blue', 'Emergency', True
+
+    def get_critical_vitals(self):
+        """Returns a dictionary of all critical vitals with their status"""
+        return {
+            'heart_rate': {
+                'value': self.heart_rate,
+                'status': self.get_heart_rate_status(),
+                'label': 'Pulse/HR',
+                'unit': 'bpm'
+            },
+            'sbp': {
+                'value': self.blood_pressure_systolic,
+                'status': self.get_sbp_status(),
+                'label': 'SBP',
+                'unit': 'mmHg'
+            },
+            'dbp': {
+                'value': self.blood_pressure_diastolic,
+                'status': self.get_dbp_status(),
+                'label': 'DBP',
+                'unit': 'mmHg'
+            },
+            'temperature': {
+                'value': self.temperature_value,
+                'status': self.get_temperature_status(),
+                'label': 'Temperature',
+                'unit': f'°{self.temperature_unit}' if self.temperature_unit else '°F'
+            },
+            'respiratory_rate': {
+                'value': self.respiratory_rate,
+                'status': self.get_respiratory_rate_status(),
+                'label': 'Respiration Rate',
+                'unit': 'bpm'
+            },
+            'oxygen_saturation': {
+                'value': self.oxygen_saturation,
+                'status': self.get_oxygen_saturation_status(),
+                'label': 'O2 Saturation',
+                'unit': '%'
+            },
+            'glucose': {
+                'value': self.glucose,
+                'status': self.get_glucose_status(),
+                'label': 'Glucose',
+                'unit': 'mg/dL'
+            }
+        }
+
+    def has_critical_values(self):
+        """Check if any vital signs have critical values requiring immediate attention"""
+        critical_vitals = self.get_critical_vitals()
+        for vital_name, vital_data in critical_vitals.items():
+            if vital_data['status'] and vital_data['status'][2]:  # is_critical flag
+                return True
+        return False
+
+    def get_highest_alert_level(self):
+        """Returns the highest alert level among all vitals (Emergency, Doctor, Nurse, Normal)"""
+        critical_vitals = self.get_critical_vitals()
+        alert_priority = {'Emergency': 4, 'Doctor': 3, 'Nurse': 2, 'Normal': 1}
+        highest_level = 'Normal'
+        highest_priority = 1
+
+        for vital_name, vital_data in critical_vitals.items():
+            if vital_data['status'] and vital_data['status'][1]:  # contact_level
+                contact_level = vital_data['status'][1]
+                priority = alert_priority.get(contact_level, 0)
+                if priority > highest_priority:
+                    highest_priority = priority
+                    highest_level = contact_level
+
+        return highest_level
+
+    def get_data_source_display_with_name(self):
+        """Returns the data source with the name of who/what recorded it"""
+        if self.data_source == 'device' and self.device:
+            return f"IoT Device: {self.device.device_name}"
+        elif self.data_source == 'manual' and self.recorded_by_nurse:
+            return f"Nurse: {self.recorded_by_nurse.full_name}"
+        elif self.recorded_by:
+            return f"Doctor: {self.recorded_by.full_name}"
+        else:
+            return "Unknown Source"
 
 
 class Diagnosis(models.Model):

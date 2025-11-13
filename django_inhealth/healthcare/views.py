@@ -1870,6 +1870,548 @@ def message_delete(request, message_id):
     return redirect('message_show', message_id=message_id)
 
 
+# ============================================================================
+# DOCTOR MESSAGING AND ALERT SYSTEM
+# ============================================================================
+
+@login_required
+@require_role('doctor')
+def doctor_inbox(request):
+    """Doctor-specific inbox with filtering and alert capabilities"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    # Get received messages
+    messages_list = request.user.received_messages.select_related('sender').order_by('-created_at')
+
+    # Get notifications/alerts
+    notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]
+
+    # Get unread counts
+    unread_messages = messages_list.filter(is_read=False).count()
+    unread_notifications = notifications_list.filter(is_read=False).count()
+
+    context = {
+        'provider': provider,
+        'messages_list': messages_list[:20],
+        'notifications_list': notifications_list,
+        'unread_messages': unread_messages,
+        'unread_notifications': unread_notifications,
+    }
+
+    return render(request, 'healthcare/providers/inbox.html', context)
+
+
+@login_required
+@require_role('doctor')
+def doctor_compose_message(request):
+    """Doctor compose message - can only message their patients"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    # Get only this doctor's patients
+    patients = Patient.objects.filter(
+        primary_doctor=provider,
+        is_active=True
+    ).select_related('user').order_by('last_name', 'first_name')
+
+    # Filter patients who have user accounts
+    patient_users = [p.user for p in patients if p.user]
+
+    # Check if this is a reply
+    reply_to_id = request.GET.get('reply_to')
+    reply_to_message = None
+    if reply_to_id:
+        reply_to_message = get_object_or_404(Message, message_id=reply_to_id)
+
+    if request.method == 'POST':
+        recipient_id = request.POST.get('recipient_id')
+        subject = request.POST.get('subject')
+        body = request.POST.get('body')
+        send_email = request.POST.get('send_email') == 'on'
+        send_sms = request.POST.get('send_sms') == 'on'
+        parent_message_id = request.POST.get('parent_message_id')
+
+        # Validate required fields
+        if not recipient_id or not subject or not body:
+            messages.error(request, 'Subject and message body are required.')
+            return redirect('doctor_compose_message')
+
+        try:
+            from django.contrib.auth.models import User
+            recipient = User.objects.get(id=recipient_id)
+
+            # Verify recipient is this doctor's patient
+            if not Patient.objects.filter(primary_doctor=provider, user=recipient, is_active=True).exists():
+                messages.error(request, 'You can only message your own patients.')
+                return redirect('doctor_compose_message')
+
+            # Create message
+            message = Message.objects.create(
+                sender=request.user,
+                recipient=recipient,
+                subject=subject,
+                body=body,
+                parent_message=Message.objects.get(message_id=parent_message_id) if parent_message_id else None
+            )
+
+            # Create notification for the recipient
+            Notification.objects.create(
+                user=recipient,
+                title=f'New message from Dr. {provider.full_name}',
+                message=f'Subject: {subject[:50]}...' if len(subject) > 50 else f'Subject: {subject}',
+                notification_type='message'
+            )
+
+            # Send email if requested (placeholder for actual email sending)
+            if send_email:
+                try:
+                    patient = Patient.objects.get(user=recipient)
+                    if patient.email:
+                        # TODO: Implement actual email sending using Django's email backend
+                        # Example: send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [patient.email])
+                        messages.info(request, f'Email notification queued to {patient.email}')
+                except Exception as e:
+                    messages.warning(request, f'Could not queue email notification: {str(e)}')
+
+            # Send SMS if requested (placeholder for actual SMS sending)
+            if send_sms:
+                try:
+                    patient = Patient.objects.get(user=recipient)
+                    if patient.phone:
+                        # TODO: Implement actual SMS sending using Twilio or similar service
+                        messages.info(request, f'SMS notification queued to {patient.phone}')
+                except Exception as e:
+                    messages.warning(request, f'Could not queue SMS notification: {str(e)}')
+
+            messages.success(request, 'Message sent successfully!')
+            return redirect('doctor_inbox')
+
+        except User.DoesNotExist:
+            messages.error(request, 'Invalid recipient.')
+            return redirect('doctor_compose_message')
+
+    context = {
+        'provider': provider,
+        'patients': patient_users,
+        'reply_to': reply_to_message,
+    }
+
+    return render(request, 'healthcare/providers/compose_message.html', context)
+
+
+@login_required
+@require_role('doctor')
+def doctor_notifications(request):
+    """View all notifications/alerts for the doctor"""
+    # Get all notifications for the doctor
+    notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at')
+
+    # Mark notifications as read if requested
+    if request.method == 'POST':
+        notification_ids = request.POST.getlist('mark_read')
+        if notification_ids:
+            Notification.objects.filter(
+                notification_id__in=notification_ids,
+                user=request.user
+            ).update(is_read=True, read_at=timezone.now())
+            messages.success(request, 'Notifications marked as read.')
+            return redirect('doctor_notifications')
+
+    context = {
+        'notifications_list': notifications_list,
+        'unread_count': notifications_list.filter(is_read=False).count(),
+    }
+
+    return render(request, 'healthcare/providers/notifications.html', context)
+
+
+@login_required
+@require_role('doctor')
+def mark_notification_read(request, notification_id):
+    """Mark a single notification as read"""
+    notification = get_object_or_404(Notification, notification_id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.read_at = timezone.now()
+    notification.save()
+    messages.success(request, 'Notification marked as read.')
+    return redirect('doctor_notifications')
+
+
+@login_required
+@require_role('doctor')
+def doctor_view_all_vitals(request):
+    """View all vital signs for doctor's patients - latest to oldest"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    # Get all patients for this provider
+    patients = Patient.objects.filter(primary_doctor=provider, is_active=True)
+    patient_ids = patients.values_list('patient_id', flat=True)
+
+    # Get all vital signs for these patients, ordered by latest first
+    vitals_list = VitalSign.objects.filter(
+        encounter__patient_id__in=patient_ids
+    ).select_related(
+        'encounter__patient',
+        'encounter__provider',
+        'recorded_by'
+    ).order_by('-recorded_at')
+
+    # Pagination (optional, but recommended for large datasets)
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    paginator = Paginator(vitals_list, 50)  # Show 50 vitals per page
+    page = request.GET.get('page')
+
+    try:
+        vitals = paginator.page(page)
+    except PageNotAnInteger:
+        vitals = paginator.page(1)
+    except EmptyPage:
+        vitals = paginator.page(paginator.num_pages)
+
+    # Get statistics
+    total_vitals = vitals_list.count()
+    critical_vitals = sum(1 for v in vitals_list if v.has_critical_values())
+
+    context = {
+        'provider': provider,
+        'vitals': vitals,
+        'total_vitals': total_vitals,
+        'critical_vitals': critical_vitals,
+    }
+
+    return render(request, 'healthcare/providers/all_vitals.html', context)
+
+
+@login_required
+@require_role('doctor')
+def patient_vitals_chart(request, patient_id):
+    """View patient's vital signs with charts, graphs, and historical data"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    # Get the patient
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    # Verify this is the doctor's patient
+    if patient.primary_doctor != provider:
+        messages.error(request, 'You do not have access to this patient.')
+        return redirect('provider_dashboard')
+
+    # Get date range from query params (default: last 30 days)
+    from datetime import datetime, timedelta
+    from django.utils import timezone
+
+    days = request.GET.get('days', '30')
+    try:
+        days = int(days)
+    except:
+        days = 30
+
+    start_date = timezone.now() - timedelta(days=days)
+
+    # Get all vitals for this patient within date range
+    vitals_list = VitalSign.objects.filter(
+        encounter__patient=patient,
+        recorded_at__gte=start_date
+    ).select_related(
+        'encounter',
+        'recorded_by'
+    ).order_by('recorded_at')
+
+    # Get all vitals (no date filter) for total count
+    all_vitals = VitalSign.objects.filter(
+        encounter__patient=patient
+    ).order_by('-recorded_at')
+
+    # Prepare data for charts
+    chart_data = {
+        'dates': [],
+        'heart_rate': [],
+        'sbp': [],
+        'dbp': [],
+        'temperature': [],
+        'respiratory_rate': [],
+        'oxygen_saturation': [],
+        'glucose': [],
+        'heart_rate_colors': [],
+        'sbp_colors': [],
+        'dbp_colors': [],
+        'temperature_colors': [],
+        'respiratory_rate_colors': [],
+        'oxygen_saturation_colors': [],
+        'glucose_colors': [],
+    }
+
+    # Color mapping
+    color_map = {
+        'blue': 'rgba(33, 150, 243, 0.8)',  # Emergency
+        'red': 'rgba(244, 67, 54, 0.8)',    # Doctor
+        'orange': 'rgba(255, 152, 0, 0.8)', # Nurse
+        'green': 'rgba(76, 175, 80, 0.8)',  # Normal
+    }
+
+    for vital in vitals_list:
+        date_str = vital.recorded_at.strftime('%Y-%m-%d %H:%M')
+        chart_data['dates'].append(date_str)
+
+        # Heart Rate
+        if vital.heart_rate:
+            chart_data['heart_rate'].append(float(vital.heart_rate))
+            status = vital.get_heart_rate_status()
+            chart_data['heart_rate_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['heart_rate'].append(None)
+            chart_data['heart_rate_colors'].append(color_map['green'])
+
+        # SBP
+        if vital.blood_pressure_systolic:
+            chart_data['sbp'].append(float(vital.blood_pressure_systolic))
+            status = vital.get_sbp_status()
+            chart_data['sbp_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['sbp'].append(None)
+            chart_data['sbp_colors'].append(color_map['green'])
+
+        # DBP
+        if vital.blood_pressure_diastolic:
+            chart_data['dbp'].append(float(vital.blood_pressure_diastolic))
+            status = vital.get_dbp_status()
+            chart_data['dbp_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['dbp'].append(None)
+            chart_data['dbp_colors'].append(color_map['green'])
+
+        # Temperature (convert to Fahrenheit for display if needed)
+        if vital.temperature_value:
+            temp = float(vital.temperature_value)
+            if vital.temperature_unit == 'C':
+                temp = (temp * 9/5) + 32  # Convert to Fahrenheit
+            chart_data['temperature'].append(temp)
+            status = vital.get_temperature_status()
+            chart_data['temperature_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['temperature'].append(None)
+            chart_data['temperature_colors'].append(color_map['green'])
+
+        # Respiratory Rate
+        if vital.respiratory_rate:
+            chart_data['respiratory_rate'].append(float(vital.respiratory_rate))
+            status = vital.get_respiratory_rate_status()
+            chart_data['respiratory_rate_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['respiratory_rate'].append(None)
+            chart_data['respiratory_rate_colors'].append(color_map['green'])
+
+        # Oxygen Saturation
+        if vital.oxygen_saturation:
+            chart_data['oxygen_saturation'].append(float(vital.oxygen_saturation))
+            status = vital.get_oxygen_saturation_status()
+            chart_data['oxygen_saturation_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['oxygen_saturation'].append(None)
+            chart_data['oxygen_saturation_colors'].append(color_map['green'])
+
+        # Glucose
+        if vital.glucose:
+            chart_data['glucose'].append(float(vital.glucose))
+            status = vital.get_glucose_status()
+            chart_data['glucose_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['glucose'].append(None)
+            chart_data['glucose_colors'].append(color_map['green'])
+
+    # Calculate statistics
+    total_readings = all_vitals.count()
+    critical_readings = sum(1 for v in vitals_list if v.has_critical_values())
+
+    # Get latest vital
+    latest_vital = all_vitals.first() if all_vitals.exists() else None
+
+    import json
+    context = {
+        'provider': provider,
+        'patient': patient,
+        'vitals_list': vitals_list,
+        'all_vitals': all_vitals[:100],  # Show last 100 for table
+        'chart_data_json': json.dumps(chart_data),
+        'total_readings': total_readings,
+        'critical_readings': critical_readings,
+        'latest_vital': latest_vital,
+        'days': days,
+    }
+
+    return render(request, 'healthcare/providers/patient_vitals_chart.html', context)
+
+
+@login_required
+def patient_my_vitals_chart(request):
+    """Patient view of their own vital signs with charts, graphs, and historical data"""
+    # Get the patient associated with the logged-in user
+    try:
+        patient = request.user.patient_profile
+    except:
+        messages.error(request, 'No patient profile found for your account.')
+        return redirect('index')
+
+    # Get date range from query params (default: last 30 days)
+    from datetime import datetime, timedelta
+    from django.utils import timezone
+
+    days = request.GET.get('days', '30')
+    try:
+        days = int(days)
+    except:
+        days = 30
+
+    start_date = timezone.now() - timedelta(days=days)
+
+    # Get all vitals for this patient within date range
+    vitals_list = VitalSign.objects.filter(
+        encounter__patient=patient,
+        recorded_at__gte=start_date
+    ).select_related(
+        'encounter',
+        'recorded_by'
+    ).order_by('recorded_at')
+
+    # Get all vitals (no date filter) for total count
+    all_vitals = VitalSign.objects.filter(
+        encounter__patient=patient
+    ).order_by('-recorded_at')
+
+    # Prepare data for charts
+    chart_data = {
+        'dates': [],
+        'heart_rate': [],
+        'sbp': [],
+        'dbp': [],
+        'temperature': [],
+        'respiratory_rate': [],
+        'oxygen_saturation': [],
+        'glucose': [],
+        'heart_rate_colors': [],
+        'sbp_colors': [],
+        'dbp_colors': [],
+        'temperature_colors': [],
+        'respiratory_rate_colors': [],
+        'oxygen_saturation_colors': [],
+        'glucose_colors': [],
+    }
+
+    # Color mapping
+    color_map = {
+        'blue': 'rgba(33, 150, 243, 0.8)',  # Emergency
+        'red': 'rgba(244, 67, 54, 0.8)',    # Doctor
+        'orange': 'rgba(255, 152, 0, 0.8)', # Nurse
+        'green': 'rgba(76, 175, 80, 0.8)',  # Normal
+    }
+
+    for vital in vitals_list:
+        date_str = vital.recorded_at.strftime('%Y-%m-%d %H:%M')
+        chart_data['dates'].append(date_str)
+
+        # Heart Rate
+        if vital.heart_rate:
+            chart_data['heart_rate'].append(float(vital.heart_rate))
+            status = vital.get_heart_rate_status()
+            chart_data['heart_rate_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['heart_rate'].append(None)
+            chart_data['heart_rate_colors'].append(color_map['green'])
+
+        # SBP
+        if vital.blood_pressure_systolic:
+            chart_data['sbp'].append(float(vital.blood_pressure_systolic))
+            status = vital.get_sbp_status()
+            chart_data['sbp_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['sbp'].append(None)
+            chart_data['sbp_colors'].append(color_map['green'])
+
+        # DBP
+        if vital.blood_pressure_diastolic:
+            chart_data['dbp'].append(float(vital.blood_pressure_diastolic))
+            status = vital.get_dbp_status()
+            chart_data['dbp_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['dbp'].append(None)
+            chart_data['dbp_colors'].append(color_map['green'])
+
+        # Temperature (convert to Fahrenheit for display if needed)
+        if vital.temperature_value:
+            temp = float(vital.temperature_value)
+            if vital.temperature_unit == 'C':
+                temp = (temp * 9/5) + 32  # Convert to Fahrenheit
+            chart_data['temperature'].append(temp)
+            status = vital.get_temperature_status()
+            chart_data['temperature_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['temperature'].append(None)
+            chart_data['temperature_colors'].append(color_map['green'])
+
+        # Respiratory Rate
+        if vital.respiratory_rate:
+            chart_data['respiratory_rate'].append(float(vital.respiratory_rate))
+            status = vital.get_respiratory_rate_status()
+            chart_data['respiratory_rate_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['respiratory_rate'].append(None)
+            chart_data['respiratory_rate_colors'].append(color_map['green'])
+
+        # Oxygen Saturation
+        if vital.oxygen_saturation:
+            chart_data['oxygen_saturation'].append(float(vital.oxygen_saturation))
+            status = vital.get_oxygen_saturation_status()
+            chart_data['oxygen_saturation_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['oxygen_saturation'].append(None)
+            chart_data['oxygen_saturation_colors'].append(color_map['green'])
+
+        # Glucose
+        if vital.glucose:
+            chart_data['glucose'].append(float(vital.glucose))
+            status = vital.get_glucose_status()
+            chart_data['glucose_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['glucose'].append(None)
+            chart_data['glucose_colors'].append(color_map['green'])
+
+    # Calculate statistics
+    total_readings = all_vitals.count()
+    critical_readings = sum(1 for v in vitals_list if v.has_critical_values())
+
+    # Get latest vital
+    latest_vital = all_vitals.first() if all_vitals.exists() else None
+
+    import json
+    context = {
+        'patient': patient,
+        'vitals_list': vitals_list,
+        'all_vitals': all_vitals[:100],  # Show last 100 for table
+        'chart_data_json': json.dumps(chart_data),
+        'total_readings': total_readings,
+        'critical_readings': critical_readings,
+        'latest_vital': latest_vital,
+        'days': days,
+    }
+
+    return render(request, 'healthcare/patients/my_vitals_chart.html', context)
+
+
 @login_required
 def patient_profile(request):
     """Patient profile view - shows patient's own information"""
@@ -1971,6 +2513,8 @@ def patient_dashboard(request):
             status__in=['Pending', 'Partially Paid']
         ).count(),
         'total_allergies': Allergy.objects.filter(patient=patient, is_active=True).count(),
+        'unread_messages': request.user.received_messages.filter(is_read=False).count(),
+        'unread_notifications': Notification.objects.filter(user=request.user, is_read=False).count(),
     }
 
     # Recent and upcoming data
@@ -2021,6 +2565,177 @@ def patient_dashboard(request):
     }
 
     return render(request, 'healthcare/patients/dashboard.html', context)
+
+
+# ============================================================================
+# PATIENT MESSAGING AND ALERT SYSTEM
+# ============================================================================
+
+@login_required
+@require_role('patient')
+def patient_inbox(request):
+    """Patient-specific inbox with filtering and alert capabilities"""
+    try:
+        patient = request.user.patient_profile
+    except:
+        messages.error(request, 'No patient profile found for your account.')
+        return redirect('index')
+
+    # Get received messages
+    messages_list = request.user.received_messages.select_related('sender').order_by('-created_at')
+
+    # Get notifications/alerts
+    notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]
+
+    # Get unread counts
+    unread_messages = messages_list.filter(is_read=False).count()
+    unread_notifications = notifications_list.filter(is_read=False).count()
+
+    context = {
+        'patient': patient,
+        'messages_list': messages_list[:20],
+        'notifications_list': notifications_list,
+        'unread_messages': unread_messages,
+        'unread_notifications': unread_notifications,
+    }
+
+    return render(request, 'healthcare/patients/inbox.html', context)
+
+
+@login_required
+@require_role('patient')
+def patient_compose_message(request):
+    """Patient compose message - can only message their primary doctor"""
+    try:
+        patient = request.user.patient_profile
+    except:
+        messages.error(request, 'No patient profile found for your account.')
+        return redirect('index')
+
+    # Get patient's primary doctor
+    doctors = []
+    if patient.primary_doctor and patient.primary_doctor.user:
+        doctors = [patient.primary_doctor.user]
+
+    # Check if this is a reply
+    reply_to_id = request.GET.get('reply_to')
+    reply_to_message = None
+    if reply_to_id:
+        reply_to_message = get_object_or_404(Message, message_id=reply_to_id)
+
+    if request.method == 'POST':
+        recipient_id = request.POST.get('recipient_id')
+        subject = request.POST.get('subject')
+        body = request.POST.get('body')
+        send_email = request.POST.get('send_email') == 'on'
+        send_sms = request.POST.get('send_sms') == 'on'
+        parent_message_id = request.POST.get('parent_message_id')
+
+        # Validate required fields
+        if not recipient_id or not subject or not body:
+            messages.error(request, 'Subject and message body are required.')
+            return redirect('patient_compose_message')
+
+        try:
+            from django.contrib.auth.models import User
+            recipient = User.objects.get(id=recipient_id)
+
+            # Verify recipient is this patient's primary doctor
+            if patient.primary_doctor and patient.primary_doctor.user:
+                if recipient.id != patient.primary_doctor.user.id:
+                    messages.error(request, 'You can only message your primary doctor.')
+                    return redirect('patient_compose_message')
+            else:
+                messages.error(request, 'You do not have a primary doctor assigned.')
+                return redirect('patient_compose_message')
+
+            # Create message
+            message = Message.objects.create(
+                sender=request.user,
+                recipient=recipient,
+                subject=subject,
+                body=body,
+                parent_message=Message.objects.get(message_id=parent_message_id) if parent_message_id else None
+            )
+
+            # Create notification for the recipient
+            Notification.objects.create(
+                user=recipient,
+                title=f'New message from patient {patient.full_name}',
+                message=f'Subject: {subject[:50]}...' if len(subject) > 50 else f'Subject: {subject}',
+                notification_type='message'
+            )
+
+            # Send email if requested (placeholder for actual email sending)
+            if send_email:
+                try:
+                    if patient.primary_doctor.email:
+                        # TODO: Implement actual email sending using Django's email backend
+                        messages.info(request, f'Email notification queued to {patient.primary_doctor.email}')
+                except Exception as e:
+                    messages.warning(request, f'Could not queue email notification: {str(e)}')
+
+            # Send SMS if requested (placeholder for actual SMS sending)
+            if send_sms:
+                try:
+                    if patient.primary_doctor.phone:
+                        # TODO: Implement actual SMS sending using Twilio or similar service
+                        messages.info(request, f'SMS notification queued to {patient.primary_doctor.phone}')
+                except Exception as e:
+                    messages.warning(request, f'Could not queue SMS notification: {str(e)}')
+
+            messages.success(request, 'Message sent successfully!')
+            return redirect('patient_inbox')
+
+        except User.DoesNotExist:
+            messages.error(request, 'Invalid recipient.')
+            return redirect('patient_compose_message')
+
+    context = {
+        'patient': patient,
+        'doctors': doctors,
+        'reply_to': reply_to_message,
+    }
+
+    return render(request, 'healthcare/patients/compose_message.html', context)
+
+
+@login_required
+@require_role('patient')
+def patient_notifications(request):
+    """View all notifications/alerts for the patient"""
+    # Get all notifications for the patient
+    notifications_list = Notification.objects.filter(user=request.user).order_by('-created_at')
+
+    # Mark notifications as read if requested
+    if request.method == 'POST':
+        notification_ids = request.POST.getlist('mark_read')
+        if notification_ids:
+            Notification.objects.filter(
+                notification_id__in=notification_ids,
+                user=request.user
+            ).update(is_read=True, read_at=timezone.now())
+            messages.success(request, 'Notifications marked as read.')
+            return redirect('patient_notifications')
+
+    context = {
+        'notifications_list': notifications_list,
+        'unread_count': notifications_list.filter(is_read=False).count(),
+    }
+
+    return render(request, 'healthcare/patients/notifications.html', context)
+
+
+@login_required
+@require_role('patient')
+def patient_mark_notification_read(request, notification_id):
+    """Mark a single notification as read"""
+    notification = get_object_or_404(Notification, notification_id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.read_at = timezone.now()
+    notification.save()
+    messages.success(request, 'Notification marked as read.')
+    return redirect('patient_notifications')
 
 
 @login_required
@@ -2161,6 +2876,8 @@ def provider_dashboard(request):
             provider=provider,
             status='Active'
         ).count(),
+        'unread_messages': request.user.received_messages.filter(is_read=False).count(),
+        'unread_notifications': Notification.objects.filter(user=request.user, is_read=False).count(),
     }
 
     # Today's appointments
@@ -2852,3 +3569,119 @@ def nurse_vitals_list(request):
     }
 
     return render(request, 'healthcare/nurse/vitals_list.html', context)
+
+
+@login_required
+@require_role('nurse')
+def nurse_vital_create(request, patient_id):
+    """Nurse can add vitals for any patient in their hospital"""
+    try:
+        nurse = request.user.nurse_profile
+    except:
+        messages.error(request, 'No nurse profile found for your account.')
+        return redirect('index')
+
+    # Get the patient
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    # Verify patient is in the same hospital as the nurse
+    if patient.primary_doctor and patient.primary_doctor.hospital != nurse.hospital:
+        messages.error(request, 'You can only add vitals for patients in your hospital.')
+        return redirect('nurse_patients_list')
+
+    if request.method == 'POST':
+        # Get or create an encounter for this patient
+        # Create a vitals recording encounter if none exists
+        encounter, created = Encounter.objects.get_or_create(
+            patient=patient,
+            provider=patient.primary_doctor,
+            encounter_type='Vitals Check',
+            encounter_date=timezone.now(),
+            status='Completed',
+            defaults={
+                'chief_complaint': 'Routine vitals recording by nurse'
+            }
+        )
+
+        # Create vital signs
+        vital = VitalSign.objects.create(
+            encounter=encounter,
+            temperature_value=request.POST.get('temperature_value') or None,
+            temperature_unit=request.POST.get('temperature_unit') or 'F',
+            blood_pressure_systolic=request.POST.get('blood_pressure_systolic') or None,
+            blood_pressure_diastolic=request.POST.get('blood_pressure_diastolic') or None,
+            heart_rate=request.POST.get('heart_rate') or None,
+            respiratory_rate=request.POST.get('respiratory_rate') or None,
+            oxygen_saturation=request.POST.get('oxygen_saturation') or None,
+            glucose=request.POST.get('glucose') or None,
+            weight_value=request.POST.get('weight_value') or None,
+            weight_unit=request.POST.get('weight_unit') or 'lbs',
+            height_value=request.POST.get('height_value') or None,
+            height_unit=request.POST.get('height_unit') or 'in',
+            notes=request.POST.get('notes') or None,
+            recorded_by_nurse=nurse,
+            data_source='manual',
+            recorded_at=timezone.now()
+        )
+
+        messages.success(request, f'Vital signs recorded successfully for {patient.full_name}')
+        return redirect('nurse_vitals_list')
+
+    context = {
+        'nurse': nurse,
+        'patient': patient,
+    }
+
+    return render(request, 'healthcare/nurse/vital_create.html', context)
+
+
+@login_required
+@require_role('nurse')
+def nurse_vital_edit(request, vital_signs_id):
+    """Nurse can edit vitals that were manually entered (by any nurse in the hospital)"""
+    try:
+        nurse = request.user.nurse_profile
+    except:
+        messages.error(request, 'No nurse profile found for your account.')
+        return redirect('index')
+
+    # Get the vital sign
+    vital = get_object_or_404(VitalSign, vital_signs_id=vital_signs_id)
+
+    # Verify vital was manually entered (not from device)
+    if vital.data_source == 'device':
+        messages.error(request, 'Cannot edit vitals from IoT devices.')
+        return redirect('nurse_vitals_list')
+
+    # Verify patient is in the same hospital
+    if vital.encounter.patient.primary_doctor and vital.encounter.patient.primary_doctor.hospital != nurse.hospital:
+        messages.error(request, 'You can only edit vitals for patients in your hospital.')
+        return redirect('nurse_vitals_list')
+
+    if request.method == 'POST':
+        # Update vital signs
+        vital.temperature_value = request.POST.get('temperature_value') or None
+        vital.temperature_unit = request.POST.get('temperature_unit') or 'F'
+        vital.blood_pressure_systolic = request.POST.get('blood_pressure_systolic') or None
+        vital.blood_pressure_diastolic = request.POST.get('blood_pressure_diastolic') or None
+        vital.heart_rate = request.POST.get('heart_rate') or None
+        vital.respiratory_rate = request.POST.get('respiratory_rate') or None
+        vital.oxygen_saturation = request.POST.get('oxygen_saturation') or None
+        vital.glucose = request.POST.get('glucose') or None
+        vital.weight_value = request.POST.get('weight_value') or None
+        vital.weight_unit = request.POST.get('weight_unit') or 'lbs'
+        vital.height_value = request.POST.get('height_value') or None
+        vital.height_unit = request.POST.get('height_unit') or 'in'
+        vital.notes = request.POST.get('notes') or None
+        vital.save()
+
+        messages.success(request, 'Vital signs updated successfully')
+        return redirect('nurse_vitals_list')
+
+    context = {
+        'nurse': nurse,
+        'vital': vital,
+        'patient': vital.encounter.patient,
+    }
+
+    return render(request, 'healthcare/nurse/vital_edit.html', context)
