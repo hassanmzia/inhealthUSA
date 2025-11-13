@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from .models import (
-    Hospital, UserProfile, Patient, Department, Provider, Nurse, Encounter, VitalSign,
+    Hospital, UserProfile, Patient, Department, Provider, Nurse, OfficeAdministrator, Encounter, VitalSign,
     Diagnosis, Prescription, Allergy, MedicalHistory, SocialHistory, FamilyHistory,
     Message, LabTest, Notification, InsuranceInformation, Billing, BillingItem, Payment, Device
 )
@@ -136,6 +136,33 @@ class NurseAdmin(admin.ModelAdmin):
         ('Organization', {
             'fields': ('hospital', 'department'),
             'description': 'Hospital assignment is required. Each nurse must be assigned to an existing hospital.'
+        }),
+        ('Contact Information', {
+            'fields': ('email', 'phone')
+        }),
+        ('Status', {
+            'fields': ('is_active',)
+        }),
+    )
+
+
+@admin.register(OfficeAdministrator)
+class OfficeAdministratorAdmin(admin.ModelAdmin):
+    list_display = ['admin_id', 'full_name', 'user', 'hospital', 'position', 'employee_id', 'email', 'is_active']
+    list_filter = ['position', 'is_active', 'department', 'hospital']
+    search_fields = ['first_name', 'last_name', 'employee_id', 'user__username', 'user__email']
+    autocomplete_fields = ['user', 'hospital', 'department']
+    fieldsets = (
+        ('User Account Link', {
+            'fields': ('user',),
+            'description': 'Link this office administrator to a User account. The user\'s role should be set to "Office Administrator" in User Profiles.'
+        }),
+        ('Administrator Information', {
+            'fields': ('first_name', 'last_name', 'employee_id', 'position')
+        }),
+        ('Organization', {
+            'fields': ('hospital', 'department'),
+            'description': 'Hospital assignment is required. Each office administrator must be assigned to an existing hospital.'
         }),
         ('Contact Information', {
             'fields': ('email', 'phone')

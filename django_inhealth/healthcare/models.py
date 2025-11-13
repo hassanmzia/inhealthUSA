@@ -139,6 +139,36 @@ class Nurse(models.Model):
         return f"{self.first_name} {self.last_name}"
 
 
+class OfficeAdministrator(models.Model):
+    """Office Administrator model"""
+    admin_id = models.AutoField(primary_key=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='office_admin_profile', null=True, blank=True)
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='office_administrators')
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    employee_id = models.CharField(max_length=100, unique=True)
+    position = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField(max_length=255, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='office_administrators')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'office_administrators'
+        ordering = ['last_name', 'first_name']
+        verbose_name = 'Office Administrator'
+        verbose_name_plural = 'Office Administrators'
+
+    def __str__(self):
+        return f"{self.last_name}, {self.first_name} (Admin)"
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+
 class Patient(models.Model):
     """Patient model representing patient demographic information"""
     patient_id = models.AutoField(primary_key=True)
