@@ -2077,8 +2077,8 @@ def admin_dashboard(request):
     }
 
     # Recent activity
-    recent_patients = Patient.objects.filter(is_active=True).order_by('-created_at')[:5]
-    recent_appointments = Encounter.objects.select_related('patient', 'provider').order_by('-created_at')[:10]
+    recent_patients = Patient.objects.filter(is_active=True).order_by('-patient_id')[:5]
+    recent_appointments = Encounter.objects.select_related('patient', 'provider').order_by('-encounter_date')[:10]
     recent_billings = Billing.objects.select_related('patient').order_by('-created_at')[:10]
     upcoming_appointments = Encounter.objects.filter(
         encounter_date__gte=timezone.now(),
@@ -2463,7 +2463,7 @@ def nurse_dashboard(request):
     }
 
     # Recent activity
-    recent_patients = Patient.objects.filter(is_active=True).order_by('-updated_at')[:10]
+    recent_patients = Patient.objects.filter(is_active=True).order_by('-patient_id')[:10]
     upcoming_appointments = Encounter.objects.filter(
         encounter_date__gte=timezone.now(),
         status='Scheduled'
