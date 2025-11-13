@@ -154,6 +154,7 @@ urlpatterns = [
 
     # Doctor Vitals Management
     path('provider/vitals/all/', views.doctor_view_all_vitals, name='doctor_view_all_vitals'),
+    path('provider/patients/<int:patient_id>/vitals/chart/', views.patient_vitals_chart, name='patient_vitals_chart'),
 
     # ============================================================================
     # OFFICE ADMINISTRATOR URLS

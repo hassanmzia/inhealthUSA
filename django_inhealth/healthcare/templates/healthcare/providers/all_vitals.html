@@ -230,7 +230,8 @@
 
                     <!-- Actions -->
                     <td style="padding: 12px; text-align: center;">
-                        <a href="{% url 'patient_detail' vital.encounter.patient.patient_id %}" style="color: #2196F3; font-size: 12px;">View Patient</a>
+                        <a href="{% url 'patient_detail' vital.encounter.patient.patient_id %}" style="color: #2196F3; font-size: 12px; margin-right: 10px;">View Patient</a>
+                        <a href="{% url 'patient_vitals_chart' vital.encounter.patient.patient_id %}" style="color: #00897B; font-size: 12px;">View Charts</a>
                     </td>
                 </tr>
                 {% empty %}

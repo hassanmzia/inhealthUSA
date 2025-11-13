@@ -2094,6 +2094,170 @@ def doctor_view_all_vitals(request):
 
 
 @login_required
+@require_role('doctor')
+def patient_vitals_chart(request, patient_id):
+    """View patient's vital signs with charts, graphs, and historical data"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    # Get the patient
+    patient = get_object_or_404(Patient, patient_id=patient_id)
+
+    # Verify this is the doctor's patient
+    if patient.primary_doctor != provider:
+        messages.error(request, 'You do not have access to this patient.')
+        return redirect('provider_dashboard')
+
+    # Get date range from query params (default: last 30 days)
+    from datetime import datetime, timedelta
+    from django.utils import timezone
+
+    days = request.GET.get('days', '30')
+    try:
+        days = int(days)
+    except:
+        days = 30
+
+    start_date = timezone.now() - timedelta(days=days)
+
+    # Get all vitals for this patient within date range
+    vitals_list = VitalSign.objects.filter(
+        encounter__patient=patient,
+        recorded_at__gte=start_date
+    ).select_related(
+        'encounter',
+        'recorded_by'
+    ).order_by('recorded_at')
+
+    # Get all vitals (no date filter) for total count
+    all_vitals = VitalSign.objects.filter(
+        encounter__patient=patient
+    ).order_by('-recorded_at')
+
+    # Prepare data for charts
+    chart_data = {
+        'dates': [],
+        'heart_rate': [],
+        'sbp': [],
+        'dbp': [],
+        'temperature': [],
+        'respiratory_rate': [],
+        'oxygen_saturation': [],
+        'glucose': [],
+        'heart_rate_colors': [],
+        'sbp_colors': [],
+        'dbp_colors': [],
+        'temperature_colors': [],
+        'respiratory_rate_colors': [],
+        'oxygen_saturation_colors': [],
+        'glucose_colors': [],
+    }
+
+    # Color mapping
+    color_map = {
+        'blue': 'rgba(33, 150, 243, 0.8)',  # Emergency
+        'red': 'rgba(244, 67, 54, 0.8)',    # Doctor
+        'orange': 'rgba(255, 152, 0, 0.8)', # Nurse
+        'green': 'rgba(76, 175, 80, 0.8)',  # Normal
+    }
+
+    for vital in vitals_list:
+        date_str = vital.recorded_at.strftime('%Y-%m-%d %H:%M')
+        chart_data['dates'].append(date_str)
+
+        # Heart Rate
+        if vital.heart_rate:
+            chart_data['heart_rate'].append(float(vital.heart_rate))
+            status = vital.get_heart_rate_status()
+            chart_data['heart_rate_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['heart_rate'].append(None)
+            chart_data['heart_rate_colors'].append(color_map['green'])
+
+        # SBP
+        if vital.blood_pressure_systolic:
+            chart_data['sbp'].append(float(vital.blood_pressure_systolic))
+            status = vital.get_sbp_status()
+            chart_data['sbp_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['sbp'].append(None)
+            chart_data['sbp_colors'].append(color_map['green'])
+
+        # DBP
+        if vital.blood_pressure_diastolic:
+            chart_data['dbp'].append(float(vital.blood_pressure_diastolic))
+            status = vital.get_dbp_status()
+            chart_data['dbp_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['dbp'].append(None)
+            chart_data['dbp_colors'].append(color_map['green'])
+
+        # Temperature (convert to Fahrenheit for display if needed)
+        if vital.temperature_value:
+            temp = float(vital.temperature_value)
+            if vital.temperature_unit == 'C':
+                temp = (temp * 9/5) + 32  # Convert to Fahrenheit
+            chart_data['temperature'].append(temp)
+            status = vital.get_temperature_status()
+            chart_data['temperature_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['temperature'].append(None)
+            chart_data['temperature_colors'].append(color_map['green'])
+
+        # Respiratory Rate
+        if vital.respiratory_rate:
+            chart_data['respiratory_rate'].append(float(vital.respiratory_rate))
+            status = vital.get_respiratory_rate_status()
+            chart_data['respiratory_rate_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['respiratory_rate'].append(None)
+            chart_data['respiratory_rate_colors'].append(color_map['green'])
+
+        # Oxygen Saturation
+        if vital.oxygen_saturation:
+            chart_data['oxygen_saturation'].append(float(vital.oxygen_saturation))
+            status = vital.get_oxygen_saturation_status()
+            chart_data['oxygen_saturation_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['oxygen_saturation'].append(None)
+            chart_data['oxygen_saturation_colors'].append(color_map['green'])
+
+        # Glucose
+        if vital.glucose:
+            chart_data['glucose'].append(float(vital.glucose))
+            status = vital.get_glucose_status()
+            chart_data['glucose_colors'].append(color_map.get(status[0], color_map['green']))
+        else:
+            chart_data['glucose'].append(None)
+            chart_data['glucose_colors'].append(color_map['green'])
+
+    # Calculate statistics
+    total_readings = all_vitals.count()
+    critical_readings = sum(1 for v in vitals_list if v.has_critical_values())
+
+    # Get latest vital
+    latest_vital = all_vitals.first() if all_vitals.exists() else None
+
+    import json
+    context = {
+        'provider': provider,
+        'patient': patient,
+        'vitals_list': vitals_list,
+        'all_vitals': all_vitals[:100],  # Show last 100 for table
+        'chart_data_json': json.dumps(chart_data),
+        'total_readings': total_readings,
+        'critical_readings': critical_readings,
+        'latest_vital': latest_vital,
+        'days': days,
+    }
+
+    return render(request, 'healthcare/providers/patient_vitals_chart.html', context)
+
+
+@login_required
 def patient_profile(request):
     """Patient profile view - shows patient's own information"""
     # Get the patient associated with the logged-in user
