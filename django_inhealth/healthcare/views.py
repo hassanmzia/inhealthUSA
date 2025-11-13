@@ -2615,6 +2615,68 @@ def admin_payment_edit(request, patient_id, payment_id):
     return render(request, 'healthcare/admin/payment_edit.html', context)
 
 
+@login_required
+@require_role('office_admin')
+def admin_profile(request):
+    """Office Administrator profile view - shows admin's own information"""
+    admin_profile = request.user.profile
+
+    # Get recent activity statistics
+    stats = {
+        'total_patients': Patient.objects.filter(is_active=True).count(),
+        'total_providers': Provider.objects.filter(is_active=True).count(),
+        'total_appointments_today': Encounter.objects.filter(
+            encounter_date__date=timezone.now().date()
+        ).count(),
+        'pending_billings': Billing.objects.filter(
+            status__in=['Pending', 'Partially Paid']
+        ).count(),
+    }
+
+    # Recent actions
+    recent_patients = Patient.objects.filter(is_active=True).order_by('-patient_id')[:10]
+    recent_appointments = Encounter.objects.select_related('patient', 'provider').order_by('-encounter_date')[:10]
+    recent_billings = Billing.objects.select_related('patient').order_by('-billing_date')[:10]
+
+    context = {
+        'admin_profile': admin_profile,
+        'stats': stats,
+        'recent_patients': recent_patients,
+        'recent_appointments': recent_appointments,
+        'recent_billings': recent_billings,
+    }
+
+    return render(request, 'healthcare/admin/profile.html', context)
+
+
+@login_required
+@require_role('office_admin')
+def admin_profile_edit(request):
+    """Edit office administrator profile - admins can edit their own information"""
+    admin_profile = request.user.profile
+
+    if request.method == 'POST':
+        # Update user information
+        request.user.first_name = request.POST.get('first_name', request.user.first_name)
+        request.user.last_name = request.POST.get('last_name', request.user.last_name)
+        request.user.email = request.POST.get('email', request.user.email)
+        request.user.save()
+
+        # Update profile information
+        admin_profile.phone = request.POST.get('phone', admin_profile.phone)
+        admin_profile.date_of_birth = request.POST.get('date_of_birth') or admin_profile.date_of_birth
+        admin_profile.save()
+
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('admin_profile')
+
+    context = {
+        'admin_profile': admin_profile,
+    }
+
+    return render(request, 'healthcare/admin/profile_edit.html', context)
+
+
 # ============================================================================
 # NURSE VIEWS
 # ============================================================================

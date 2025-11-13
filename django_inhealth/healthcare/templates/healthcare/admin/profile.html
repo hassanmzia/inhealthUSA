@@ -1,0 +1,211 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Office Administrator Profile - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a> &rsaquo;
+    My Profile
+</div>
+
+<div class="module">
+    <h1>Office Administrator Profile</h1>
+
+    <!-- Profile Information -->
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin: 20px 0;">
+        <div class="module">
+            <h2>Personal Information</h2>
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 15px;">
+                    <strong>Name:</strong><br>
+                    {{ user.first_name }} {{ user.last_name }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Username:</strong><br>
+                    {{ user.username }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Email:</strong><br>
+                    {{ user.email|default:"Not provided" }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Phone:</strong><br>
+                    {{ admin_profile.phone|default:"Not provided" }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Date of Birth:</strong><br>
+                    {{ admin_profile.date_of_birth|date:"M d, Y"|default:"Not provided" }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Role:</strong><br>
+                    Office Administrator
+                </div>
+                <div style="margin-top: 20px;">
+                    <a href="{% url 'admin_profile_edit' %}" class="button" style="display: inline-block; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 3px;">
+                        Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <!-- Today's Statistics -->
+            <div class="module">
+                <h2>System Overview</h2>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px;">
+                    <div style="text-align: center; padding: 15px; background: #e7f3ff; border-radius: 5px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #2196F3;">{{ stats.total_patients }}</div>
+                        <div style="font-size: 12px; color: #666;">Total Patients</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #e7ffe7; border-radius: 5px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #4caf50;">{{ stats.total_providers }}</div>
+                        <div style="font-size: 12px; color: #666;">Total Providers</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #ffe7f3; border-radius: 5px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #e91e63;">{{ stats.total_appointments_today }}</div>
+                        <div style="font-size: 12px; color: #666;">Appointments Today</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #fff3e7; border-radius: 5px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #ff9800;">{{ stats.pending_billings }}</div>
+                        <div style="font-size: 12px; color: #666;">Pending Bills</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Patients -->
+            <div class="module" style="margin-top: 20px;">
+                <h2>Recent Patients</h2>
+                <table style="width: 100%; margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; padding: 10px; background: #f0f0f0;">Name</th>
+                            <th style="text-align: left; padding: 10px; background: #f0f0f0;">DOB</th>
+                            <th style="text-align: left; padding: 10px; background: #f0f0f0;">Primary Doctor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in recent_patients %}
+                        <tr style="border-bottom: 1px solid #e8e8e8;">
+                            <td style="padding: 10px;">
+                                <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a>
+                            </td>
+                            <td style="padding: 10px;">{{ patient.date_of_birth|date:"M d, Y" }}</td>
+                            <td style="padding: 10px;">
+                                {% if patient.primary_doctor %}
+                                    Dr. {{ patient.primary_doctor.full_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" style="padding: 10px; text-align: center; color: #999;">No recent patients</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 20px;">
+        <!-- Recent Appointments -->
+        <div class="module">
+            <h2>Recent Appointments</h2>
+            <table style="width: 100%; margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding: 10px; background: #f0f0f0;">Date</th>
+                        <th style="text-align: left; padding: 10px; background: #f0f0f0;">Patient</th>
+                        <th style="text-align: left; padding: 10px; background: #f0f0f0;">Provider</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in recent_appointments %}
+                    <tr style="border-bottom: 1px solid #e8e8e8;">
+                        <td style="padding: 10px;">{{ appointment.encounter_date|date:"M d, Y" }}</td>
+                        <td style="padding: 10px;">
+                            <a href="{% url 'patient_detail' appointment.patient.patient_id %}">{{ appointment.patient.full_name }}</a>
+                        </td>
+                        <td style="padding: 10px;">
+                            {% if appointment.provider %}
+                                Dr. {{ appointment.provider.full_name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" style="padding: 10px; text-align: center; color: #999;">No recent appointments</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Billings -->
+        <div class="module">
+            <h2>Recent Billings</h2>
+            <table style="width: 100%; margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding: 10px; background: #f0f0f0;">Date</th>
+                        <th style="text-align: left; padding: 10px; background: #f0f0f0;">Patient</th>
+                        <th style="text-align: left; padding: 10px; background: #f0f0f0;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for billing in recent_billings %}
+                    <tr style="border-bottom: 1px solid #e8e8e8;">
+                        <td style="padding: 10px;">{{ billing.billing_date|date:"M d, Y" }}</td>
+                        <td style="padding: 10px;">
+                            <a href="{% url 'patient_detail' billing.patient.patient_id %}">{{ billing.patient.full_name }}</a>
+                        </td>
+                        <td style="padding: 10px;">${{ billing.amount_due|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" style="padding: 10px; text-align: center; color: #999;">No recent billings</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="module" style="margin-top: 20px;">
+        <h2>Quick Links</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; padding: 20px;">
+            <a href="{% url 'admin_dashboard' %}" style="display: block; padding: 15px; text-align: center; background: white; border: 1px solid #e8e8e8; border-radius: 5px; text-decoration: none;">
+                <div style="font-size: 24px; margin-bottom: 5px;">📊</div>
+                <div>Dashboard</div>
+            </a>
+            <a href="{% url 'patient_list' %}" style="display: block; padding: 15px; text-align: center; background: white; border: 1px solid #e8e8e8; border-radius: 5px; text-decoration: none;">
+                <div style="font-size: 24px; margin-bottom: 5px;">👥</div>
+                <div>Patients</div>
+            </a>
+            <a href="{% url 'physician_list' %}" style="display: block; padding: 15px; text-align: center; background: white; border: 1px solid #e8e8e8; border-radius: 5px; text-decoration: none;">
+                <div style="font-size: 24px; margin-bottom: 5px;">⚕️</div>
+                <div>Providers</div>
+            </a>
+            <a href="{% url 'appointment_list' %}" style="display: block; padding: 15px; text-align: center; background: white; border: 1px solid #e8e8e8; border-radius: 5px; text-decoration: none;">
+                <div style="font-size: 24px; margin-bottom: 5px;">📅</div>
+                <div>Appointments</div>
+            </a>
+            <a href="{% url 'billing_information' %}" style="display: block; padding: 15px; text-align: center; background: white; border: 1px solid #e8e8e8; border-radius: 5px; text-decoration: none;">
+                <div style="font-size: 24px; margin-bottom: 5px;">💰</div>
+                <div>Billing</div>
+            </a>
+            <a href="{% url 'hospital_list' %}" style="display: block; padding: 15px; text-align: center; background: white; border: 1px solid #e8e8e8; border-radius: 5px; text-decoration: none;">
+                <div style="font-size: 24px; margin-bottom: 5px;">🏥</div>
+                <div>Hospitals</div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
