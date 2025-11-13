@@ -72,8 +72,11 @@ The `--fake` flag tells Django: "Mark this migration as applied WITHOUT running 
 ```bash
 cd /home/zia/django_inhealth
 source venv/bin/activate
-python manage.py migrate healthcare 0003 --fake
+python manage.py migrate healthcare 0003_billing_alter_userprofile_role_payment_and_more --fake
+python manage.py migrate
 ```
+
+**IMPORTANT:** Use the **full migration name**. If you just use "0003", Django will error: "More than one migration matches '0003'".
 
 **What this does:**
 - Updates `django_migrations` table to mark Migration #2 as applied

@@ -15,12 +15,15 @@ Django is trying to create tables that already exist from migration #1.
 Run these on your server at `/home/zia/django_inhealth`:
 
 ```bash
-# First: Fix the migration conflict
-cd /home/zia/django_inhealth && source venv/bin/activate && python manage.py migrate healthcare 0003 --fake
+# First: Fix the migration conflict (use FULL migration name!)
+cd /home/zia/django_inhealth && source venv/bin/activate
+python manage.py migrate healthcare 0003_billing_alter_userprofile_role_payment_and_more --fake
 
 # Second: Apply remaining migrations (creates django_session table)
 python manage.py migrate
 ```
+
+**IMPORTANT:** You must use the **full migration name**, not just "0003". If there are multiple 0003 migrations, Django will give an error asking you to be more specific.
 
 **Why two commands?**
 1. First command fixes the duplicate 0003 conflict
@@ -39,8 +42,8 @@ source venv/bin/activate
 # 3. Check current migration status (you'll see 0003 is not marked with [X])
 python manage.py showmigrations healthcare
 
-# 4. Fake the conflicting migration (mark it as applied without running it)
-python manage.py migrate healthcare 0003 --fake
+# 4. Fake the conflicting migration (use FULL name - not just "0003")
+python manage.py migrate healthcare 0003_billing_alter_userprofile_role_payment_and_more --fake
 
 # 5. Apply ALL remaining migrations (this creates django_session and other tables)
 python manage.py migrate
