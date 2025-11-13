@@ -35,7 +35,7 @@ sudo dnf install -y perl-IPC-Run || echo "Warning: perl-IPC-Run not available, w
 
 # Install PostgreSQL 15 (try with devel, fallback without if it fails)
 echo "Installing PostgreSQL 15..."
-if sudo dnf install -y postgresql15-server postgresql15-contrib postgresql15-devel; then
+if sudo dnf install -y postgresql15-server postgresql15-contrib postgresql15-devel --nobes; then
     echo "PostgreSQL 15 with development packages installed successfully"
 else
     echo "Installing PostgreSQL 15 without devel package..."
