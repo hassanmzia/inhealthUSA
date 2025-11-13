@@ -1919,3 +1919,80 @@ def patient_profile_edit(request):
     }
 
     return render(request, 'healthcare/patients/profile_edit.html', context)
+
+
+@login_required
+def provider_profile(request):
+    """Provider profile view - shows provider's own information and patient data"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    # Get all provider-related information
+    appointments = Encounter.objects.filter(provider=provider).select_related('patient', 'department').order_by('-encounter_date')[:20]
+
+    # Get unique patients for this provider
+    patients = Patient.objects.filter(encounters__provider=provider).distinct().order_by('last_name', 'first_name')
+
+    # Get prescriptions written by this provider
+    prescriptions = Prescription.objects.filter(provider=provider).select_related('patient', 'encounter').order_by('-start_date')[:20]
+
+    # Get diagnoses made by this provider
+    diagnoses = Diagnosis.objects.filter(diagnosed_by=provider).select_related('encounter__patient').order_by('-diagnosed_at')[:20]
+
+    # Get recent vital signs for provider's patients
+    vitals = VitalSign.objects.filter(encounter__provider=provider).select_related('encounter__patient').order_by('-recorded_at')[:20]
+
+    # Get statistics
+    total_patients = patients.count()
+    total_appointments = appointments.count()
+    upcoming_appointments = Encounter.objects.filter(
+        provider=provider,
+        encounter_date__gte=timezone.now(),
+        status='Scheduled'
+    ).count()
+
+    context = {
+        'provider': provider,
+        'appointments': appointments,
+        'patients': patients,
+        'prescriptions': prescriptions,
+        'diagnoses': diagnoses,
+        'vitals': vitals,
+        'total_patients': total_patients,
+        'total_appointments': total_appointments,
+        'upcoming_appointments': upcoming_appointments,
+    }
+
+    return render(request, 'healthcare/providers/profile.html', context)
+
+
+@login_required
+def provider_profile_edit(request):
+    """Provider profile edit view - allows providers to update contact information"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    if request.method == 'POST':
+        # Update only contact information
+        provider.phone = request.POST.get('phone', provider.phone)
+        provider.email = request.POST.get('email', provider.email)
+        provider.save()
+
+        # Update user email as well
+        request.user.email = provider.email
+        request.user.save()
+
+        messages.success(request, 'Your contact information has been updated successfully.')
+        return redirect('provider_profile')
+
+    context = {
+        'provider': provider,
+    }
+
+    return render(request, 'healthcare/providers/profile_edit.html', context)
