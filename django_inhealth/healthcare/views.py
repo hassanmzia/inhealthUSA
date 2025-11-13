@@ -2203,9 +2203,9 @@ def provider_dashboard(request):
             encounter__provider=provider,
             recorded_at__gte=timezone.now() - timezone.timedelta(days=7)
         ).filter(
-            Q(systolic_bp__gt=140) | Q(diastolic_bp__gt=90) |
+            Q(blood_pressure_systolic__gt=140) | Q(blood_pressure_diastolic__gt=90) |
             Q(heart_rate__gt=100) | Q(heart_rate__lt=60) |
-            Q(temperature__gt=100.4)
+            Q(temperature_value__gt=100.4)
         ).values_list('encounter__patient_id', flat=True)
     ).distinct()[:5]
 
