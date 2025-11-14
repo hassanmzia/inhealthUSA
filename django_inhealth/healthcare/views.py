@@ -3955,3 +3955,75 @@ def nurse_vital_edit(request, vital_signs_id):
     }
 
     return render(request, 'healthcare/nurse/vital_edit.html', context)
+
+
+@login_required
+@require_role('nurse')
+def nurse_add_vitals(request):
+    """Nurse view to select a patient and add vitals manually"""
+    try:
+        nurse = request.user.nurse_profile
+    except:
+        messages.error(request, 'No nurse profile found for your account.')
+        return redirect('index')
+
+    search = request.GET.get('search', '')
+    patients = Patient.objects.filter(is_active=True).select_related('primary_doctor', 'primary_doctor__hospital')
+
+    # Filter patients by hospital if nurse has a hospital
+    if nurse.hospital:
+        patients = patients.filter(primary_doctor__hospital=nurse.hospital)
+
+    if search:
+        patients = patients.filter(
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(patient_id__icontains=search)
+        )
+
+    patients = patients.order_by('last_name', 'first_name')[:50]  # Limit to 50 results
+
+    context = {
+        'nurse': nurse,
+        'patients': patients,
+        'search': search,
+    }
+
+    return render(request, 'healthcare/nurse/add_vitals.html', context)
+
+
+@login_required
+@require_role('nurse')
+def nurse_vitals_charts(request):
+    """Nurse view to select a patient and view their vital signs charts"""
+    try:
+        nurse = request.user.nurse_profile
+    except:
+        messages.error(request, 'No nurse profile found for your account.')
+        return redirect('index')
+
+    search = request.GET.get('search', '')
+    patients = Patient.objects.filter(is_active=True).select_related('primary_doctor', 'primary_doctor__hospital')
+
+    # Filter patients by hospital if nurse has a hospital
+    if nurse.hospital:
+        patients = patients.filter(primary_doctor__hospital=nurse.hospital)
+
+    if search:
+        patients = patients.filter(
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(patient_id__icontains=search)
+        )
+
+    patients = patients.order_by('last_name', 'first_name')[:50]  # Limit to 50 results
+
+    context = {
+        'nurse': nurse,
+        'patients': patients,
+        'search': search,
+    }
+
+    return render(request, 'healthcare/nurse/vitals_charts.html', context)
