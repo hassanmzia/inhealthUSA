@@ -51,7 +51,7 @@
                     <td style="padding: 10px;">{{ message.subject }}</td>
                     <td style="padding: 10px;">{{ message.created_at|date:"M d, Y H:i" }}</td>
                     <td style="padding: 10px;">
-                        <a href="{% url 'message_show' message.message_id %}" style="color: #2196F3; margin-right: 10px;">View</a>
+                        <a href="{% url 'message_show' message.message_id %}" style="color: #00897B; margin-right: 10px;">View</a>
                         <a href="{% url 'patient_compose_message' %}?reply_to={{ message.message_id }}" style="color: #4caf50;">Reply</a>
                     </td>
                 </tr>
@@ -97,7 +97,7 @@
                     <td style="padding: 10px;">{{ notification.created_at|date:"M d, Y H:i" }}</td>
                     <td style="padding: 10px;">
                         {% if not notification.is_read %}
-                        <a href="{% url 'patient_mark_notification_read' notification.notification_id %}" style="color: #2196F3;">Mark Read</a>
+                        <a href="{% url 'patient_mark_notification_read' notification.notification_id %}" style="color: #00897B;">Mark Read</a>
                         {% endif %}
                     </td>
                 </tr>
