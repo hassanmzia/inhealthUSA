@@ -130,5 +130,10 @@
             </div>
         {% endfor %}
     </div>
+
+    <!-- Actions -->
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e8e8e8;">
+        <a href="{% url 'patient_detail' patient.patient_id %}" class="button" style="color: white;">← Back to Patient</a>
+    </div>
 </div>
 {% endblock %}
