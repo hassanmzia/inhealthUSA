@@ -65,6 +65,10 @@ class UserProfile(models.Model):
     def is_office_admin(self):
         return self.role == 'office_admin'
 
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
+
 
 class Department(models.Model):
     """Department model"""
