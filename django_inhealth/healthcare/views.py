@@ -3089,9 +3089,7 @@ def system_admin_dashboard(request):
 
         # Patients Information
         'total_patients': Patient.objects.filter(is_active=True).count(),
-        'new_patients_this_month': Patient.objects.filter(
-            created_at__gte=timezone.now() - timedelta(days=30)
-        ).count(),
+        'new_patients_this_month': 0,  # Patient model doesn't have created_at field
 
         # Devices Information
         'total_devices': Device.objects.count(),
@@ -3127,10 +3125,10 @@ def system_admin_dashboard(request):
     recent_hospitals = Hospital.objects.filter(is_active=True).order_by('-created_at')[:5]
 
     # Recent Activity - All Doctors
-    recent_doctors = Provider.objects.filter(is_active=True).order_by('-created_at')[:10]
+    recent_doctors = Provider.objects.filter(is_active=True).order_by('-provider_id')[:10]
 
     # Recent Activity - All Patients
-    recent_patients = Patient.objects.filter(is_active=True).order_by('-created_at')[:10]
+    recent_patients = Patient.objects.filter(is_active=True).order_by('-patient_id')[:10]
 
     # Recent Activity - All Users
     recent_users = User.objects.filter(is_active=True).order_by('-date_joined')[:10]
