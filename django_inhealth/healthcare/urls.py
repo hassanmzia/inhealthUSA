@@ -166,6 +166,9 @@ urlpatterns = [
     # Admin Dashboard
     path('office-admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
 
+    # System Admin Dashboard
+    path('system-admin/dashboard/', views.system_admin_dashboard, name='system_admin_dashboard'),
+
     # Admin Profile
     path('office-admin/profile/', views.admin_profile, name='admin_profile'),
     path('office-admin/profile/edit/', views.admin_profile_edit, name='admin_profile_edit'),

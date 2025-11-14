@@ -3,19 +3,20 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from django.db.models import Q, Sum
+from django.contrib.auth.models import User
+from django.db.models import Q, Sum, Count
 from django.utils import timezone
 from .models import (
     Hospital, Patient, Provider, Encounter, VitalSign, Diagnosis,
     Prescription, Department, Allergy, MedicalHistory, SocialHistory,
     FamilyHistory, LabTest, Message, Notification, InsuranceInformation,
-    Billing, BillingItem, Payment, Device
+    Billing, BillingItem, Payment, Device, UserProfile
 )
 from .forms import UserRegistrationForm
 from .permissions import (
     require_patient_access, require_patient_edit, require_role,
     require_provider_access, require_provider_edit, require_vital_edit,
-    is_patient, is_doctor, is_office_admin, is_nurse, get_patient_for_user,
+    is_patient, is_doctor, is_office_admin, is_nurse, is_admin, get_patient_for_user,
     get_provider_for_user, can_view_patient, can_edit_patient,
     can_view_provider, can_edit_provider, can_edit_vitals
 )
@@ -3060,6 +3061,134 @@ def admin_dashboard(request):
     }
 
     return render(request, 'healthcare/admin/dashboard.html', context)
+
+
+@login_required
+@require_role('admin')
+def system_admin_dashboard(request):
+    """System Administrator Dashboard - comprehensive system management and analytics"""
+    from datetime import timedelta
+
+    # Core Statistics
+    stats = {
+        # Hospital Information
+        'total_hospitals': Hospital.objects.filter(is_active=True).count(),
+        'total_departments': Department.objects.filter(is_active=True).count(),
+
+        # User Information
+        'total_users': User.objects.filter(is_active=True).count(),
+        'total_admins': UserProfile.objects.filter(role='admin').count(),
+        'total_office_admins': UserProfile.objects.filter(role='office_admin').count(),
+        'total_doctors_users': UserProfile.objects.filter(role='doctor').count(),
+        'total_nurses_users': UserProfile.objects.filter(role='nurse').count(),
+        'total_patients_users': UserProfile.objects.filter(role='patient').count(),
+
+        # Doctors Information
+        'total_doctors': Provider.objects.filter(is_active=True).count(),
+        'doctors_by_specialty': Provider.objects.filter(is_active=True).values('specialty').annotate(count=Count('specialty')).order_by('-count')[:10],
+
+        # Patients Information
+        'total_patients': Patient.objects.filter(is_active=True).count(),
+        'new_patients_this_month': Patient.objects.filter(
+            created_at__gte=timezone.now() - timedelta(days=30)
+        ).count(),
+
+        # Devices Information
+        'total_devices': Device.objects.count(),
+        'active_devices': Device.objects.filter(status='Active').count(),
+        'devices_by_type': Device.objects.values('device_type').annotate(count=Count('device_type')).order_by('-count'),
+
+        # Appointments Information
+        'total_appointments': Encounter.objects.count(),
+        'appointments_today': Encounter.objects.filter(
+            encounter_date__date=timezone.now().date()
+        ).count(),
+        'appointments_this_week': Encounter.objects.filter(
+            encounter_date__gte=timezone.now(),
+            encounter_date__lt=timezone.now() + timedelta(days=7)
+        ).count(),
+        'appointments_this_month': Encounter.objects.filter(
+            encounter_date__gte=timezone.now() - timedelta(days=30)
+        ).count(),
+
+        # Financial Information
+        'total_revenue': Billing.objects.filter(status='Paid').aggregate(total=Sum('amount_due'))['total'] or 0,
+        'pending_payments': Billing.objects.filter(status='Pending').aggregate(total=Sum('amount_due'))['total'] or 0,
+
+        # System Analytics
+        'total_messages': Message.objects.count(),
+        'unread_messages': Message.objects.filter(is_read=False).count(),
+        'total_notifications': Notification.objects.count(),
+        'total_prescriptions': Prescription.objects.count(),
+        'total_lab_tests': LabTest.objects.count(),
+    }
+
+    # Recent Activity - All Hospitals
+    recent_hospitals = Hospital.objects.filter(is_active=True).order_by('-created_at')[:5]
+
+    # Recent Activity - All Doctors
+    recent_doctors = Provider.objects.filter(is_active=True).order_by('-created_at')[:10]
+
+    # Recent Activity - All Patients
+    recent_patients = Patient.objects.filter(is_active=True).order_by('-created_at')[:10]
+
+    # Recent Activity - All Users
+    recent_users = User.objects.filter(is_active=True).order_by('-date_joined')[:10]
+
+    # Recent Activity - All Devices
+    recent_devices = Device.objects.all().order_by('-created_at')[:10]
+
+    # Recent Activity - All Appointments
+    recent_appointments = Encounter.objects.select_related('patient', 'provider').order_by('-encounter_date')[:15]
+
+    # Upcoming Appointments
+    upcoming_appointments = Encounter.objects.filter(
+        encounter_date__gte=timezone.now(),
+        status='Scheduled'
+    ).select_related('patient', 'provider').order_by('encounter_date')[:15]
+
+    # User Distribution by Role
+    user_roles = UserProfile.objects.values('role').annotate(count=Count('role')).order_by('-count')
+
+    # System Health Metrics
+    health_metrics = {
+        'active_users_today': User.objects.filter(
+            last_login__gte=timezone.now() - timedelta(days=1)
+        ).count(),
+        'new_users_this_week': User.objects.filter(
+            date_joined__gte=timezone.now() - timedelta(days=7)
+        ).count(),
+        'appointments_completion_rate': _calculate_completion_rate(),
+    }
+
+    context = {
+        'stats': stats,
+        'recent_hospitals': recent_hospitals,
+        'recent_doctors': recent_doctors,
+        'recent_patients': recent_patients,
+        'recent_users': recent_users,
+        'recent_devices': recent_devices,
+        'recent_appointments': recent_appointments,
+        'upcoming_appointments': upcoming_appointments,
+        'user_roles': user_roles,
+        'health_metrics': health_metrics,
+    }
+
+    return render(request, 'healthcare/system_admin/dashboard.html', context)
+
+
+def _calculate_completion_rate():
+    """Helper function to calculate appointment completion rate"""
+    total = Encounter.objects.filter(
+        encounter_date__lt=timezone.now()
+    ).count()
+    if total == 0:
+        return 0
+    completed = Encounter.objects.filter(
+        encounter_date__lt=timezone.now(),
+        status='Completed'
+    ).count()
+    return round((completed / total) * 100, 1)
 
 
 # ============================================================================
