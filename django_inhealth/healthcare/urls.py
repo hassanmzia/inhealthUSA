@@ -98,6 +98,9 @@ urlpatterns = [
     path('patients/<int:patient_id>/insurance/', views.patient_insurance_list, name='patient_insurance_list'),
     path('patients/<int:patient_id>/insurance/<int:insurance_id>/', views.patient_insurance_detail, name='patient_insurance_detail'),
 
+    # Device URLs
+    path('devices/', views.device_list, name='device_list'),
+
     # Patient Device URLs
     path('patients/<int:patient_id>/devices/', views.patient_device_list, name='patient_device_list'),
     path('patients/<int:patient_id>/devices/<int:device_id>/', views.patient_device_detail, name='patient_device_detail'),
