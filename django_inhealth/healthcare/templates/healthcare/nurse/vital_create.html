@@ -1,0 +1,179 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Add Vital Signs - {{ patient.full_name }} - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'nurse_dashboard' %}">Nurse Dashboard</a> &rsaquo;
+    <a href="{% url 'nurse_add_vitals' %}">Add Vitals</a> &rsaquo;
+    {{ patient.full_name }}
+</div>
+
+<div class="module">
+    <h1>Add Vital Signs - Manual Entry</h1>
+    <p style="color: #666; margin-top: 10px;">
+        <strong>Patient:</strong> {{ patient.full_name }} |
+        <strong>DOB:</strong> {{ patient.date_of_birth|date:"M d, Y" }} |
+        <strong>Patient ID:</strong> {{ patient.patient_id }}
+    </p>
+    <p style="color: #4caf50; margin-top: 5px; font-weight: 600;">
+        Data Source: Manual Entry
+    </p>
+
+    <form method="POST" action="" style="margin-top: 30px;">
+        {% csrf_token %}
+
+        <!-- Vital Signs Form -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+
+            <!-- Temperature -->
+            <div class="form-group">
+                <label for="temperature_value" style="display: block; margin-bottom: 5px; font-weight: 600;">Temperature</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number"
+                           step="0.1"
+                           name="temperature_value"
+                           id="temperature_value"
+                           placeholder="98.6"
+                           style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                    <select name="temperature_unit"
+                            style="width: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="F">°F</option>
+                        <option value="C">°C</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Blood Pressure -->
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Blood Pressure (mmHg)</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="number"
+                           name="blood_pressure_systolic"
+                           placeholder="Systolic (120)"
+                           style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                    <span>/</span>
+                    <input type="number"
+                           name="blood_pressure_diastolic"
+                           placeholder="Diastolic (80)"
+                           style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+            </div>
+
+            <!-- Heart Rate -->
+            <div class="form-group">
+                <label for="heart_rate" style="display: block; margin-bottom: 5px; font-weight: 600;">Heart Rate (bpm)</label>
+                <input type="number"
+                       name="heart_rate"
+                       id="heart_rate"
+                       placeholder="72"
+                       style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+
+            <!-- Respiratory Rate -->
+            <div class="form-group">
+                <label for="respiratory_rate" style="display: block; margin-bottom: 5px; font-weight: 600;">Respiratory Rate (breaths/min)</label>
+                <input type="number"
+                       name="respiratory_rate"
+                       id="respiratory_rate"
+                       placeholder="16"
+                       style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+
+            <!-- Oxygen Saturation -->
+            <div class="form-group">
+                <label for="oxygen_saturation" style="display: block; margin-bottom: 5px; font-weight: 600;">Oxygen Saturation (%)</label>
+                <input type="number"
+                       step="0.1"
+                       name="oxygen_saturation"
+                       id="oxygen_saturation"
+                       placeholder="98"
+                       min="0"
+                       max="100"
+                       style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+
+            <!-- Blood Glucose -->
+            <div class="form-group">
+                <label for="glucose" style="display: block; margin-bottom: 5px; font-weight: 600;">Blood Glucose (mg/dL)</label>
+                <input type="number"
+                       step="0.1"
+                       name="glucose"
+                       id="glucose"
+                       placeholder="100"
+                       style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+
+            <!-- Weight -->
+            <div class="form-group">
+                <label for="weight_value" style="display: block; margin-bottom: 5px; font-weight: 600;">Weight</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number"
+                           step="0.1"
+                           name="weight_value"
+                           id="weight_value"
+                           placeholder="150"
+                           style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                    <select name="weight_unit"
+                            style="width: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="lbs">lbs</option>
+                        <option value="kg">kg</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Height -->
+            <div class="form-group">
+                <label for="height_value" style="display: block; margin-bottom: 5px; font-weight: 600;">Height</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number"
+                           step="0.1"
+                           name="height_value"
+                           id="height_value"
+                           placeholder="68"
+                           style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                    <select name="height_unit"
+                            style="width: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="in">in</option>
+                        <option value="cm">cm</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-group" style="margin-top: 20px;">
+            <label for="notes" style="display: block; margin-bottom: 5px; font-weight: 600;">Notes (Optional)</label>
+            <textarea name="notes"
+                      id="notes"
+                      rows="4"
+                      placeholder="Additional notes about the vital signs..."
+                      style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit;"></textarea>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e8e8e8; display: flex; gap: 10px;">
+            <button type="submit"
+                    class="button"
+                    style="padding: 12px 30px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                Save Vital Signs
+            </button>
+            <a href="{% url 'nurse_add_vitals' %}"
+               class="button"
+               style="padding: 12px 30px; background: #666; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
+                Cancel
+            </a>
+        </div>
+    </form>
+
+    <!-- Help Text -->
+    <div style="margin-top: 30px; padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; border-radius: 4px;">
+        <strong style="color: #1976D2;">ℹ️ Note:</strong>
+        <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;">
+            This vital sign entry will be recorded as manual entry (data source: manual) and will be associated with your nurse profile.
+            All fields are optional - enter only the measurements you have taken.
+        </p>
+    </div>
+</div>
+{% endblock %}
