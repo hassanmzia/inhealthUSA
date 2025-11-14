@@ -1741,6 +1741,36 @@ def patient_insurance_detail(request, patient_id, insurance_id):
 
 # Device Management
 @login_required
+def device_list(request):
+    """List all IoT devices - for admin access"""
+    # Only office admins, nurses, and system admins can see all devices
+    if not (is_office_admin(request.user) or is_nurse(request.user) or is_admin(request.user)):
+        messages.error(request, 'You do not have permission to view the device list.')
+        return redirect('index')
+
+    search = request.GET.get('search', '')
+    devices = Device.objects.all().select_related('patient')
+
+    if search:
+        devices = devices.filter(
+            Q(device_name__icontains=search) |
+            Q(device_type__icontains=search) |
+            Q(device_unique_id__icontains=search) |
+            Q(patient__first_name__icontains=search) |
+            Q(patient__last_name__icontains=search)
+        )
+
+    devices = devices.order_by('-created_at')
+
+    context = {
+        'devices': devices,
+        'search': search,
+    }
+
+    return render(request, 'healthcare/devices/list.html', context)
+
+
+@login_required
 @require_patient_access
 def patient_device_list(request, patient_id):
     """Display devices for a patient - with role-based access control"""
