@@ -1,0 +1,91 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Add Vitals Manually - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'nurse_dashboard' %}">Nurse Dashboard</a> &rsaquo;
+    Add Vitals Manually
+</div>
+
+<div class="module">
+    <h1>Add Vitals Manually</h1>
+    <p style="color: #666; margin-top: 10px;">Select a patient to record vital signs manually</p>
+
+    <!-- Search Form -->
+    <div style="background: #f9f9f9; padding: 20px; margin: 20px 0; border-radius: 5px;">
+        <form method="GET" action="">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text"
+                       name="search"
+                       value="{{ search }}"
+                       placeholder="Search by name, email, or patient ID..."
+                       style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                <button type="submit"
+                        class="button"
+                        style="padding: 10px 20px; background: #417690; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Search
+                </button>
+                <a href="{% url 'nurse_add_vitals' %}"
+                   class="button"
+                   style="padding: 10px 20px; background: #666; color: white; text-decoration: none; border-radius: 4px;">
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Patient List -->
+    <table style="width: 100%; margin-top: 20px;">
+        <thead>
+            <tr>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Patient ID</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Name</th>
+                <th style="text-align: left; padding: #f0f0f0;">Date of Birth</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Primary Doctor</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for patient in patients %}
+            <tr style="border-bottom: 1px solid #e8e8e8;">
+                <td style="padding: 10px;">{{ patient.patient_id }}</td>
+                <td style="padding: 10px;">
+                    <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a>
+                </td>
+                <td style="padding: 10px;">{{ patient.date_of_birth|date:"M d, Y" }}</td>
+                <td style="padding: 10px;">
+                    {% if patient.primary_doctor %}
+                        Dr. {{ patient.primary_doctor.full_name }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td style="padding: 10px;">
+                    <a href="{% url 'nurse_vital_create' patient.patient_id %}"
+                       class="button"
+                       style="padding: 8px 15px; background: #4caf50; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
+                        Add Vitals
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: 40px; text-align: center; color: #999;">
+                    {% if search %}
+                        No patients found matching "{{ search }}"
+                    {% else %}
+                        No patients available
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-top: 20px;">
+        <a href="{% url 'nurse_dashboard' %}" class="button" style="color: white;">← Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}
