@@ -39,6 +39,11 @@ def is_nurse(user):
     return get_user_role(user) == 'nurse'
 
 
+def is_admin(user):
+    """Check if user is a system administrator"""
+    return get_user_role(user) == 'admin'
+
+
 def get_patient_for_user(user):
     """Get the Patient object for a user if they are a patient"""
     if not is_patient(user):
@@ -63,8 +68,8 @@ def get_provider_for_user(user):
 
 def can_view_patient(user, patient):
     """Check if user can view a specific patient's information"""
-    # Admins, doctors, and nurses can view all patients
-    if is_office_admin(user) or is_doctor(user) or is_nurse(user):
+    # System admins, office admins, doctors, and nurses can view all patients
+    if is_admin(user) or is_office_admin(user) or is_doctor(user) or is_nurse(user):
         return True
 
     # Patients can only view their own information
@@ -77,8 +82,8 @@ def can_view_patient(user, patient):
 
 def can_edit_patient(user, patient):
     """Check if user can edit a specific patient's information"""
-    # Only admins and doctors can edit patient information
-    return is_office_admin(user) or is_doctor(user)
+    # System admins, office admins, and doctors can edit patient information
+    return is_admin(user) or is_office_admin(user) or is_doctor(user)
 
 
 def require_role(*allowed_roles):
@@ -145,8 +150,8 @@ def require_patient_edit(view_func):
 
 def can_edit_vitals(user, patient):
     """Check if user can edit vital information for a patient"""
-    # Admins, doctors, and nurses can edit vital information
-    return is_office_admin(user) or is_doctor(user) or is_nurse(user)
+    # System admins, office admins, doctors, and nurses can edit vital information
+    return is_admin(user) or is_office_admin(user) or is_doctor(user) or is_nurse(user)
 
 
 def require_vital_edit(view_func):
@@ -170,8 +175,8 @@ def require_vital_edit(view_func):
 
 def can_view_provider(user, provider):
     """Check if user can view a specific provider's information"""
-    # Admins and nurses can view all providers
-    if is_office_admin(user) or is_nurse(user):
+    # System admins, office admins, and nurses can view all providers
+    if is_admin(user) or is_office_admin(user) or is_nurse(user):
         return True
 
     # Doctors can only view their own information
@@ -185,8 +190,8 @@ def can_view_provider(user, provider):
 
 def can_edit_provider(user, provider):
     """Check if user can edit a specific provider's information"""
-    # Only admins can edit provider information
-    return is_office_admin(user)
+    # System admins and office admins can edit provider information
+    return is_admin(user) or is_office_admin(user)
 
 
 def require_provider_access(view_func):

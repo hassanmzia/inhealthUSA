@@ -33,6 +33,7 @@ class UserProfile(models.Model):
         ('doctor', 'Doctor'),
         ('nurse', 'Nurse'),
         ('office_admin', 'Office Administrator'),
+        ('admin', 'System Administrator'),
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')

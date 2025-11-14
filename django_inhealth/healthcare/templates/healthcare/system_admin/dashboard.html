@@ -1,0 +1,392 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}System Administration Dashboard - InHealth EHR{% endblock %}
+
+{% block extra_head %}
+<!-- Heap Analytics Integration -->
+<script type="text/javascript">
+  window.heap=window.heap||[],heap.load=function(e,t){window.heap.appid=e,window.heap.config=t=t||{};var r=document.createElement("script");r.type="text/javascript",r.async=!0,r.src="https://cdn.heapanalytics.com/js/heap-"+e+".js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(r,a);for(var n=function(e){return function(){heap.push([e].concat(Array.prototype.slice.call(arguments,0)))}},p=["addEventProperties","addUserProperties","clearEventProperties","identify","resetIdentity","removeEventProperty","setEventProperties","track","unsetEventProperty"],o=0;o<p.length;o++)heap[p[o]]=n(p[o])};
+  // Replace 'YOUR_APP_ID' with your actual Heap App ID
+  // heap.load("YOUR_APP_ID");
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo; System Administration Dashboard
+</div>
+
+<div class="module">
+    <h1 style="color: #417690; border-bottom: 3px solid #417690; padding-bottom: 10px; margin-bottom: 20px;">🔧 System Administration Dashboard</h1>
+    <p style="color: #666; margin-bottom: 20px;">Comprehensive system management, analytics, and monitoring</p>
+
+    <!-- Quick Access Links -->
+    <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; margin-bottom: 30px; border-left: 4px solid #417690;">
+        <h3 style="margin: 0 0 10px 0; color: #417690;">⚡ Quick Access</h3>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <a href="/admin/" target="_blank" class="button" style="background: #417690; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 13px;">
+                🔐 Django Admin Panel
+            </a>
+            <a href="{% url 'patient_list' %}" class="button" style="background: #5b80b2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 13px;">
+                👥 All Patients
+            </a>
+            <a href="{% url 'physician_list' %}" class="button" style="background: #5b80b2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 13px;">
+                👨‍⚕️ All Doctors
+            </a>
+            <a href="{% url 'hospital_list' %}" class="button" style="background: #5b80b2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 13px;">
+                🏥 All Hospitals
+            </a>
+        </div>
+    </div>
+
+    <!-- Key Metrics Dashboard -->
+    <h2 style="color: #417690; margin: 30px 0 15px 0;">📊 Key System Metrics</h2>
+
+    <!-- Hospital & Infrastructure Stats -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="color: #5b80b2; margin-bottom: 15px;">🏥 Hospital Infrastructure</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; color: white;">
+                <div style="font-size: 36px; font-weight: bold; margin-bottom: 5px;">{{ stats.total_hospitals }}</div>
+                <div style="font-size: 14px; opacity: 0.9;">Total Hospitals</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 8px; color: white;">
+                <div style="font-size: 36px; font-weight: bold; margin-bottom: 5px;">{{ stats.total_departments }}</div>
+                <div style="font-size: 14px; opacity: 0.9;">Departments</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Stats -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="color: #5b80b2; margin-bottom: 15px;">👤 User Management</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+            <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; border-left: 4px solid #2196F3;">
+                <div style="font-size: 28px; font-weight: bold; color: #2196F3; margin-bottom: 5px;">{{ stats.total_users }}</div>
+                <div style="font-size: 13px; color: #666;">Total Users</div>
+            </div>
+            <div style="background: #fff3e7; padding: 15px; border-radius: 5px; border-left: 4px solid #ff9800;">
+                <div style="font-size: 28px; font-weight: bold; color: #ff9800; margin-bottom: 5px;">{{ stats.total_admins }}</div>
+                <div style="font-size: 13px; color: #666;">System Admins</div>
+            </div>
+            <div style="background: #f3e7ff; padding: 15px; border-radius: 5px; border-left: 4px solid #9c27b0;">
+                <div style="font-size: 28px; font-weight: bold; color: #9c27b0; margin-bottom: 5px;">{{ stats.total_office_admins }}</div>
+                <div style="font-size: 13px; color: #666;">Office Admins</div>
+            </div>
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 5px; border-left: 4px solid #4caf50;">
+                <div style="font-size: 28px; font-weight: bold; color: #4caf50; margin-bottom: 5px;">{{ stats.total_doctors_users }}</div>
+                <div style="font-size: 13px; color: #666;">Doctor Users</div>
+            </div>
+            <div style="background: #fff8e1; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
+                <div style="font-size: 28px; font-weight: bold; color: #ffc107; margin-bottom: 5px;">{{ stats.total_nurses_users }}</div>
+                <div style="font-size: 13px; color: #666;">Nurse Users</div>
+            </div>
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; border-left: 4px solid #03a9f4;">
+                <div style="font-size: 28px; font-weight: bold; color: #03a9f4; margin-bottom: 5px;">{{ stats.total_patients_users }}</div>
+                <div style="font-size: 13px; color: #666;">Patient Users</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doctors & Patients Stats -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="color: #5b80b2; margin-bottom: 15px;">👨‍⚕️ Healthcare Providers & Patients</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 8px; color: white;">
+                <div style="font-size: 36px; font-weight: bold; margin-bottom: 5px;">{{ stats.total_doctors }}</div>
+                <div style="font-size: 14px; opacity: 0.9;">Total Doctors</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); padding: 20px; border-radius: 8px; color: white;">
+                <div style="font-size: 36px; font-weight: bold; margin-bottom: 5px;">{{ stats.total_patients }}</div>
+                <div style="font-size: 14px; opacity: 0.9;">Total Patients</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 20px; border-radius: 8px; color: white;">
+                <div style="font-size: 36px; font-weight: bold; margin-bottom: 5px;">{{ stats.new_patients_this_month }}</div>
+                <div style="font-size: 14px; opacity: 0.9;">New Patients (30 days)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Device Stats -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="color: #5b80b2; margin-bottom: 15px;">⌚ IoT Devices</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background: #ffe7f3; padding: 15px; border-radius: 5px; border-left: 4px solid #e91e63;">
+                <div style="font-size: 28px; font-weight: bold; color: #e91e63; margin-bottom: 5px;">{{ stats.total_devices }}</div>
+                <div style="font-size: 13px; color: #666;">Total Devices</div>
+            </div>
+            <div style="background: #e7ffe7; padding: 15px; border-radius: 5px; border-left: 4px solid #4caf50;">
+                <div style="font-size: 28px; font-weight: bold; color: #4caf50; margin-bottom: 5px;">{{ stats.active_devices }}</div>
+                <div style="font-size: 13px; color: #666;">Active Devices</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointments Stats -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="color: #5b80b2; margin-bottom: 15px;">📅 Appointments</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+            <div style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 20px; border-radius: 8px;">
+                <div style="font-size: 32px; font-weight: bold; color: #333; margin-bottom: 5px;">{{ stats.total_appointments }}</div>
+                <div style="font-size: 13px; color: #666;">Total Appointments</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); padding: 20px; border-radius: 8px;">
+                <div style="font-size: 32px; font-weight: bold; color: #333; margin-bottom: 5px;">{{ stats.appointments_today }}</div>
+                <div style="font-size: 13px; color: #666;">Today</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); padding: 20px; border-radius: 8px;">
+                <div style="font-size: 32px; font-weight: bold; color: #333; margin-bottom: 5px;">{{ stats.appointments_this_week }}</div>
+                <div style="font-size: 13px; color: #666;">This Week</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%); padding: 20px; border-radius: 8px;">
+                <div style="font-size: 32px; font-weight: bold; color: #333; margin-bottom: 5px;">{{ stats.appointments_this_month }}</div>
+                <div style="font-size: 13px; color: #666;">This Month</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #fdcbf1 0%, #e6dee9 100%); padding: 20px; border-radius: 8px;">
+                <div style="font-size: 32px; font-weight: bold; color: #333; margin-bottom: 5px;">{{ health_metrics.appointments_completion_rate }}%</div>
+                <div style="font-size: 13px; color: #666;">Completion Rate</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Stats -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="color: #5b80b2; margin-bottom: 15px;">💰 Financial Overview</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%); padding: 20px; border-radius: 8px;">
+                <div style="font-size: 32px; font-weight: bold; color: #2e7d32; margin-bottom: 5px;">${{ stats.total_revenue|floatformat:0 }}</div>
+                <div style="font-size: 13px; color: #2e7d32;">Total Revenue</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%); padding: 20px; border-radius: 8px;">
+                <div style="font-size: 32px; font-weight: bold; color: #d35400; margin-bottom: 5px;">${{ stats.pending_payments|floatformat:0 }}</div>
+                <div style="font-size: 13px; color: #d35400;">Pending Payments</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Activity Stats -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="color: #5b80b2; margin-bottom: 15px;">📈 System Activity</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold; color: #1976d2;">{{ stats.total_messages }}</div>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">Total Messages</div>
+            </div>
+            <div style="background: #fce4ec; padding: 15px; border-radius: 5px; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold; color: #c2185b;">{{ stats.unread_messages }}</div>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">Unread Messages</div>
+            </div>
+            <div style="background: #f3e5f5; padding: 15px; border-radius: 5px; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold; color: #7b1fa2;">{{ stats.total_notifications }}</div>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">Notifications</div>
+            </div>
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 5px; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold; color: #388e3c;">{{ stats.total_prescriptions }}</div>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">Prescriptions</div>
+            </div>
+            <div style="background: #fff3e0; padding: 15px; border-radius: 5px; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold; color: #f57c00;">{{ stats.total_lab_tests }}</div>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">Lab Tests</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Health Metrics -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="color: #5b80b2; margin-bottom: 15px;">🏥 System Health</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); padding: 20px; border-radius: 8px; color: white;">
+                <div style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">{{ health_metrics.active_users_today }}</div>
+                <div style="font-size: 13px; opacity: 0.9;">Active Users Today</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); padding: 20px; border-radius: 8px; color: #333;">
+                <div style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">{{ health_metrics.new_users_this_week }}</div>
+                <div style="font-size: 13px;">New Users This Week</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Sections -->
+    <h2 style="color: #417690; margin: 40px 0 20px 0;">📋 Recent Activity</h2>
+
+    <!-- Tabbed interface for different sections -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 20px;">
+
+        <!-- Recent Hospitals -->
+        <div style="background: white; border: 1px solid #ccc; border-radius: 5px; padding: 20px;">
+            <h3 style="color: #5b80b2; margin: 0 0 15px 0; border-bottom: 2px solid #5b80b2; padding-bottom: 8px;">🏥 Recent Hospitals</h3>
+            <table style="width: 100%;">
+                <thead>
+                    <tr style="background: #f0f0f0;">
+                        <th style="text-align: left; padding: 8px; font-size: 12px;">Name</th>
+                        <th style="text-align: left; padding: 8px; font-size: 12px;">City</th>
+                        <th style="text-align: center; padding: 8px; font-size: 12px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hospital in recent_hospitals %}
+                    <tr style="border-bottom: 1px solid #e8e8e8;">
+                        <td style="padding: 8px; font-size: 13px;"><a href="{% url 'hospital_detail' hospital.hospital_id %}">{{ hospital.name }}</a></td>
+                        <td style="padding: 8px; font-size: 13px;">{{ hospital.city }}</td>
+                        <td style="padding: 8px; text-align: center;"><span style="background: #dfd; padding: 3px 8px; border-radius: 3px; font-size: 11px;">Active</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="padding: 20px; text-align: center; color: #999;">No hospitals found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Users -->
+        <div style="background: white; border: 1px solid #ccc; border-radius: 5px; padding: 20px;">
+            <h3 style="color: #5b80b2; margin: 0 0 15px 0; border-bottom: 2px solid #5b80b2; padding-bottom: 8px;">👤 Recent Users</h3>
+            <table style="width: 100%;">
+                <thead>
+                    <tr style="background: #f0f0f0;">
+                        <th style="text-align: left; padding: 8px; font-size: 12px;">Name</th>
+                        <th style="text-align: left; padding: 8px; font-size: 12px;">Email</th>
+                        <th style="text-align: center; padding: 8px; font-size: 12px;">Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in recent_users %}
+                    <tr style="border-bottom: 1px solid #e8e8e8;">
+                        <td style="padding: 8px; font-size: 13px;">{{ user.get_full_name|default:user.username }}</td>
+                        <td style="padding: 8px; font-size: 13px;">{{ user.email }}</td>
+                        <td style="padding: 8px; text-align: center; font-size: 12px;">{{ user.date_joined|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="padding: 20px; text-align: center; color: #999;">No users found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Doctors -->
+        <div style="background: white; border: 1px solid #ccc; border-radius: 5px; padding: 20px;">
+            <h3 style="color: #5b80b2; margin: 0 0 15px 0; border-bottom: 2px solid #5b80b2; padding-bottom: 8px;">👨‍⚕️ Recent Doctors</h3>
+            <table style="width: 100%;">
+                <thead>
+                    <tr style="background: #f0f0f0;">
+                        <th style="text-align: left; padding: 8px; font-size: 12px;">Name</th>
+                        <th style="text-align: left; padding: 8px; font-size: 12px;">Specialty</th>
+                        <th style="text-align: center; padding: 8px; font-size: 12px;">NPI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doctor in recent_doctors %}
+                    <tr style="border-bottom: 1px solid #e8e8e8;">
+                        <td style="padding: 8px; font-size: 13px;"><a href="{% url 'physician_detail' doctor.provider_id %}">Dr. {{ doctor.full_name }}</a></td>
+                        <td style="padding: 8px; font-size: 13px;">{{ doctor.specialty|default:"-" }}</td>
+                        <td style="padding: 8px; text-align: center; font-size: 12px;">{{ doctor.npi|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="padding: 20px; text-align: center; color: #999;">No doctors found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Patients -->
+        <div style="background: white; border: 1px solid #ccc; border-radius: 5px; padding: 20px;">
+            <h3 style="color: #5b80b2; margin: 0 0 15px 0; border-bottom: 2px solid #5b80b2; padding-bottom: 8px;">👥 Recent Patients</h3>
+            <table style="width: 100%;">
+                <thead>
+                    <tr style="background: #f0f0f0;">
+                        <th style="text-align: left; padding: 8px; font-size: 12px;">Name</th>
+                        <th style="text-align: left; padding: 8px; font-size: 12px;">MRN</th>
+                        <th style="text-align: center; padding: 8px; font-size: 12px;">DOB</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in recent_patients %}
+                    <tr style="border-bottom: 1px solid #e8e8e8;">
+                        <td style="padding: 8px; font-size: 13px;"><a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a></td>
+                        <td style="padding: 8px; font-size: 13px;">{{ patient.medical_record_number|default:"-" }}</td>
+                        <td style="padding: 8px; text-align: center; font-size: 12px;">{{ patient.date_of_birth|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="padding: 20px; text-align: center; color: #999;">No patients found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Devices -->
+        <div style="background: white; border: 1px solid #ccc; border-radius: 5px; padding: 20px;">
+            <h3 style="color: #5b80b2; margin: 0 0 15px 0; border-bottom: 2px solid #5b80b2; padding-bottom: 8px;">⌚ Recent IoT Devices</h3>
+            <table style="width: 100%;">
+                <thead>
+                    <tr style="background: #f0f0f0;">
+                        <th style="text-align: left; padding: 8px; font-size: 12px;">Device Name</th>
+                        <th style="text-align: left; padding: 8px; font-size: 12px;">Type</th>
+                        <th style="text-align: center; padding: 8px; font-size: 12px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in recent_devices %}
+                    <tr style="border-bottom: 1px solid #e8e8e8;">
+                        <td style="padding: 8px; font-size: 13px;">{{ device.device_name }}</td>
+                        <td style="padding: 8px; font-size: 13px;">{{ device.device_type }}</td>
+                        <td style="padding: 8px; text-align: center;">
+                            <span style="padding: 3px 8px; border-radius: 3px; font-size: 11px; {% if device.status == 'Active' %}background: #dfd; color: #2e7d32;{% else %}background: #e8e8e8; color: #666;{% endif %}">{{ device.status }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="padding: 20px; text-align: center; color: #999;">No devices found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Upcoming Appointments -->
+        <div style="background: white; border: 1px solid #ccc; border-radius: 5px; padding: 20px;">
+            <h3 style="color: #5b80b2; margin: 0 0 15px 0; border-bottom: 2px solid #5b80b2; padding-bottom: 8px;">📅 Upcoming Appointments</h3>
+            <table style="width: 100%;">
+                <thead>
+                    <tr style="background: #f0f0f0;">
+                        <th style="text-align: left; padding: 8px; font-size: 12px;">Patient</th>
+                        <th style="text-align: left; padding: 8px; font-size: 12px;">Doctor</th>
+                        <th style="text-align: center; padding: 8px; font-size: 12px;">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in upcoming_appointments %}
+                    <tr style="border-bottom: 1px solid #e8e8e8;">
+                        <td style="padding: 8px; font-size: 13px;"><a href="{% url 'patient_detail' appointment.patient.patient_id %}">{{ appointment.patient.full_name }}</a></td>
+                        <td style="padding: 8px; font-size: 13px;"><a href="{% url 'physician_detail' appointment.provider.provider_id %}">Dr. {{ appointment.provider.full_name }}</a></td>
+                        <td style="padding: 8px; text-align: center; font-size: 12px;">{{ appointment.encounter_date|date:"M d, h:i A" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="padding: 20px; text-align: center; color: #999;">No upcoming appointments</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- User Distribution Chart -->
+    <div style="background: white; border: 1px solid #ccc; border-radius: 5px; padding: 20px; margin-top: 30px;">
+        <h3 style="color: #5b80b2; margin: 0 0 15px 0; border-bottom: 2px solid #5b80b2; padding-bottom: 8px;">📊 User Distribution by Role</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px;">
+            {% for role_data in user_roles %}
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px; border-radius: 5px; text-align: center; color: white;">
+                <div style="font-size: 28px; font-weight: bold;">{{ role_data.count }}</div>
+                <div style="font-size: 13px; margin-top: 5px; opacity: 0.9;">{{ role_data.role|title }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<script>
+// Track page view in Heap Analytics
+if (typeof heap !== 'undefined') {
+    heap.track('System Admin Dashboard Viewed', {
+        timestamp: new Date().toISOString(),
+        user_role: 'admin'
+    });
+}
+</script>
+{% endblock %}
