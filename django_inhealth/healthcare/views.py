@@ -76,7 +76,25 @@ def user_register(request):
 
 @login_required
 def index(request):
-    """Dashboard/Home view"""
+    """Dashboard/Home view - redirects to role-specific dashboard"""
+    try:
+        user_role = request.user.profile.role
+
+        # Redirect based on user role
+        if user_role == 'patient':
+            return redirect('patient_dashboard')
+        elif user_role == 'doctor':
+            return redirect('provider_dashboard')
+        elif user_role == 'nurse':
+            return redirect('nurse_dashboard')
+        elif user_role == 'office_admin':
+            return redirect('admin_dashboard')
+        elif user_role == 'admin':
+            return redirect('system_admin_dashboard')
+    except (AttributeError, Exception):
+        pass
+
+    # Fallback: show generic dashboard for users without a specific role
     context = {
         'total_hospitals': Hospital.objects.filter(is_active=True).count(),
         'total_patients': Patient.objects.filter(is_active=True).count(),
