@@ -2642,6 +2642,25 @@ def patient_dashboard(request):
         is_active=True
     ).order_by('-severity', 'allergen')
 
+    # Recent doctor's notes from encounters
+    recent_doctor_notes = Encounter.objects.filter(
+        patient=patient,
+        notes__isnull=False,
+        notes__gt=''
+    ).exclude(notes='').select_related('provider').order_by('-encounter_date')[:5]
+
+    # Recent treatment plans from encounters
+    recent_treatment_plans = Encounter.objects.filter(
+        patient=patient,
+        treatment_plan__isnull=False,
+        treatment_plan__gt=''
+    ).exclude(treatment_plan='').select_related('provider').order_by('-encounter_date')[:5]
+
+    # Recent diagnoses
+    recent_diagnoses = Diagnosis.objects.filter(
+        encounter__patient=patient
+    ).select_related('encounter__provider', 'diagnosed_by').order_by('-diagnosed_at')[:5]
+
     context = {
         'patient': patient,
         'stats': stats,
@@ -2652,6 +2671,9 @@ def patient_dashboard(request):
         'recent_lab_tests': recent_lab_tests,
         'pending_billings': pending_billings,
         'allergies': allergies,
+        'recent_doctor_notes': recent_doctor_notes,
+        'recent_treatment_plans': recent_treatment_plans,
+        'recent_diagnoses': recent_diagnoses,
     }
 
     return render(request, 'healthcare/patients/dashboard.html', context)
