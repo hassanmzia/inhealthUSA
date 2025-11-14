@@ -134,8 +134,8 @@ def patient_list(request):
                 messages.error(request, f'Error creating patient profile: {str(e)}. Please contact administration.')
                 return redirect('index')
 
-    # Only doctors, nurses, and admins can see the full patient list
-    if not (is_doctor(request.user) or is_nurse(request.user) or is_office_admin(request.user)):
+    # Only doctors, nurses, office admins, and system admins can see the full patient list
+    if not (is_doctor(request.user) or is_nurse(request.user) or is_office_admin(request.user) or is_admin(request.user)):
         messages.error(request, 'You do not have permission to view the patient list.')
         return redirect('index')
 
@@ -779,8 +779,8 @@ def physician_list(request):
         messages.error(request, 'You do not have permission to view the physician list.')
         return redirect('index')
 
-    # Only office admins and nurses can see the full physician list
-    if not (is_office_admin(request.user) or is_nurse(request.user)):
+    # Only office admins, nurses, and system admins can see the full physician list
+    if not (is_office_admin(request.user) or is_nurse(request.user) or is_admin(request.user)):
         messages.error(request, 'You do not have permission to view the physician list.')
         return redirect('index')
 
