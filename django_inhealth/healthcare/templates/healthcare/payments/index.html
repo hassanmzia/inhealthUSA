@@ -1,6 +1,6 @@
 {% extends 'healthcare/base.html' %}
-{% block title %}Payment History - {{ patient.full_name }} - InHealth EHR{% endblock %}
-{% block breadcrumbs %}&rsaquo; <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo; Payment History{% endblock %}
+{% block title %}{% if is_system_admin_view %}All Payments - System Admin{% else %}Payment History - {{ patient.full_name }}{% endif %} - InHealth EHR{% endblock %}
+{% block breadcrumbs %}{% if is_system_admin_view %}&rsaquo; All Payments{% else %}&rsaquo; <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo; Payment History{% endif %}{% endblock %}
 
 {% block content %}
 <style>
@@ -302,12 +302,22 @@
 
 <div class="detail-header">
     <div>
+        {% if is_system_admin_view %}
+        <h1>All Payment Records</h1>
+        <div class="meta">
+            <strong>System-Wide View:</strong> All patients |
+            <strong>Total Payments:</strong> ${{ stats.total_payments|floatformat:2 }} ({{ stats.payment_count }} payments) |
+            <strong>Pending:</strong> ${{ stats.pending_payments|floatformat:2 }}
+        </div>
+        <a href="{% url 'system_admin_dashboard' %}" class="button" style="color: white;">← Back to Dashboard</a>
+        {% else %}
         <h1>Payment History</h1>
         <div class="meta">
             <strong>Patient:</strong> {{ patient.full_name }} |
             <strong>Patient ID:</strong> {{ patient.patient_id }}
         </div>
         <a href="{% url 'patient_detail' patient.patient_id %}" class="button" style="color: white;">← Back to Patient</a>
+        {% endif %}
     </div>
 </div>
 
@@ -316,17 +326,24 @@
 <div class="summary-card">
     <div class="summary-grid">
         <div class="summary-item">
-            <div class="summary-label">Total Payments</div>
-            <div class="summary-value">{{ payments|length }}</div>
+            <div class="summary-label">{% if is_system_admin_view %}Completed Payments{% else %}Total Payments{% endif %}</div>
+            <div class="summary-value">{{ stats.payment_count|default:payments|length }}</div>
         </div>
         <div class="summary-item">
             <div class="summary-label">Total Amount Paid</div>
-            <div class="summary-value">${{ total_paid|floatformat:2|default:"0.00" }}</div>
+            <div class="summary-value">${{ stats.total_payments|floatformat:2|default:"0.00" }}</div>
         </div>
+        {% if is_system_admin_view %}
+        <div class="summary-item">
+            <div class="summary-label">Pending Payments</div>
+            <div class="summary-value" style="font-size:20px">${{ stats.pending_payments|floatformat:2 }}</div>
+        </div>
+        {% else %}
         <div class="summary-item">
             <div class="summary-label">Last Payment</div>
             <div class="summary-value" style="font-size:20px">{{ payments.0.payment_date|date:"M d, Y" }}</div>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endif %}
@@ -368,7 +385,11 @@
         </div>
         <div class="filter-actions">
             <button type="submit" class="button-primary">Apply Filters</button>
+            {% if is_system_admin_view %}
+            <button type="reset" class="button-secondary" onclick="window.location.href='{% url 'all_payments_list' %}'">Clear Filters</button>
+            {% else %}
             <button type="reset" class="button-secondary" onclick="window.location.href='{% url 'patient_payment_list' patient.patient_id %}'">Clear Filters</button>
+            {% endif %}
         </div>
     </form>
 </div>
@@ -387,6 +408,16 @@
             </div>
 
             <div class="payment-details">
+                {% if is_system_admin_view %}
+                <div class="payment-detail">
+                    <span class="detail-label">Patient</span>
+                    <span class="detail-value">
+                        <a href="{% url 'patient_detail' payment.patient.patient_id %}" style="color:var(--link-fg);font-weight:600">
+                            {{ payment.patient.full_name }}
+                        </a>
+                    </span>
+                </div>
+                {% endif %}
                 <div class="payment-detail">
                     <span class="detail-label">Payment Date</span>
                     <span class="detail-value">{{ payment.payment_date|date:"F d, Y" }}</span>
@@ -399,9 +430,15 @@
                 <div class="payment-detail">
                     <span class="detail-label">Invoice</span>
                     <span class="detail-value">
+                        {% if is_system_admin_view %}
+                        <a href="{% url 'patient_billing_detail' payment.patient.patient_id payment.billing.billing_id %}" style="color:var(--link-fg);font-weight:600">
+                            #{{ payment.billing.billing_id }}
+                        </a>
+                        {% else %}
                         <a href="{% url 'patient_billing_detail' patient.patient_id payment.billing.billing_id %}" style="color:var(--link-fg);font-weight:600">
                             #{{ payment.billing.billing_id }}
                         </a>
+                        {% endif %}
                     </span>
                 </div>
                 {% endif %}
@@ -416,7 +453,11 @@
 
         <div class="payment-actions">
             <span class="status-badge status-{{ payment.status|lower }}">{{ payment.status }}</span>
+            {% if is_system_admin_view %}
+            <a href="{% url 'patient_payment_detail' payment.patient.patient_id payment.payment_id %}" class="button-primary">View Receipt</a>
+            {% else %}
             <a href="{% url 'patient_payment_detail' patient.patient_id payment.payment_id %}" class="button-primary">View Receipt</a>
+            {% endif %}
         </div>
     </div>
     {% endfor %}

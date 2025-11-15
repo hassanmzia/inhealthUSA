@@ -1688,6 +1688,66 @@ def patient_payment_list(request, patient_id):
 
 
 @login_required
+def all_billings_list(request):
+    """Display all billing information across all patients - system admin view"""
+    # Get all billings with related data
+    billings = Billing.objects.select_related('patient', 'encounter').prefetch_related('billing_items', 'payments').order_by('-billing_date')
+
+    # Calculate summary statistics
+    total_billed = billings.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    total_paid = billings.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
+    total_due = billings.aggregate(Sum('amount_due'))['amount_due__sum'] or 0
+
+    # Count by status
+    pending_count = billings.filter(status='Pending').count()
+    paid_count = billings.filter(status='Paid').count()
+    partially_paid_count = billings.filter(status='Partially Paid').count()
+
+    context = {
+        'billings': billings,
+        'total_billed': total_billed,
+        'total_paid': total_paid,
+        'total_due': total_due,
+        'pending_count': pending_count,
+        'paid_count': paid_count,
+        'partially_paid_count': partially_paid_count,
+        'is_system_admin_view': True,
+    }
+
+    return render(request, 'healthcare/billing/index.html', context)
+
+
+@login_required
+def all_payments_list(request):
+    """Display all payment history across all patients - system admin view"""
+    # Get all payments with related data
+    payments = Payment.objects.select_related('patient', 'billing').order_by('-payment_date')
+
+    # Calculate statistics
+    completed_payments = payments.filter(status='Completed')
+    pending_payments = payments.filter(status='Pending')
+    failed_payments = payments.filter(status='Failed')
+
+    stats = {
+        'total_payments': completed_payments.aggregate(Sum('amount'))['amount__sum'] or 0,
+        'payment_count': completed_payments.count(),
+        'pending_payments': pending_payments.aggregate(Sum('amount'))['amount__sum'] or 0,
+        'pending_count': pending_payments.count(),
+        'failed_payments': failed_payments.aggregate(Sum('amount'))['amount__sum'] or 0,
+        'failed_count': failed_payments.count(),
+        'last_payment_date': completed_payments.first().payment_date if completed_payments.exists() else None,
+    }
+
+    context = {
+        'payments': payments,
+        'stats': stats,
+        'is_system_admin_view': True,
+    }
+
+    return render(request, 'healthcare/payments/index.html', context)
+
+
+@login_required
 @require_patient_access
 def patient_payment_detail(request, patient_id, payment_id):
     """Display payment receipt - with role-based access control"""
