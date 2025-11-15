@@ -40,6 +40,12 @@ class UserProfile(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='patient')
     phone = models.CharField(max_length=20, blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
+
+    # Multi-Factor Authentication fields
+    mfa_enabled = models.BooleanField(default=False, help_text="Enable Two-Factor Authentication")
+    mfa_secret = models.CharField(max_length=32, blank=True, null=True, help_text="TOTP Secret Key")
+    backup_codes = models.JSONField(default=list, blank=True, help_text="Backup codes for MFA recovery")
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

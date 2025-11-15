@@ -34,3 +34,7 @@ python-dotenv==1.0.1
 
 # SMS Messaging
 twilio==9.0.4
+
+# Multi-Factor Authentication
+pyotp==2.9.0
+qrcode==7.4.2
