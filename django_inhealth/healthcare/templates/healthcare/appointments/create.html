@@ -1,16 +1,182 @@
 {% extends 'healthcare/base.html' %}
 {% block title %}Schedule Appointment - InHealth EHR{% endblock %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'appointment_list' %}">Appointments</a> &rsaquo; Schedule New Appointment{% endblock %}
 {% block content %}
-<div class="px-4 sm:px-0 max-w-2xl mx-auto">
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">Schedule New Appointment</h1>
-    <div class="bg-white shadow sm:rounded-lg p-6">
-        <form method="POST">
-            {% csrf_token %}
-            <p class="text-sm text-gray-500 mb-4">Feature coming soon. Use the Django admin panel at <a href="/admin/" class="text-medical-blue">/admin/</a> to create appointments.</p>
-            <a href="{% url 'appointment_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                Back to Appointments
-            </a>
-        </form>
-    </div>
+<style>
+.form-header {
+    background: white;
+    border: 1px solid var(--hairline-color);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.form-header h1 {
+    margin: 0 0 8px 0;
+    font-size: 28px;
+    font-weight: 300;
+}
+
+.form-header .description {
+    font-size: 13px;
+    color: #666;
+}
+
+.form-section {
+    background: white;
+    border: 1px solid var(--hairline-color);
+    border-radius: 4px;
+    padding: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-row.full-width {
+    grid-template-columns: 1fr;
+}
+
+.form-field {
+    margin-bottom: 0;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--body-fg);
+}
+
+.form-field label.required::after {
+    content: ' *';
+    color: var(--error-fg);
+}
+
+.form-field input[type="text"],
+.form-field input[type="date"],
+.form-field input[type="datetime-local"],
+.form-field select,
+.form-field textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(65, 118, 144, 0.1);
+}
+
+.submit-row {
+    background: var(--darkened-bg);
+    padding: 15px 20px;
+    margin: -20px -20px -20px -20px;
+    margin-top: 20px;
+    border-top: 1px solid var(--hairline-color);
+    text-align: right;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+</style>
+
+<div class="form-header">
+    <h1>Schedule New Appointment</h1>
+    <div class="description">Create a new patient appointment</div>
 </div>
+
+<form method="POST" class="form-section">
+    {% csrf_token %}
+
+    <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 16px; color: var(--primary);">Appointment Information</h2>
+
+    <div class="form-row">
+        <div class="form-field">
+            <label class="required">Patient</label>
+            <select name="patient_id" required>
+                <option value="">Select Patient</option>
+                {% for patient in patients %}
+                <option value="{{ patient.patient_id }}">{{ patient.full_name }} - DOB: {{ patient.date_of_birth|date:"M d, Y" }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-field">
+            <label class="required">Provider</label>
+            <select name="provider_id" required>
+                <option value="">Select Provider</option>
+                {% for physician in physicians %}
+                <option value="{{ physician.provider_id }}">Dr. {{ physician.full_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-field">
+            <label>Department</label>
+            <select name="department_id">
+                <option value="">No Department</option>
+                {% for department in departments %}
+                <option value="{{ department.department_id }}">{{ department.department_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-field">
+            <label class="required">Date & Time</label>
+            <input type="datetime-local" name="encounter_date" required>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-field">
+            <label class="required">Type</label>
+            <select name="encounter_type" required>
+                <option value="">Select Type</option>
+                <option value="Office Visit">Office Visit</option>
+                <option value="Follow-up">Follow-up</option>
+                <option value="Annual Physical">Annual Physical</option>
+                <option value="Urgent Care">Urgent Care</option>
+                <option value="Consultation">Consultation</option>
+                <option value="Telemedicine">Telemedicine</option>
+                <option value="Emergency">Emergency</option>
+                <option value="Procedure">Procedure</option>
+                <option value="Lab Review">Lab Review</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <label class="required">Status</label>
+            <select name="status" required>
+                <option value="Scheduled" selected>Scheduled</option>
+                <option value="Checked In">Checked In</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="No Show">No Show</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-row full-width">
+        <div class="form-field">
+            <label>Chief Complaint</label>
+            <textarea name="chief_complaint" rows="3" placeholder="Reason for visit..."></textarea>
+        </div>
+    </div>
+
+    <div class="submit-row">
+        <a href="{% url 'appointment_list' %}" class="button button-secondary">Cancel</a>
+        <button type="submit" class="button">Schedule Appointment</button>
+    </div>
+</form>
 {% endblock %}
