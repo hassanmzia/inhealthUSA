@@ -126,6 +126,10 @@ urlpatterns = [
     # Payment History (Generic)
     path('payment-history/', views.payment_history, name='payment_history'),
 
+    # All Billings and Payments (System Admin Views)
+    path('all-billings/', views.all_billings_list, name='all_billings_list'),
+    path('all-payments/', views.all_payments_list, name='all_payments_list'),
+
     # Message URLs
     path('messages/inbox/', views.message_inbox, name='message_inbox'),
     path('messages/sent/', views.message_sent, name='message_sent'),

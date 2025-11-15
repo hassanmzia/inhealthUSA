@@ -1,6 +1,6 @@
 {% extends 'healthcare/base.html' %}
-{% block title %}Billing Information - {{ patient.full_name }} - InHealth EHR{% endblock %}
-{% block breadcrumbs %}&rsaquo; <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo; Billing Information{% endblock %}
+{% block title %}{% if is_system_admin_view %}All Billings - System Admin{% else %}Billing Information - {{ patient.full_name }}{% endif %} - InHealth EHR{% endblock %}
+{% block breadcrumbs %}{% if is_system_admin_view %}&rsaquo; All Billings{% else %}&rsaquo; <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a> &rsaquo; Billing Information{% endif %}{% endblock %}
 
 {% block content %}
 <style>
@@ -316,12 +316,23 @@
 
 <div class="detail-header">
     <div>
+        {% if is_system_admin_view %}
+        <h1>All Billing Records</h1>
+        <div class="meta">
+            <strong>System-Wide View:</strong> All patients |
+            <strong>Total Billed:</strong> ${{ total_billed|floatformat:2 }} |
+            <strong>Total Paid:</strong> ${{ total_paid|floatformat:2 }} |
+            <strong>Total Due:</strong> ${{ total_due|floatformat:2 }}
+        </div>
+        <a href="{% url 'system_admin_dashboard' %}" class="button" style="color: white;">← Back to Dashboard</a>
+        {% else %}
         <h1>Billing Information</h1>
         <div class="meta">
             <strong>Patient:</strong> {{ patient.full_name }} |
             <strong>Patient ID:</strong> {{ patient.patient_id }}
         </div>
         <a href="{% url 'patient_detail' patient.patient_id %}" class="button" style="color: white;">← Back to Patient</a>
+        {% endif %}
     </div>
 </div>
 
@@ -355,7 +366,11 @@
         </div>
         <div class="filter-actions">
             <button type="submit" class="button-primary">Apply Filters</button>
+            {% if is_system_admin_view %}
+            <button type="reset" class="button-secondary" onclick="window.location.href='{% url 'all_billings_list' %}'">Clear Filters</button>
+            {% else %}
             <button type="reset" class="button-secondary" onclick="window.location.href='{% url 'patient_billing_list' patient.patient_id %}'">Clear Filters</button>
+            {% endif %}
         </div>
     </form>
 </div>
@@ -370,6 +385,9 @@
         <div class="billing-header">
             <div>
                 <div class="billing-number">Invoice #{{ billing.billing_id }}</div>
+                {% if is_system_admin_view %}
+                <div class="billing-date">Patient: <a href="{% url 'patient_detail' billing.patient.patient_id %}">{{ billing.patient.full_name }}</a></div>
+                {% endif %}
                 <div class="billing-date">Date: {{ billing.billing_date|date:"F d, Y" }}</div>
                 {% if billing.encounter %}
                     <div class="billing-date">Encounter: {{ billing.encounter.encounter_date|date:"F d, Y" }}</div>
@@ -425,7 +443,11 @@
         {% endif %}
 
         <div class="billing-summary">
+            {% if is_system_admin_view %}
+            <a href="{% url 'patient_billing_detail' billing.patient.patient_id billing.billing_id %}" class="button-primary">View Details</a>
+            {% else %}
             <a href="{% url 'patient_billing_detail' patient.patient_id billing.billing_id %}" class="button-primary">View Details</a>
+            {% endif %}
             <div>
                 {% if billing.amount_due > 0 %}
                     <span class="amount-label">Amount Due: </span>
