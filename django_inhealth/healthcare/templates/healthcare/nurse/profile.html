@@ -3,6 +3,17 @@
 {% block title %}Nurse Profile - InHealth EHR{% endblock %}
 
 {% block content %}
+<style>
+.profile-picture-section{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px}
+.profile-picture{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #417690;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.profile-picture-placeholder{width:120px;height:120px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:48px;color:#999;border:3px solid #ddd}
+.profile-picture-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.profile-picture-btn{padding:6px 12px;font-size:11px;background:#417690;color:white;border:none;border-radius:3px;cursor:pointer;text-decoration:none;display:inline-block}
+.profile-picture-btn:hover{background:#2c5364}
+.profile-picture-btn.delete{background:#dc3545}
+.profile-picture-btn.delete:hover{background:#c82333}
+</style>
+
 <div class="breadcrumbs">
     <a href="{% url 'index' %}">Home</a> &rsaquo;
     <a href="{% url 'nurse_dashboard' %}">Nurse Dashboard</a> &rsaquo;
@@ -17,6 +28,30 @@
         <div class="module">
             <h2>Personal Information</h2>
             <div style="padding: 20px;">
+                <!-- Profile Picture Section -->
+                <div class="profile-picture-section">
+                    {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture" class="profile-picture">
+                    {% else %}
+                        <div class="profile-picture-placeholder">👤</div>
+                    {% endif %}
+                    <div class="profile-picture-actions">
+                        <form method="post" action="{% url 'upload_profile_picture' %}" enctype="multipart/form-data" style="display:inline;">
+                            {% csrf_token %}
+                            <label for="id_profile_picture_nurse" class="profile-picture-btn" style="margin:0;cursor:pointer;">
+                                {% if user.profile.profile_picture %}Change{% else %}Upload{% endif %}
+                            </label>
+                            <input type="file" id="id_profile_picture_nurse" name="profile_picture" accept="image/*" style="display:none;" onchange="this.form.submit()">
+                        </form>
+                        {% if user.profile.profile_picture %}
+                        <form method="post" action="{% url 'delete_profile_picture' %}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete your profile picture?');">
+                            {% csrf_token %}
+                            <button type="submit" class="profile-picture-btn delete">Remove</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+
                 <div style="margin-bottom: 15px;">
                     <strong>Name:</strong><br>
                     {{ user.first_name }} {{ user.last_name }}

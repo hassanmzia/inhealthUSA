@@ -4465,8 +4465,10 @@ def upload_profile_picture(request):
     # Redirect back to appropriate profile based on user role
     if user_profile.role == 'patient':
         return redirect('patient_profile')
-    elif user_profile.role in ['doctor', 'nurse']:
+    elif user_profile.role == 'doctor':
         return redirect('provider_profile')
+    elif user_profile.role == 'nurse':
+        return redirect('nurse_profile')
     elif user_profile.role == 'office_admin':
         return redirect('office_admin_dashboard')
     elif user_profile.role == 'admin':
@@ -4498,8 +4500,10 @@ def delete_profile_picture(request):
     # Redirect back to appropriate profile based on user role
     if user_profile.role == 'patient':
         return redirect('patient_profile')
-    elif user_profile.role in ['doctor', 'nurse']:
+    elif user_profile.role == 'doctor':
         return redirect('provider_profile')
+    elif user_profile.role == 'nurse':
+        return redirect('nurse_profile')
     elif user_profile.role == 'office_admin':
         return redirect('office_admin_dashboard')
     elif user_profile.role == 'admin':
