@@ -3905,6 +3905,68 @@ def admin_profile_edit(request):
     return render(request, 'healthcare/admin/profile_edit.html', context)
 
 
+@login_required
+@require_role('admin')
+def system_admin_profile(request):
+    """System Administrator profile view - shows admin's own information"""
+    system_admin_profile = request.user.profile
+
+    # Get recent activity statistics
+    stats = {
+        'total_users': User.objects.count(),
+        'total_patients': Patient.objects.filter(is_active=True).count(),
+        'total_providers': Provider.objects.filter(is_active=True).count(),
+        'total_appointments': Encounter.objects.count(),
+        'total_hospitals': Hospital.objects.filter(is_active=True).count(),
+        'pending_billings': Billing.objects.filter(
+            status__in=['Pending', 'Partially Paid']
+        ).count(),
+    }
+
+    # Recent actions
+    recent_users = User.objects.order_by('-date_joined')[:10]
+    recent_patients = Patient.objects.filter(is_active=True).order_by('-patient_id')[:10]
+    recent_appointments = Encounter.objects.select_related('patient', 'provider').order_by('-encounter_date')[:10]
+
+    context = {
+        'system_admin_profile': system_admin_profile,
+        'stats': stats,
+        'recent_users': recent_users,
+        'recent_patients': recent_patients,
+        'recent_appointments': recent_appointments,
+    }
+
+    return render(request, 'healthcare/system_admin/profile.html', context)
+
+
+@login_required
+@require_role('admin')
+def system_admin_profile_edit(request):
+    """Edit system administrator profile - admins can edit their own information"""
+    system_admin_profile = request.user.profile
+
+    if request.method == 'POST':
+        # Update user information
+        request.user.first_name = request.POST.get('first_name', request.user.first_name)
+        request.user.last_name = request.POST.get('last_name', request.user.last_name)
+        request.user.email = request.POST.get('email', request.user.email)
+        request.user.save()
+
+        # Update profile information
+        system_admin_profile.phone = request.POST.get('phone', system_admin_profile.phone)
+        system_admin_profile.date_of_birth = request.POST.get('date_of_birth') or system_admin_profile.date_of_birth
+        system_admin_profile.save()
+
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('system_admin_profile')
+
+    context = {
+        'system_admin_profile': system_admin_profile,
+    }
+
+    return render(request, 'healthcare/system_admin/profile_edit.html', context)
+
+
 # ============================================================================
 # NURSE VIEWS
 # ============================================================================
@@ -4617,7 +4679,7 @@ def upload_profile_picture(request):
     elif user_profile.role == 'office_admin':
         return redirect('admin_profile')
     elif user_profile.role == 'admin':
-        return redirect('admin_profile')
+        return redirect('system_admin_profile')
     else:
         return redirect('index')
 
@@ -4652,7 +4714,7 @@ def delete_profile_picture(request):
     elif user_profile.role == 'office_admin':
         return redirect('admin_profile')
     elif user_profile.role == 'admin':
-        return redirect('admin_profile')
+        return redirect('system_admin_profile')
     else:
         return redirect('index')
 
@@ -4846,7 +4908,7 @@ def change_password(request):
             elif user_profile.role == 'office_admin':
                 return redirect('admin_profile')
             elif user_profile.role == 'admin':
-                return redirect('admin_profile')
+                return redirect('system_admin_profile')
             else:
                 return redirect('index')
     else:
