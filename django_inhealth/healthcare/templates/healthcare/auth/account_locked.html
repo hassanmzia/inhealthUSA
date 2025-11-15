@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Locked - InHealth EHR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: #fff3cd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon svg {
+            width: 40px;
+            height: 40px;
+            color: #856404;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .info-box p {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 32px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .footer {
+            margin-top: 32px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+        </div>
+
+        <h1>Account Temporarily Locked</h1>
+
+        <p>
+            Your account has been temporarily locked due to multiple failed login attempts.
+            This is a security measure to protect your account.
+        </p>
+
+        <div class="info-box">
+            <p><strong>Why was my account locked?</strong></p>
+            <p>After {{ failure_limit|default:"5" }} failed login attempts, accounts are automatically locked for {{ cooloff_time|default:"1 hour" }} to prevent unauthorized access.</p>
+            <p style="margin-top: 12px;"><strong>What should I do?</strong></p>
+            <p>You can try again after the cooloff period expires. If you forgot your password, please use the password reset option.</p>
+        </div>
+
+        <a href="{% url 'password_reset' %}" class="btn">Reset Password</a>
+
+        <div class="footer">
+            <p>Need immediate access? <a href="#">Contact Support</a></p>
+            <p style="margin-top: 16px;">
+                <a href="{% url 'provider_select' %}">Return to Login</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

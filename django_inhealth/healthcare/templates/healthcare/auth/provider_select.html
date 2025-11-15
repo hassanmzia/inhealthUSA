@@ -1,0 +1,275 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Login Method - InHealth EHR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .provider-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .provider-btn {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .provider-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .provider-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            margin-right: 16px;
+            font-size: 24px;
+        }
+
+        .provider-icon.azure { background: #0078d4; color: white; }
+        .provider-icon.okta { background: #007dc1; color: white; }
+        .provider-icon.aws { background: #ff9900; color: white; }
+        .provider-icon.microsoft { background: #00a4ef; color: white; }
+        .provider-icon.saml { background: #34a853; color: white; }
+        .provider-icon.cac { background: #ea4335; color: white; }
+        .provider-icon.standard { background: #667eea; color: white; }
+
+        .provider-info {
+            flex: 1;
+        }
+
+        .provider-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .provider-desc {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .divider span {
+            padding: 0 16px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .provider-btn {
+                padding: 16px;
+            }
+
+            .provider-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .provider-name {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to InHealth EHR</h1>
+            <p>Choose your preferred login method</p>
+        </div>
+
+        <div class="provider-grid">
+            {% if azure_ad_enabled %}
+            <a href="{% url 'oidc_authentication_init' %}" class="provider-btn">
+                <div class="provider-icon azure">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.25 0L0 20.25h7.5L18.75 0h-7.5zM13.5 20.25L24 24V0L13.5 20.25z"/>
+                    </svg>
+                </div>
+                <div class="provider-info">
+                    <div class="provider-name">Azure Active Directory</div>
+                    <div class="provider-desc">Sign in with your Microsoft account</div>
+                </div>
+            </a>
+            {% endif %}
+
+            {% if okta_enabled %}
+            <a href="{% url 'okta_login' %}" class="provider-btn">
+                <div class="provider-icon okta">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                </div>
+                <div class="provider-info">
+                    <div class="provider-name">Okta SSO</div>
+                    <div class="provider-desc">Sign in through Okta</div>
+                </div>
+            </a>
+            {% endif %}
+
+            {% if aws_cognito_enabled %}
+            <a href="{% url 'cognito_login' %}" class="provider-btn">
+                <div class="provider-icon aws">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/>
+                    </svg>
+                </div>
+                <div class="provider-info">
+                    <div class="provider-name">AWS Cognito</div>
+                    <div class="provider-desc">Sign in with AWS credentials</div>
+                </div>
+            </a>
+            {% endif %}
+
+            {% if saml_enabled %}
+            <a href="{% url 'saml_login' %}" class="provider-btn">
+                <div class="provider-icon saml">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                    </svg>
+                </div>
+                <div class="provider-info">
+                    <div class="provider-name">SAML SSO</div>
+                    <div class="provider-desc">Enterprise SAML authentication</div>
+                </div>
+            </a>
+            {% endif %}
+
+            {% if cac_enabled %}
+            <a href="{% url 'cac_login' %}" class="provider-btn">
+                <div class="provider-icon cac">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"/>
+                    </svg>
+                </div>
+                <div class="provider-info">
+                    <div class="provider-name">CAC / PKI Certificate</div>
+                    <div class="provider-desc">Sign in with your smart card</div>
+                </div>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="divider">
+            <span>OR</span>
+        </div>
+
+        <a href="{% url 'login' %}" class="provider-btn">
+            <div class="provider-icon standard">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+            </div>
+            <div class="provider-info">
+                <div class="provider-name">Standard Login</div>
+                <div class="provider-desc">Sign in with email and password</div>
+            </div>
+        </a>
+
+        <div class="footer">
+            <p>Need help? <a href="#">Contact Support</a></p>
+            <p style="margin-top: 8px; font-size: 12px;">
+                &copy; 2024 InHealth EHR. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

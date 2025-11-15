@@ -1,0 +1,42 @@
+# Core Django dependencies (existing)
+Django>=4.2,<5.0
+pillow>=10.0.0
+pyotp>=2.8.0
+qrcode>=7.4.2
+django-recaptcha>=4.0.0
+python-decouple>=3.8
+twilio>=8.0.0
+
+# Enterprise Authentication packages
+django-allauth>=0.57.0
+mozilla-django-oidc>=4.0.0
+python3-saml>=1.16.0
+xmlsec>=1.3.13
+
+# OAuth2 and OIDC
+requests-oauthlib>=1.3.1
+PyJWT>=2.8.0
+cryptography>=41.0.0
+
+# Session and security enhancements
+django-session-security>=2.6.7
+django-axes>=6.1.1
+django-ratelimit>=4.1.0
+
+# CAC/PKI authentication
+pyOpenSSL>=23.2.0
+
+# Azure AD specific
+msal>=1.24.0
+
+# AWS Cognito support
+boto3>=1.28.0
+warrant-lite>=1.0.0
+
+# Multi-factor authentication
+django-otp>=1.3.0
+qrcode>=7.4.2
+
+# LDAP/Active Directory (optional)
+django-auth-ldap>=4.6.0
+python-ldap>=3.4.3

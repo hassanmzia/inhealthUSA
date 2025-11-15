@@ -48,6 +48,98 @@ def safe_decimal(value):
 
 
 # Authentication Views
+def provider_select(request):
+    """
+    Authentication provider selection page
+    Shows available enterprise SSO options
+    """
+    if request.user.is_authenticated:
+        return redirect('index')
+
+    from django.conf import settings
+
+    context = {
+        'azure_ad_enabled': bool(settings.OIDC_RP_CLIENT_ID),
+        'okta_enabled': settings.OKTA_ENABLED,
+        'aws_cognito_enabled': settings.AWS_COGNITO_ENABLED,
+        'saml_enabled': settings.SAML_ENABLED,
+        'cac_enabled': settings.CAC_ENABLED,
+    }
+
+    return render(request, 'healthcare/auth/provider_select.html', context)
+
+
+def cac_login(request):
+    """
+    CAC/PKI Certificate login handler
+    """
+    from django.conf import settings
+
+    if not settings.CAC_ENABLED:
+        messages.error(request, 'CAC authentication is not enabled.')
+        return redirect('provider_select')
+
+    # CAC authentication is handled by middleware
+    # If user reached here without being authenticated, CAC auth failed
+    if request.user.is_authenticated:
+        return redirect('index')
+    else:
+        messages.error(
+            request,
+            'CAC authentication failed. Please ensure your smart card is inserted '
+            'and your browser is configured for certificate authentication.'
+        )
+        return redirect('provider_select')
+
+
+def okta_login(request):
+    """
+    Okta SSO login - redirects to Okta OIDC flow
+    """
+    from django.conf import settings
+
+    if not settings.OKTA_ENABLED:
+        messages.error(request, 'Okta authentication is not enabled.')
+        return redirect('provider_select')
+
+    # Store provider for OIDC callback
+    request.session['auth_provider'] = 'okta'
+
+    # Redirect to OIDC authentication
+    return redirect('oidc_authentication_init')
+
+
+def cognito_login(request):
+    """
+    AWS Cognito login - redirects to Cognito OIDC flow
+    """
+    from django.conf import settings
+
+    if not settings.AWS_COGNITO_ENABLED:
+        messages.error(request, 'AWS Cognito authentication is not enabled.')
+        return redirect('provider_select')
+
+    # Store provider for OIDC callback
+    request.session['auth_provider'] = 'cognito'
+
+    # Redirect to OIDC authentication
+    return redirect('oidc_authentication_init')
+
+
+def account_locked(request):
+    """
+    Account locked page (django-axes)
+    """
+    from django.conf import settings
+
+    context = {
+        'failure_limit': settings.AXES_FAILURE_LIMIT,
+        'cooloff_time': f"{settings.AXES_COOLOFF_TIME} hour{'s' if settings.AXES_COOLOFF_TIME != 1 else ''}",
+    }
+
+    return render(request, 'healthcare/auth/account_locked.html', context)
+
+
 def user_login(request):
     """User login view"""
     if request.user.is_authenticated:

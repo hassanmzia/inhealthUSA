@@ -2,7 +2,14 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Authentication URLs
+    # Enterprise Authentication URLs
+    path('auth/', views.provider_select, name='provider_select'),
+    path('auth/cac/', views.cac_login, name='cac_login'),
+    path('auth/okta/', views.okta_login, name='okta_login'),
+    path('auth/cognito/', views.cognito_login, name='cognito_login'),
+    path('account-locked/', views.account_locked, name='account_locked'),
+
+    # Standard Authentication URLs
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
     path('register/', views.user_register, name='register'),
