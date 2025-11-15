@@ -52,6 +52,10 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Session security middleware - Auto-logout on inactivity
+    'healthcare.middleware.session_security.SessionSecurityMiddleware',
+    'healthcare.middleware.session_security.ConcurrentSessionMiddleware',
+    'healthcare.middleware.session_security.SecurityHeadersMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',  # Required for django-allauth
@@ -258,22 +262,52 @@ CAC_REQUIRE_CERT_FOR_LOGIN = os.environ.get('CAC_REQUIRE_CERT_FOR_LOGIN', 'False
 # SESSION SECURITY AND TOKEN STORAGE
 # ============================================================================
 
-# Enhanced session security
-SESSION_COOKIE_SECURE = not DEBUG  # Use secure cookies in production
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_AGE = int(os.environ.get('SESSION_COOKIE_AGE', '28800'))  # 8 hours
-SESSION_SAVE_EVERY_REQUEST = True
+# Session Engine - Database-backed sessions for tracking and security
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# Session Expiration - HIPAA Compliance (30 minutes recommended)
+# Override with environment variable: SESSION_COOKIE_AGE=1800
+SESSION_COOKIE_AGE = int(os.environ.get('SESSION_COOKIE_AGE', '1800'))  # 30 minutes (was 8 hours)
+
+# Session Inactivity Timeout - Auto-logout after no activity
+# This works with SessionSecurityMiddleware
+SESSION_INACTIVITY_TIMEOUT = int(os.environ.get('SESSION_INACTIVITY_TIMEOUT', '1800'))  # 30 minutes
+
+# Session Renewal Threshold - Renew session if activity within this time
+SESSION_RENEWAL_THRESHOLD = int(os.environ.get('SESSION_RENEWAL_THRESHOLD', '300'))  # 5 minutes
+
+# Session cookie name - Custom name for security through obscurity
+SESSION_COOKIE_NAME = 'inhealth_sid'
+
+# Enhanced session security settings
+SESSION_COOKIE_SECURE = not DEBUG  # Use secure cookies in production (HTTPS only)
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access (XSS protection)
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection (Lax = good balance, Strict = maximum security)
+SESSION_SAVE_EVERY_REQUEST = True  # Required for activity tracking and auto-renewal
 SESSION_EXPIRE_AT_BROWSER_CLOSE = os.environ.get('SESSION_EXPIRE_AT_BROWSER_CLOSE', 'False') == 'True'
 
-# CSRF Protection
-CSRF_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_USE_SESSIONS = True
+# Session timeout excluded paths (won't trigger auto-logout)
+SESSION_TIMEOUT_EXCLUDED_PATHS = [
+    '/auth/',
+    '/login/',
+    '/logout/',
+    '/static/',
+    '/media/',
+    '/password-reset/',
+    '/verify-email/',
+    '/resend-verification/',
+]
 
-# Secure token storage in database
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+# Prevent concurrent sessions - Optional (set to True for high security)
+PREVENT_CONCURRENT_SESSIONS = os.environ.get('PREVENT_CONCURRENT_SESSIONS', 'False') == 'True'
+
+# CSRF Protection - Enhanced
+CSRF_COOKIE_NAME = 'inhealth_csrftoken'
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_HTTPONLY = True  # Set to False if you need JavaScript access for AJAX
+CSRF_COOKIE_SAMESITE = 'Strict'  # Strict for maximum CSRF protection
+CSRF_COOKIE_AGE = 31449600  # 1 year
+CSRF_USE_SESSIONS = True
 
 # ============================================================================
 # MULTI-FACTOR AUTHENTICATION (MFA) ENFORCEMENT
