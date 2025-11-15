@@ -1,0 +1,27 @@
+# Security Packages for InHealth EHR
+# Install with: pip install -r security_requirements.txt
+
+# Content Security Policy
+django-csp==3.8
+
+# Security Middleware and Headers
+django-security==0.18.0
+
+# HTML Sanitization (XSS Prevention)
+bleach==6.1.0
+html5lib==1.1
+
+# SQL Injection Testing
+sqlparse==0.4.4
+
+# Security Scanner
+bandit==1.7.5  # Python security scanner
+
+# Additional Security Tools
+django-defender==0.9.5  # Rate limiting and blocking
+
+# Already installed (from previous requirements):
+# djangorestframework
+# django-cors-headers
+# django-ratelimit
+# cryptography

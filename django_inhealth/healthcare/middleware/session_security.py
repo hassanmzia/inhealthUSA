@@ -210,40 +210,108 @@ class ConcurrentSessionMiddleware:
 
 class SecurityHeadersMiddleware:
     """
-    Additional security headers middleware
-    Complements Django's built-in security
+    Comprehensive security headers middleware
+
+    Adds multiple security headers to prevent:
+    - XSS (Cross-Site Scripting)
+    - Clickjacking
+    - MIME sniffing
+    - Information leakage
+
+    Headers added:
+    - Content-Security-Policy (CSP)
+    - X-Content-Type-Options
+    - X-Frame-Options
+    - X-XSS-Protection
+    - Referrer-Policy
+    - Permissions-Policy
+    - Strict-Transport-Security (HSTS)
     """
 
     def __init__(self, get_response):
         self.get_response = get_response
+        from django.conf import settings
+        self.debug = settings.DEBUG
 
     def __call__(self, request):
         response = self.get_response(request)
 
-        # Add security headers
-        if not hasattr(response, 'has_header') or not response.has_header('X-Content-Type-Options'):
+        # X-Content-Type-Options: Prevent MIME sniffing
+        if not response.has_header('X-Content-Type-Options'):
             response['X-Content-Type-Options'] = 'nosniff'
 
-        if not hasattr(response, 'has_header') or not response.has_header('X-Frame-Options'):
+        # X-Frame-Options: Prevent clickjacking
+        if not response.has_header('X-Frame-Options'):
             response['X-Frame-Options'] = 'DENY'
 
-        if not hasattr(response, 'has_header') or not response.has_header('X-XSS-Protection'):
+        # X-XSS-Protection: Enable browser XSS filter
+        if not response.has_header('X-XSS-Protection'):
             response['X-XSS-Protection'] = '1; mode=block'
 
-        if not hasattr(response, 'has_header') or not response.has_header('Referrer-Policy'):
+        # Referrer-Policy: Control referrer information
+        if not response.has_header('Referrer-Policy'):
             response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
 
-        # Permissions Policy (formerly Feature-Policy)
-        if not hasattr(response, 'has_header') or not response.has_header('Permissions-Policy'):
+        # Permissions-Policy: Control browser features
+        if not response.has_header('Permissions-Policy'):
             response['Permissions-Policy'] = (
-                'geolocation=(), '
-                'microphone=(), '
+                'accelerometer=(), '
+                'ambient-light-sensor=(), '
+                'autoplay=(), '
                 'camera=(), '
-                'payment=(), '
-                'usb=(), '
-                'magnetometer=(), '
+                'encrypted-media=(), '
+                'fullscreen=(self), '
+                'geolocation=(), '
                 'gyroscope=(), '
-                'accelerometer=()'
+                'magnetometer=(), '
+                'microphone=(), '
+                'midi=(), '
+                'payment=(), '
+                'picture-in-picture=(), '
+                'usb=(), '
+                'vr=(), '
+                'xr-spatial-tracking=()'
             )
+
+        # Content-Security-Policy: XSS protection
+        # Only add if django-csp is not installed
+        if not response.has_header('Content-Security-Policy'):
+            csp_directives = [
+                "default-src 'self'",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.heapanalytics.com https://www.google.com https://www.gstatic.com",
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                "img-src 'self' data: https:",
+                "font-src 'self' data: https://fonts.gstatic.com",
+                "connect-src 'self' https://cdn.heapanalytics.com",
+                "frame-src 'self' https://www.google.com",
+                "object-src 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+                "frame-ancestors 'none'",
+            ]
+
+            # Add upgrade-insecure-requests in production
+            if not self.debug:
+                csp_directives.append("upgrade-insecure-requests")
+
+            response['Content-Security-Policy'] = '; '.join(csp_directives)
+
+        # Strict-Transport-Security (HSTS): Force HTTPS
+        # Only add in production (when not in debug mode)
+        if not self.debug and not response.has_header('Strict-Transport-Security'):
+            # 1 year, include subdomains, allow preloading
+            response['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
+
+        # Cross-Origin-Opener-Policy: Isolate browsing context
+        if not response.has_header('Cross-Origin-Opener-Policy'):
+            response['Cross-Origin-Opener-Policy'] = 'same-origin'
+
+        # Cross-Origin-Resource-Policy: Prevent resource leaks
+        if not response.has_header('Cross-Origin-Resource-Policy'):
+            response['Cross-Origin-Resource-Policy'] = 'same-origin'
+
+        # Cross-Origin-Embedder-Policy: Require CORP
+        if not response.has_header('Cross-Origin-Embedder-Policy'):
+            response['Cross-Origin-Embedder-Policy'] = 'require-corp'
 
         return response
