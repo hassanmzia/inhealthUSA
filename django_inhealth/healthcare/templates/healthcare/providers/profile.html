@@ -86,6 +86,7 @@
     <!-- Actions Section -->
     <div class="actions">
         <a href="{% url 'provider_profile_edit' %}" class="button" style="color: white;">Edit My Profile</a>
+        <a href="{% url 'change_password' %}" class="button" style="color: white; background: #6c757d;">🔑 Change Password</a>
         <a href="{% url 'mfa_setup' %}" class="button" style="color: white; background: {% if user.profile.mfa_enabled %}#5cb85c{% else %}#f0ad4e{% endif %};">
             {% if user.profile.mfa_enabled %}🔒 Manage 2FA{% else %}🔓 Enable 2FA{% endif %}
         </a>

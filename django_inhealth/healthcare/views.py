@@ -14,7 +14,7 @@ from .models import (
 )
 from .forms import (
     UserRegistrationForm, ProfilePictureForm, PasswordResetRequestForm,
-    PasswordResetConfirmForm, UsernameRecoveryForm
+    PasswordResetConfirmForm, UsernameRecoveryForm, UserPasswordChangeForm
 )
 from .permissions import (
     require_patient_access, require_patient_edit, require_role,
@@ -4668,3 +4668,43 @@ def username_recovery(request):
         form = UsernameRecoveryForm()
 
     return render(request, 'healthcare/auth/username_recovery.html', {'form': form})
+
+
+# ============================================================================
+# PASSWORD CHANGE VIEW (FOR AUTHENTICATED USERS)
+# ============================================================================
+
+@login_required
+def change_password(request):
+    """Allow authenticated users to change their password"""
+    if request.method == 'POST':
+        form = UserPasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            # Update session to prevent logout after password change
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, form.user)
+
+            messages.success(
+                request,
+                'Your password has been changed successfully!'
+            )
+
+            # Redirect back to appropriate profile based on user role
+            user_profile = request.user.profile
+            if user_profile.role == 'patient':
+                return redirect('patient_profile')
+            elif user_profile.role == 'doctor':
+                return redirect('provider_profile')
+            elif user_profile.role == 'nurse':
+                return redirect('nurse_profile')
+            elif user_profile.role == 'office_admin':
+                return redirect('office_admin_dashboard')
+            elif user_profile.role == 'admin':
+                return redirect('admin_profile')
+            else:
+                return redirect('index')
+    else:
+        form = UserPasswordChangeForm(user=request.user)
+
+    return render(request, 'healthcare/auth/change_password.html', {'form': form})
