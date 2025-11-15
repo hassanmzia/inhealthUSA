@@ -6,6 +6,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.db.models import Q, Sum, Count
 from django.utils import timezone
+from decimal import Decimal, InvalidOperation
 from .models import (
     Hospital, Patient, Provider, Encounter, VitalSign, Diagnosis,
     Prescription, Department, Allergy, MedicalHistory, SocialHistory,
@@ -23,6 +24,27 @@ from .permissions import (
     get_provider_for_user, can_view_patient, can_edit_patient,
     can_view_provider, can_edit_provider, can_edit_vitals
 )
+
+
+# Helper function to safely convert POST data to numeric types
+def safe_int(value):
+    """Safely convert value to int, return None if empty or invalid"""
+    if not value or value == '':
+        return None
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def safe_decimal(value):
+    """Safely convert value to Decimal, return None if empty or invalid"""
+    if not value or value == '':
+        return None
+    try:
+        return Decimal(str(value))
+    except (InvalidOperation, ValueError, TypeError):
+        return None
 
 
 # Authentication Views
@@ -372,18 +394,19 @@ def patient_vital_create(request, patient_id):
 
         vital_sign = VitalSign.objects.create(
             encounter=encounter,
-            temperature_value=request.POST.get('temperature_value') or None,
-            temperature_unit=request.POST.get('temperature_unit') or None,
-            blood_pressure_systolic=request.POST.get('blood_pressure_systolic') or None,
-            blood_pressure_diastolic=request.POST.get('blood_pressure_diastolic') or None,
-            heart_rate=request.POST.get('heart_rate') or None,
-            respiratory_rate=request.POST.get('respiratory_rate') or None,
-            oxygen_saturation=request.POST.get('oxygen_saturation') or None,
-            weight_value=request.POST.get('weight_value') or None,
-            weight_unit=request.POST.get('weight_unit') or None,
-            height_value=request.POST.get('height_value') or None,
-            height_unit=request.POST.get('height_unit') or None,
-            bmi=request.POST.get('bmi') or None,
+            temperature_value=safe_decimal(request.POST.get('temperature_value')),
+            temperature_unit=request.POST.get('temperature_unit') or 'F',
+            blood_pressure_systolic=safe_int(request.POST.get('blood_pressure_systolic')),
+            blood_pressure_diastolic=safe_int(request.POST.get('blood_pressure_diastolic')),
+            heart_rate=safe_int(request.POST.get('heart_rate')),
+            respiratory_rate=safe_int(request.POST.get('respiratory_rate')),
+            oxygen_saturation=safe_decimal(request.POST.get('oxygen_saturation')),
+            glucose=safe_decimal(request.POST.get('glucose')),
+            weight_value=safe_decimal(request.POST.get('weight_value')),
+            weight_unit=request.POST.get('weight_unit') or 'lbs',
+            height_value=safe_decimal(request.POST.get('height_value')),
+            height_unit=request.POST.get('height_unit') or 'in',
+            bmi=safe_decimal(request.POST.get('bmi')),
             notes=request.POST.get('notes', ''),
             recorded_at=timezone.now(),
         )
@@ -411,18 +434,19 @@ def patient_vital_edit(request, patient_id, vital_signs_id):
     vital_sign = get_object_or_404(VitalSign, vital_signs_id=vital_signs_id)
 
     if request.method == 'POST':
-        vital_sign.temperature_value = request.POST.get('temperature_value') or None
-        vital_sign.temperature_unit = request.POST.get('temperature_unit') or None
-        vital_sign.blood_pressure_systolic = request.POST.get('blood_pressure_systolic') or None
-        vital_sign.blood_pressure_diastolic = request.POST.get('blood_pressure_diastolic') or None
-        vital_sign.heart_rate = request.POST.get('heart_rate') or None
-        vital_sign.respiratory_rate = request.POST.get('respiratory_rate') or None
-        vital_sign.oxygen_saturation = request.POST.get('oxygen_saturation') or None
-        vital_sign.weight_value = request.POST.get('weight_value') or None
-        vital_sign.weight_unit = request.POST.get('weight_unit') or None
-        vital_sign.height_value = request.POST.get('height_value') or None
-        vital_sign.height_unit = request.POST.get('height_unit') or None
-        vital_sign.bmi = request.POST.get('bmi') or None
+        vital_sign.temperature_value = safe_decimal(request.POST.get('temperature_value'))
+        vital_sign.temperature_unit = request.POST.get('temperature_unit') or 'F'
+        vital_sign.blood_pressure_systolic = safe_int(request.POST.get('blood_pressure_systolic'))
+        vital_sign.blood_pressure_diastolic = safe_int(request.POST.get('blood_pressure_diastolic'))
+        vital_sign.heart_rate = safe_int(request.POST.get('heart_rate'))
+        vital_sign.respiratory_rate = safe_int(request.POST.get('respiratory_rate'))
+        vital_sign.oxygen_saturation = safe_decimal(request.POST.get('oxygen_saturation'))
+        vital_sign.glucose = safe_decimal(request.POST.get('glucose'))
+        vital_sign.weight_value = safe_decimal(request.POST.get('weight_value'))
+        vital_sign.weight_unit = request.POST.get('weight_unit') or 'lbs'
+        vital_sign.height_value = safe_decimal(request.POST.get('height_value'))
+        vital_sign.height_unit = request.POST.get('height_unit') or 'in'
+        vital_sign.bmi = safe_decimal(request.POST.get('bmi'))
         vital_sign.notes = request.POST.get('notes', '')
         vital_sign.save()
 
@@ -991,18 +1015,19 @@ def encounter_vital_create(request, encounter_id):
     if request.method == 'POST':
         vital_sign = VitalSign.objects.create(
             encounter=encounter,
-            temperature_value=request.POST.get('temperature_value') or None,
-            temperature_unit=request.POST.get('temperature_unit') or None,
-            blood_pressure_systolic=request.POST.get('blood_pressure_systolic') or None,
-            blood_pressure_diastolic=request.POST.get('blood_pressure_diastolic') or None,
-            heart_rate=request.POST.get('heart_rate') or None,
-            respiratory_rate=request.POST.get('respiratory_rate') or None,
-            oxygen_saturation=request.POST.get('oxygen_saturation') or None,
-            weight_value=request.POST.get('weight_value') or None,
-            weight_unit=request.POST.get('weight_unit') or None,
-            height_value=request.POST.get('height_value') or None,
-            height_unit=request.POST.get('height_unit') or None,
-            bmi=request.POST.get('bmi') or None,
+            temperature_value=safe_decimal(request.POST.get('temperature_value')),
+            temperature_unit=request.POST.get('temperature_unit') or 'F',
+            blood_pressure_systolic=safe_int(request.POST.get('blood_pressure_systolic')),
+            blood_pressure_diastolic=safe_int(request.POST.get('blood_pressure_diastolic')),
+            heart_rate=safe_int(request.POST.get('heart_rate')),
+            respiratory_rate=safe_int(request.POST.get('respiratory_rate')),
+            oxygen_saturation=safe_decimal(request.POST.get('oxygen_saturation')),
+            glucose=safe_decimal(request.POST.get('glucose')),
+            weight_value=safe_decimal(request.POST.get('weight_value')),
+            weight_unit=request.POST.get('weight_unit') or 'lbs',
+            height_value=safe_decimal(request.POST.get('height_value')),
+            height_unit=request.POST.get('height_unit') or 'in',
+            bmi=safe_decimal(request.POST.get('bmi')),
             notes=request.POST.get('notes', ''),
             recorded_at=timezone.now(),
         )
@@ -1032,18 +1057,19 @@ def encounter_vital_edit(request, encounter_id, vital_signs_id):
         return redirect('appointment_detail', encounter_id=encounter.encounter_id)
 
     if request.method == 'POST':
-        vital_sign.temperature_value = request.POST.get('temperature_value') or None
-        vital_sign.temperature_unit = request.POST.get('temperature_unit') or None
-        vital_sign.blood_pressure_systolic = request.POST.get('blood_pressure_systolic') or None
-        vital_sign.blood_pressure_diastolic = request.POST.get('blood_pressure_diastolic') or None
-        vital_sign.heart_rate = request.POST.get('heart_rate') or None
-        vital_sign.respiratory_rate = request.POST.get('respiratory_rate') or None
-        vital_sign.oxygen_saturation = request.POST.get('oxygen_saturation') or None
-        vital_sign.weight_value = request.POST.get('weight_value') or None
-        vital_sign.weight_unit = request.POST.get('weight_unit') or None
-        vital_sign.height_value = request.POST.get('height_value') or None
-        vital_sign.height_unit = request.POST.get('height_unit') or None
-        vital_sign.bmi = request.POST.get('bmi') or None
+        vital_sign.temperature_value = safe_decimal(request.POST.get('temperature_value'))
+        vital_sign.temperature_unit = request.POST.get('temperature_unit') or 'F'
+        vital_sign.blood_pressure_systolic = safe_int(request.POST.get('blood_pressure_systolic'))
+        vital_sign.blood_pressure_diastolic = safe_int(request.POST.get('blood_pressure_diastolic'))
+        vital_sign.heart_rate = safe_int(request.POST.get('heart_rate'))
+        vital_sign.respiratory_rate = safe_int(request.POST.get('respiratory_rate'))
+        vital_sign.oxygen_saturation = safe_decimal(request.POST.get('oxygen_saturation'))
+        vital_sign.glucose = safe_decimal(request.POST.get('glucose'))
+        vital_sign.weight_value = safe_decimal(request.POST.get('weight_value'))
+        vital_sign.weight_unit = request.POST.get('weight_unit') or 'lbs'
+        vital_sign.height_value = safe_decimal(request.POST.get('height_value'))
+        vital_sign.height_unit = request.POST.get('height_unit') or 'in'
+        vital_sign.bmi = safe_decimal(request.POST.get('bmi'))
         vital_sign.notes = request.POST.get('notes', '')
         vital_sign.save()
 
@@ -3999,17 +4025,17 @@ def nurse_vital_create(request, patient_id):
         # Create vital signs
         vital = VitalSign.objects.create(
             encounter=encounter,
-            temperature_value=request.POST.get('temperature_value') or None,
+            temperature_value=safe_decimal(request.POST.get('temperature_value')),
             temperature_unit=request.POST.get('temperature_unit') or 'F',
-            blood_pressure_systolic=request.POST.get('blood_pressure_systolic') or None,
-            blood_pressure_diastolic=request.POST.get('blood_pressure_diastolic') or None,
-            heart_rate=request.POST.get('heart_rate') or None,
-            respiratory_rate=request.POST.get('respiratory_rate') or None,
-            oxygen_saturation=request.POST.get('oxygen_saturation') or None,
-            glucose=request.POST.get('glucose') or None,
-            weight_value=request.POST.get('weight_value') or None,
+            blood_pressure_systolic=safe_int(request.POST.get('blood_pressure_systolic')),
+            blood_pressure_diastolic=safe_int(request.POST.get('blood_pressure_diastolic')),
+            heart_rate=safe_int(request.POST.get('heart_rate')),
+            respiratory_rate=safe_int(request.POST.get('respiratory_rate')),
+            oxygen_saturation=safe_decimal(request.POST.get('oxygen_saturation')),
+            glucose=safe_decimal(request.POST.get('glucose')),
+            weight_value=safe_decimal(request.POST.get('weight_value')),
             weight_unit=request.POST.get('weight_unit') or 'lbs',
-            height_value=request.POST.get('height_value') or None,
+            height_value=safe_decimal(request.POST.get('height_value')),
             height_unit=request.POST.get('height_unit') or 'in',
             notes=request.POST.get('notes') or None,
             recorded_by_nurse=nurse,
@@ -4057,19 +4083,20 @@ def nurse_vital_edit(request, vital_signs_id):
 
     if request.method == 'POST':
         # Update vital signs
-        vital.temperature_value = request.POST.get('temperature_value') or None
+        vital.temperature_value = safe_decimal(request.POST.get('temperature_value'))
         vital.temperature_unit = request.POST.get('temperature_unit') or 'F'
-        vital.blood_pressure_systolic = request.POST.get('blood_pressure_systolic') or None
-        vital.blood_pressure_diastolic = request.POST.get('blood_pressure_diastolic') or None
-        vital.heart_rate = request.POST.get('heart_rate') or None
-        vital.respiratory_rate = request.POST.get('respiratory_rate') or None
-        vital.oxygen_saturation = request.POST.get('oxygen_saturation') or None
-        vital.glucose = request.POST.get('glucose') or None
-        vital.weight_value = request.POST.get('weight_value') or None
+        vital.blood_pressure_systolic = safe_int(request.POST.get('blood_pressure_systolic'))
+        vital.blood_pressure_diastolic = safe_int(request.POST.get('blood_pressure_diastolic'))
+        vital.heart_rate = safe_int(request.POST.get('heart_rate'))
+        vital.respiratory_rate = safe_int(request.POST.get('respiratory_rate'))
+        vital.oxygen_saturation = safe_decimal(request.POST.get('oxygen_saturation'))
+        vital.glucose = safe_decimal(request.POST.get('glucose'))
+        vital.weight_value = safe_decimal(request.POST.get('weight_value'))
         vital.weight_unit = request.POST.get('weight_unit') or 'lbs'
-        vital.height_value = request.POST.get('height_value') or None
+        vital.height_value = safe_decimal(request.POST.get('height_value'))
         vital.height_unit = request.POST.get('height_unit') or 'in'
-        vital.notes = request.POST.get('notes') or None
+        vital.bmi = safe_decimal(request.POST.get('bmi'))
+        vital.notes = request.POST.get('notes') or ''
         vital.save()
 
         # Send automated alerts for critical vital signs
