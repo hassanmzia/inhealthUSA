@@ -76,9 +76,12 @@
                     <strong>Role:</strong><br>
                     Nurse
                 </div>
-                <div style="margin-top: 20px;">
-                    <a href="{% url 'nurse_profile_edit' %}" class="button" style="display: inline-block; padding: 10px 20px; background: #417690; color: white; text-decoration: none; border-radius: 3px;">
+                <div style="margin-top: 20px; display: flex; gap: 10px; flex-direction: column;">
+                    <a href="{% url 'nurse_profile_edit' %}" class="button" style="display: inline-block; padding: 10px 20px; background: #417690; color: white; text-decoration: none; border-radius: 3px; text-align: center;">
                         Edit Profile
+                    </a>
+                    <a href="{% url 'change_password' %}" class="button" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 3px; text-align: center;">
+                        🔑 Change Password
                     </a>
                 </div>
             </div>
