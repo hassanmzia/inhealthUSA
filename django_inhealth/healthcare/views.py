@@ -12,7 +12,10 @@ from .models import (
     FamilyHistory, LabTest, Message, Notification, InsuranceInformation,
     Billing, BillingItem, Payment, Device, UserProfile
 )
-from .forms import UserRegistrationForm, ProfilePictureForm
+from .forms import (
+    UserRegistrationForm, ProfilePictureForm, PasswordResetRequestForm,
+    PasswordResetConfirmForm, UsernameRecoveryForm
+)
 from .permissions import (
     require_patient_access, require_patient_edit, require_role,
     require_provider_access, require_provider_edit, require_vital_edit,
@@ -4503,3 +4506,161 @@ def delete_profile_picture(request):
         return redirect('admin_profile')
     else:
         return redirect('index')
+
+
+# ============================================================================
+# PASSWORD RESET AND ACCOUNT RECOVERY VIEWS
+# ============================================================================
+
+def password_reset_request(request):
+    """Request password reset via email"""
+    if request.user.is_authenticated:
+        return redirect('index')
+
+    if request.method == 'POST':
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+
+            # Find users with this email
+            users = User.objects.filter(email=email)
+
+            if users.exists():
+                for user in users:
+                    # Generate password reset token
+                    from django.contrib.auth.tokens import default_token_generator
+                    from django.utils.http import urlsafe_base64_encode
+                    from django.utils.encoding import force_bytes
+                    from django.core.mail import send_mail
+                    from django.template.loader import render_to_string
+                    from django.conf import settings
+
+                    token = default_token_generator.make_token(user)
+                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+                    # Build reset URL
+                    reset_url = request.build_absolute_uri(
+                        f'/password-reset/{uid}/{token}/'
+                    )
+
+                    # Send password reset email
+                    subject = 'Password Reset Request - InHealth EHR'
+                    message = render_to_string('healthcare/email/password_reset_email.html', {
+                        'user': user,
+                        'reset_url': reset_url,
+                    })
+
+                    try:
+                        send_mail(
+                            subject,
+                            '',
+                            settings.DEFAULT_FROM_EMAIL,
+                            [user.email],
+                            html_message=message,
+                            fail_silently=False,
+                        )
+                    except Exception as e:
+                        messages.error(request, 'Failed to send password reset email. Please try again later.')
+                        return render(request, 'healthcare/auth/password_reset_request.html', {'form': form})
+
+            # Always show success message (don't reveal if email exists)
+            messages.success(
+                request,
+                'If an account exists with this email, a password reset link has been sent.'
+            )
+            return redirect('login')
+    else:
+        form = PasswordResetRequestForm()
+
+    return render(request, 'healthcare/auth/password_reset_request.html', {'form': form})
+
+
+def password_reset_confirm(request, uidb64, token):
+    """Confirm password reset with token"""
+    from django.contrib.auth.tokens import default_token_generator
+    from django.utils.http import urlsafe_base64_decode
+    from django.utils.encoding import force_str
+
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == 'POST':
+            form = PasswordResetConfirmForm(user, request.POST)
+            if form.is_valid():
+                form.save()
+                messages.success(
+                    request,
+                    'Your password has been reset successfully. You can now login with your new password.'
+                )
+                return redirect('login')
+        else:
+            form = PasswordResetConfirmForm(user)
+
+        context = {
+            'form': form,
+            'validlink': True,
+        }
+        return render(request, 'healthcare/auth/password_reset_confirm.html', context)
+    else:
+        messages.error(
+            request,
+            'This password reset link is invalid or has expired. Please request a new one.'
+        )
+        return redirect('password_reset_request')
+
+
+def username_recovery(request):
+    """Recover username via email"""
+    if request.user.is_authenticated:
+        return redirect('index')
+
+    if request.method == 'POST':
+        form = UsernameRecoveryForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+
+            # Find users with this email
+            users = User.objects.filter(email=email)
+
+            if users.exists():
+                # Get all usernames for this email
+                usernames = [user.username for user in users]
+
+                # Send username recovery email
+                from django.core.mail import send_mail
+                from django.template.loader import render_to_string
+                from django.conf import settings
+
+                subject = 'Username Recovery - InHealth EHR'
+                message = render_to_string('healthcare/email/username_recovery_email.html', {
+                    'usernames': usernames,
+                    'email': email,
+                })
+
+                try:
+                    send_mail(
+                        subject,
+                        '',
+                        settings.DEFAULT_FROM_EMAIL,
+                        [email],
+                        html_message=message,
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    messages.error(request, 'Failed to send username recovery email. Please try again later.')
+                    return render(request, 'healthcare/auth/username_recovery.html', {'form': form})
+
+            # Always show success message (don't reveal if email exists)
+            messages.success(
+                request,
+                'If an account exists with this email, your username(s) have been sent to you.'
+            )
+            return redirect('login')
+    else:
+        form = UsernameRecoveryForm()
+
+    return render(request, 'healthcare/auth/username_recovery.html', {'form': form})

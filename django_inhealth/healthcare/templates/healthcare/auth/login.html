@@ -314,6 +314,7 @@
                 </form>
 
                 <div class="password-reset-link">
+                    <p><a href="{% url 'password_reset_request' %}">🔐 Forgot password?</a> | <a href="{% url 'username_recovery' %}">🔑 Forgot username?</a></p>
                     <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
                     <p>Haven't received verification email? <a href="{% url 'resend_verification_email' %}">Resend verification</a></p>
                 </div>
