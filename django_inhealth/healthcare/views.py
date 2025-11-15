@@ -3182,6 +3182,9 @@ def system_admin_dashboard(request):
         # Financial Information
         'total_revenue': Billing.objects.filter(status='Paid').aggregate(total=Sum('amount_due'))['total'] or 0,
         'pending_payments': Billing.objects.filter(status='Pending').aggregate(total=Sum('amount_due'))['total'] or 0,
+        'total_billings': Billing.objects.count(),
+        'total_payments': Payment.objects.count(),
+        'unpaid_billings': Billing.objects.filter(status='Pending').count(),
 
         # System Analytics
         'total_messages': Message.objects.count(),
