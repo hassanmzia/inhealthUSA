@@ -1,0 +1,68 @@
+# InHealth EHR - Systemd Service File for Gunicorn
+# Save this file as: /etc/systemd/system/inhealth.service
+#
+# Then run:
+# sudo systemctl daemon-reload
+# sudo systemctl enable inhealth
+# sudo systemctl start inhealth
+# sudo systemctl status inhealth
+
+[Unit]
+Description=InHealth EHR Django Application
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+
+# Working directory - where manage.py is located
+WorkingDirectory=/home/user/inhealthUSA/django_inhealth
+
+# Environment variables
+Environment="PATH=/home/user/inhealthUSA/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="DJANGO_SETTINGS_MODULE=inhealth.settings"
+Environment="PYTHONUNBUFFERED=1"
+
+# Create runtime directory
+RuntimeDirectory=gunicorn
+RuntimeDirectoryMode=755
+
+# Gunicorn command
+ExecStart=/home/user/inhealthUSA/venv/bin/gunicorn \
+          --workers 4 \
+          --worker-class sync \
+          --bind 127.0.0.1:8000 \
+          --timeout 120 \
+          --keep-alive 5 \
+          --max-requests 1000 \
+          --max-requests-jitter 50 \
+          --access-logfile /var/log/inhealth/access.log \
+          --error-logfile /var/log/inhealth/error.log \
+          --log-level info \
+          --capture-output \
+          --enable-stdio-inheritance \
+          inhealth.wsgi:application
+
+# Reload on SIGHUP
+ExecReload=/bin/kill -s HUP $MAINPID
+
+# Process management
+KillMode=mixed
+KillSignal=SIGQUIT
+TimeoutStopSec=5
+
+# Security settings
+PrivateTmp=true
+NoNewPrivileges=true
+
+# Resource limits
+LimitNOFILE=65536
+
+# Restart policy
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
