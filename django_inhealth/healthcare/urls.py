@@ -203,6 +203,10 @@ urlpatterns = [
     # System Admin Dashboard
     path('system-admin/dashboard/', views.system_admin_dashboard, name='system_admin_dashboard'),
 
+    # System Admin Profile
+    path('system-admin/profile/', views.system_admin_profile, name='system_admin_profile'),
+    path('system-admin/profile/edit/', views.system_admin_profile_edit, name='system_admin_profile_edit'),
+
     # Admin Profile
     path('office-admin/profile/', views.admin_profile, name='admin_profile'),
     path('office-admin/profile/edit/', views.admin_profile_edit, name='admin_profile_edit'),

@@ -1,0 +1,255 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}System Administrator Profile - InHealth EHR{% endblock %}
+
+{% block content %}
+<style>
+.profile-picture-section{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px}
+.profile-picture{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #667eea;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.profile-picture-placeholder{width:120px;height:120px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:48px;color:#999;border:3px solid #ddd}
+.profile-picture-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.profile-picture-btn{padding:6px 12px;font-size:11px;background:#667eea;color:white;border:none;border-radius:3px;cursor:pointer;text-decoration:none;display:inline-block}
+.profile-picture-btn:hover{background:#5568d3}
+.profile-picture-btn.delete{background:#dc3545}
+.profile-picture-btn.delete:hover{background:#c82333}
+</style>
+
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'system_admin_dashboard' %}">System Admin Dashboard</a> &rsaquo;
+    My Profile
+</div>
+
+<div class="module">
+    <h1>System Administrator Profile</h1>
+
+    <!-- Profile Information -->
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin: 20px 0;">
+        <div class="module">
+            <h2>Personal Information</h2>
+            <div style="padding: 20px;">
+                <!-- Profile Picture Section -->
+                <div class="profile-picture-section">
+                    {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture" class="profile-picture">
+                    {% else %}
+                        <div class="profile-picture-placeholder">👤</div>
+                    {% endif %}
+                    <div class="profile-picture-actions">
+                        <form method="post" action="{% url 'upload_profile_picture' %}" enctype="multipart/form-data" style="display:inline;">
+                            {% csrf_token %}
+                            <label for="id_profile_picture_sysadmin" class="profile-picture-btn" style="margin:0;cursor:pointer;">
+                                {% if user.profile.profile_picture %}Change{% else %}Upload{% endif %}
+                            </label>
+                            <input type="file" id="id_profile_picture_sysadmin" name="profile_picture" accept="image/*" style="display:none;" onchange="this.form.submit()">
+                        </form>
+                        {% if user.profile.profile_picture %}
+                        <form method="post" action="{% url 'delete_profile_picture' %}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete your profile picture?');">
+                            {% csrf_token %}
+                            <button type="submit" class="profile-picture-btn delete">Remove</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <strong>Name:</strong><br>
+                    {{ user.first_name }} {{ user.last_name }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Username:</strong><br>
+                    {{ user.username }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Email:</strong><br>
+                    {{ user.email|default:"Not provided" }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Phone:</strong><br>
+                    {{ system_admin_profile.phone|default:"Not provided" }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Date of Birth:</strong><br>
+                    {{ system_admin_profile.date_of_birth|date:"M d, Y"|default:"Not provided" }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Role:</strong><br>
+                    System Administrator
+                </div>
+                <div style="margin-top: 20px; display: flex; gap: 10px; flex-direction: column;">
+                    <a href="{% url 'system_admin_profile_edit' %}" class="button" style="display: inline-block; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 3px; text-align: center;">
+                        Edit Profile
+                    </a>
+                    <a href="{% url 'change_password' %}" class="button" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 3px; text-align: center;">
+                        🔑 Change Password
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <!-- System Statistics -->
+            <div class="module">
+                <h2>System Overview</h2>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px;">
+                    <div style="text-align: center; padding: 15px; background: #e7f3ff; border-radius: 5px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #2196F3;">{{ stats.total_users }}</div>
+                        <div style="font-size: 12px; color: #666;">Total Users</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #e7ffe7; border-radius: 5px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #4caf50;">{{ stats.total_patients }}</div>
+                        <div style="font-size: 12px; color: #666;">Total Patients</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #ffe7f3; border-radius: 5px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #e91e63;">{{ stats.total_providers }}</div>
+                        <div style="font-size: 12px; color: #666;">Total Providers</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #fff3e7; border-radius: 5px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #ff9800;">{{ stats.total_hospitals }}</div>
+                        <div style="font-size: 12px; color: #666;">Total Hospitals</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #f3e7ff; border-radius: 5px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #9c27b0;">{{ stats.total_appointments }}</div>
+                        <div style="font-size: 12px; color: #666;">Total Appointments</div>
+                    </div>
+                    <div style="text-align: center; padding: 15px; background: #ffe7e7; border-radius: 5px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #f44336;">{{ stats.pending_billings }}</div>
+                        <div style="font-size: 12px; color: #666;">Pending Bills</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Users -->
+            <div class="module" style="margin-top: 20px;">
+                <h2>Recent Users</h2>
+                <table style="width: 100%; margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; padding: 10px; background: #f0f0f0;">Username</th>
+                            <th style="text-align: left; padding: 10px; background: #f0f0f0;">Email</th>
+                            <th style="text-align: left; padding: 10px; background: #f0f0f0;">Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for recent_user in recent_users %}
+                        <tr style="border-bottom: 1px solid #e8e8e8;">
+                            <td style="padding: 10px;">{{ recent_user.username }}</td>
+                            <td style="padding: 10px;">{{ recent_user.email }}</td>
+                            <td style="padding: 10px;">{{ recent_user.date_joined|date:"M d, Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" style="padding: 10px; text-align: center; color: #999;">No recent users</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 20px;">
+        <!-- Recent Patients -->
+        <div class="module">
+            <h2>Recent Patients</h2>
+            <table style="width: 100%; margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding: 10px; background: #f0f0f0;">Name</th>
+                        <th style="text-align: left; padding: 10px; background: #f0f0f0;">DOB</th>
+                        <th style="text-align: left; padding: 10px; background: #f0f0f0;">Primary Doctor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in recent_patients %}
+                    <tr style="border-bottom: 1px solid #e8e8e8;">
+                        <td style="padding: 10px;">
+                            <a href="{% url 'patient_detail' patient.patient_id %}">{{ patient.full_name }}</a>
+                        </td>
+                        <td style="padding: 10px;">{{ patient.date_of_birth|date:"M d, Y" }}</td>
+                        <td style="padding: 10px;">
+                            {% if patient.primary_doctor %}
+                                Dr. {{ patient.primary_doctor.full_name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" style="padding: 10px; text-align: center; color: #999;">No recent patients</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Appointments -->
+        <div class="module">
+            <h2>Recent Appointments</h2>
+            <table style="width: 100%; margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding: 10px; background: #f0f0f0;">Date</th>
+                        <th style="text-align: left; padding: 10px; background: #f0f0f0;">Patient</th>
+                        <th style="text-align: left; padding: 10px; background: #f0f0f0;">Provider</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in recent_appointments %}
+                    <tr style="border-bottom: 1px solid #e8e8e8;">
+                        <td style="padding: 10px;">{{ appointment.encounter_date|date:"M d, Y" }}</td>
+                        <td style="padding: 10px;">
+                            <a href="{% url 'patient_detail' appointment.patient.patient_id %}">{{ appointment.patient.full_name }}</a>
+                        </td>
+                        <td style="padding: 10px;">
+                            {% if appointment.provider %}
+                                Dr. {{ appointment.provider.full_name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" style="padding: 10px; text-align: center; color: #999;">No recent appointments</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="module" style="margin-top: 20px;">
+        <h2>Quick Links</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; padding: 20px;">
+            <a href="{% url 'system_admin_dashboard' %}" style="display: block; padding: 15px; text-align: center; background: white; border: 1px solid #e8e8e8; border-radius: 5px; text-decoration: none;">
+                <div style="font-size: 24px; margin-bottom: 5px;">📊</div>
+                <div>Dashboard</div>
+            </a>
+            <a href="{% url 'patient_list' %}" style="display: block; padding: 15px; text-align: center; background: white; border: 1px solid #e8e8e8; border-radius: 5px; text-decoration: none;">
+                <div style="font-size: 24px; margin-bottom: 5px;">👥</div>
+                <div>Patients</div>
+            </a>
+            <a href="{% url 'physician_list' %}" style="display: block; padding: 15px; text-align: center; background: white; border: 1px solid #e8e8e8; border-radius: 5px; text-decoration: none;">
+                <div style="font-size: 24px; margin-bottom: 5px;">⚕️</div>
+                <div>Providers</div>
+            </a>
+            <a href="{% url 'appointment_list' %}" style="display: block; padding: 15px; text-align: center; background: white; border: 1px solid #e8e8e8; border-radius: 5px; text-decoration: none;">
+                <div style="font-size: 24px; margin-bottom: 5px;">📅</div>
+                <div>Appointments</div>
+            </a>
+            <a href="{% url 'hospital_list' %}" style="display: block; padding: 15px; text-align: center; background: white; border: 1px solid #e8e8e8; border-radius: 5px; text-decoration: none;">
+                <div style="font-size: 24px; margin-bottom: 5px;">🏥</div>
+                <div>Hospitals</div>
+            </a>
+            <a href="/admin/" style="display: block; padding: 15px; text-align: center; background: white; border: 1px solid #e8e8e8; border-radius: 5px; text-decoration: none;">
+                <div style="font-size: 24px; margin-bottom: 5px;">🔐</div>
+                <div>Django Admin</div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
