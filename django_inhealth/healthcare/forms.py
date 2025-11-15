@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, SetPasswordForm
 from django.contrib.auth.models import User
 from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Checkbox
@@ -53,3 +53,61 @@ class ProfilePictureForm(forms.ModelForm):
                 raise forms.ValidationError('Invalid image type. Allowed types: JPEG, PNG, GIF, WebP')
 
         return picture
+
+
+class PasswordResetRequestForm(forms.Form):
+    """Form for requesting password reset via email"""
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your email address',
+            'autocomplete': 'email'
+        })
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if not User.objects.filter(email=email).exists():
+            # Don't reveal if email exists for security
+            pass
+        return email
+
+
+class PasswordResetConfirmForm(SetPasswordForm):
+    """Form for setting new password after reset"""
+    new_password1 = forms.CharField(
+        label="New Password",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter new password',
+            'autocomplete': 'new-password'
+        })
+    )
+    new_password2 = forms.CharField(
+        label="Confirm New Password",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm new password',
+            'autocomplete': 'new-password'
+        })
+    )
+
+
+class UsernameRecoveryForm(forms.Form):
+    """Form for recovering username via email"""
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your email address',
+            'autocomplete': 'email'
+        })
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if not User.objects.filter(email=email).exists():
+            # Don't reveal if email exists for security
+            pass
+        return email

@@ -21,6 +21,11 @@ urlpatterns = [
     path('profile/picture/upload/', views.upload_profile_picture, name='upload_profile_picture'),
     path('profile/picture/delete/', views.delete_profile_picture, name='delete_profile_picture'),
 
+    # Password Reset and Account Recovery URLs
+    path('password-reset/', views.password_reset_request, name='password_reset_request'),
+    path('password-reset/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
+    path('username-recovery/', views.username_recovery, name='username_recovery'),
+
     # Dashboard
     path('', views.index, name='index'),
 
