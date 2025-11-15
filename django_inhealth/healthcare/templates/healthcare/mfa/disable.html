@@ -1,0 +1,52 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Disable Two-Factor Authentication - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo; <a href="{% url 'mfa_setup' %}">Two-Factor Authentication</a> &rsaquo; Disable
+</div>
+
+<div class="module" style="max-width: 600px; margin: 0 auto;">
+    <h1 style="color: #417690; margin-bottom: 20px;">🔓 Disable Two-Factor Authentication</h1>
+
+    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+        <h3 style="color: #856404; margin: 0 0 10px 0;">⚠️ Warning</h3>
+        <p style="margin: 0; color: #856404;">
+            Disabling two-factor authentication will make your account less secure.
+            You will only need your password to login.
+        </p>
+    </div>
+
+    <div style="background: white; border: 1px solid #ddd; padding: 25px; border-radius: 5px; margin-bottom: 20px;">
+        <h3 style="margin: 0 0 15px 0;">Confirm Password</h3>
+        <p style="margin-bottom: 20px; color: #666;">
+            Please enter your password to confirm you want to disable two-factor authentication.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div style="margin-bottom: 20px;">
+                <label for="password" style="display: block; margin-bottom: 8px; font-weight: 600;">
+                    Password
+                </label>
+                <input type="password"
+                       name="password"
+                       id="password"
+                       required
+                       autofocus
+                       style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px;">
+            </div>
+
+            <div style="display: flex; gap: 15px;">
+                <button type="submit" class="button" style="background: #d9534f; color: white; padding: 12px 24px;">
+                    Disable 2FA
+                </button>
+                <a href="{% url 'mfa_setup' %}" class="button" style="background: #6c757d; color: white; padding: 12px 24px; display: inline-block;">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

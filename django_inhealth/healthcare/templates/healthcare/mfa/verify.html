@@ -1,0 +1,101 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Two-Factor Authentication - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="module" style="max-width: 500px; margin: 50px auto;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #417690; margin-bottom: 10px;">🔐 Two-Factor Authentication</h1>
+        <p style="color: #666; margin: 0;">Enter the verification code from your authenticator app</p>
+    </div>
+
+    <div style="background: white; border: 1px solid #ddd; padding: 30px; border-radius: 5px;">
+        <form method="post" id="mfaForm">
+            {% csrf_token %}
+            <input type="hidden" name="use_backup" id="useBackup" value="false">
+
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">
+                    Verification Code
+                </label>
+                <input type="text"
+                       name="token"
+                       id="tokenInput"
+                       maxlength="8"
+                       placeholder="000000"
+                       required
+                       autofocus
+                       style="width: 100%; padding: 15px; font-size: 24px; text-align: center; border: 2px solid #ddd; border-radius: 5px; letter-spacing: 5px; font-family: monospace;">
+                <small id="inputHelp" style="display: block; margin-top: 8px; color: #666; text-align: center;">
+                    Enter the 6-digit code from your authenticator app
+                </small>
+            </div>
+
+            <button type="submit"
+                    class="button"
+                    style="width: 100%; background: #417690; color: white; padding: 15px; font-size: 16px; font-weight: 600; border-radius: 5px;">
+                Verify
+            </button>
+        </form>
+
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center;">
+            <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">
+                Lost access to your authenticator?
+            </p>
+            <button onclick="toggleBackupMode()"
+                    id="backupToggle"
+                    class="button"
+                    style="background: #6c757d; color: white; padding: 8px 16px; font-size: 14px;">
+                Use Backup Code
+            </button>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="{% url 'login' %}" style="color: #417690; font-size: 14px; text-decoration: underline;">
+                ← Back to Login
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+let backupMode = false;
+
+function toggleBackupMode() {
+    backupMode = !backupMode;
+    const tokenInput = document.getElementById('tokenInput');
+    const inputHelp = document.getElementById('inputHelp');
+    const useBackupInput = document.getElementById('useBackup');
+    const toggleButton = document.getElementById('backupToggle');
+
+    if (backupMode) {
+        tokenInput.placeholder = 'XXXX-XXXX';
+        tokenInput.maxLength = 9;
+        inputHelp.textContent = 'Enter one of your backup codes (format: XXXX-XXXX)';
+        useBackupInput.value = 'true';
+        toggleButton.textContent = 'Use Authenticator Code';
+        toggleButton.style.background = '#417690';
+    } else {
+        tokenInput.placeholder = '000000';
+        tokenInput.maxLength = 8;
+        inputHelp.textContent = 'Enter the 6-digit code from your authenticator app';
+        useBackupInput.value = 'false';
+        toggleButton.textContent = 'Use Backup Code';
+        toggleButton.style.background = '#6c757d';
+    }
+    tokenInput.value = '';
+    tokenInput.focus();
+}
+
+// Auto-format backup code input
+document.getElementById('tokenInput').addEventListener('input', function(e) {
+    if (backupMode) {
+        let value = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+        if (value.length > 4) {
+            value = value.slice(0, 4) + '-' + value.slice(4);
+        }
+        e.target.value = value;
+    }
+});
+</script>
+{% endblock %}

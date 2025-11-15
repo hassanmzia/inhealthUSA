@@ -35,6 +35,18 @@ def user_login(request):
             password = form.cleaned_data.get('password')
             user = authenticate(username=username, password=password)
             if user is not None:
+                # Check if user has MFA enabled
+                try:
+                    user_profile = user.profile
+                    if user_profile.mfa_enabled and user_profile.mfa_secret:
+                        # Store user ID in session for MFA verification
+                        request.session['mfa_user_id'] = user.id
+                        # Redirect to MFA verification page
+                        return redirect('mfa_verify')
+                except:
+                    pass  # User doesn't have a profile, proceed with normal login
+
+                # Normal login without MFA
                 login(request, user)
                 messages.success(request, f'Welcome back, {username}!')
                 next_url = request.GET.get('next', 'index')
@@ -4090,3 +4102,209 @@ def nurse_vitals_charts(request):
     }
 
     return render(request, 'healthcare/nurse/vitals_charts.html', context)
+
+
+# ============================================================================
+# MULTI-FACTOR AUTHENTICATION (MFA) VIEWS
+# ============================================================================
+
+from .mfa_utils import (
+    generate_totp_secret, get_totp_uri, generate_qr_code,
+    verify_totp_token, generate_backup_codes, verify_backup_code
+)
+
+
+@login_required
+def mfa_setup(request):
+    """Setup MFA for user account"""
+    user_profile = request.user.profile
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'enable':
+            # Generate new secret
+            secret = generate_totp_secret()
+            request.session['mfa_temp_secret'] = secret
+
+            # Generate QR code
+            totp_uri = get_totp_uri(request.user, secret)
+            qr_code = generate_qr_code(totp_uri)
+
+            context = {
+                'qr_code': qr_code,
+                'secret': secret,
+                'step': 'verify',
+            }
+            return render(request, 'healthcare/mfa/setup.html', context)
+
+        elif action == 'verify':
+            # Verify the TOTP token
+            temp_secret = request.session.get('mfa_temp_secret')
+            token = request.POST.get('token', '').replace(' ', '')
+
+            if verify_totp_token(temp_secret, token):
+                # Enable MFA
+                user_profile.mfa_secret = temp_secret
+                user_profile.mfa_enabled = True
+
+                # Generate backup codes
+                backup_codes = generate_backup_codes(10)
+                user_profile.backup_codes = backup_codes
+                user_profile.save()
+
+                # Clear temporary secret
+                del request.session['mfa_temp_secret']
+
+                messages.success(request, 'Two-Factor Authentication has been enabled successfully!')
+
+                context = {
+                    'backup_codes': backup_codes,
+                    'step': 'complete',
+                }
+                return render(request, 'healthcare/mfa/setup.html', context)
+            else:
+                messages.error(request, 'Invalid verification code. Please try again.')
+                totp_uri = get_totp_uri(request.user, temp_secret)
+                qr_code = generate_qr_code(totp_uri)
+
+                context = {
+                    'qr_code': qr_code,
+                    'secret': temp_secret,
+                    'step': 'verify',
+                    'error': True,
+                }
+                return render(request, 'healthcare/mfa/setup.html', context)
+
+    context = {
+        'mfa_enabled': user_profile.mfa_enabled,
+        'step': 'initial',
+    }
+    return render(request, 'healthcare/mfa/setup.html', context)
+
+
+@login_required
+def mfa_disable(request):
+    """Disable MFA for user account"""
+    user_profile = request.user.profile
+
+    if request.method == 'POST':
+        password = request.POST.get('password')
+
+        # Verify password before disabling MFA
+        from django.contrib.auth import authenticate
+        user = authenticate(username=request.user.username, password=password)
+
+        if user:
+            user_profile.mfa_enabled = False
+            user_profile.mfa_secret = None
+            user_profile.backup_codes = []
+            user_profile.save()
+
+            messages.success(request, 'Two-Factor Authentication has been disabled.')
+            return redirect('patient_profile' if user_profile.is_patient else 'provider_profile')
+        else:
+            messages.error(request, 'Incorrect password. MFA was not disabled.')
+
+    return render(request, 'healthcare/mfa/disable.html')
+
+
+@login_required
+def mfa_verify(request):
+    """Verify MFA token during login"""
+    if request.method == 'POST':
+        token = request.POST.get('token', '').replace(' ', '')
+        use_backup = request.POST.get('use_backup') == 'true'
+
+        user_id = request.session.get('mfa_user_id')
+        if not user_id:
+            messages.error(request, 'Session expired. Please login again.')
+            return redirect('login')
+
+        try:
+            from django.contrib.auth.models import User
+            user = User.objects.get(id=user_id)
+            user_profile = user.profile
+
+            if use_backup:
+                # Verify backup code
+                if verify_backup_code(user_profile, token):
+                    # Log user in
+                    from django.contrib.auth import login
+                    login(request, user)
+
+                    # Clear MFA session
+                    del request.session['mfa_user_id']
+                    request.session['mfa_verified'] = True
+
+                    messages.success(request, f'Welcome back, {user.username}!')
+
+                    # Warn about remaining backup codes
+                    remaining = len(user_profile.backup_codes)
+                    if remaining <= 3:
+                        messages.warning(request, f'You have {remaining} backup codes remaining. Consider generating new codes.')
+
+                    return redirect('index')
+                else:
+                    messages.error(request, 'Invalid backup code.')
+            else:
+                # Verify TOTP token
+                if verify_totp_token(user_profile.mfa_secret, token):
+                    # Log user in
+                    from django.contrib.auth import login
+                    login(request, user)
+
+                    # Clear MFA session
+                    del request.session['mfa_user_id']
+                    request.session['mfa_verified'] = True
+
+                    messages.success(request, f'Welcome back, {user.username}!')
+                    return redirect('index')
+                else:
+                    messages.error(request, 'Invalid verification code.')
+
+        except User.DoesNotExist:
+            messages.error(request, 'User not found. Please login again.')
+            return redirect('login')
+
+    return render(request, 'healthcare/mfa/verify.html')
+
+
+@login_required
+def mfa_backup_codes(request):
+    """Manage backup codes"""
+    user_profile = request.user.profile
+
+    if not user_profile.mfa_enabled:
+        messages.error(request, 'MFA is not enabled on your account.')
+        return redirect('patient_profile' if user_profile.is_patient else 'provider_profile')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'regenerate':
+            password = request.POST.get('password')
+
+            # Verify password before regenerating
+            from django.contrib.auth import authenticate
+            user = authenticate(username=request.user.username, password=password)
+
+            if user:
+                backup_codes = generate_backup_codes(10)
+                user_profile.backup_codes = backup_codes
+                user_profile.save()
+
+                messages.success(request, 'New backup codes have been generated. Please save them in a secure location.')
+
+                context = {
+                    'backup_codes': backup_codes,
+                    'show_codes': True,
+                }
+                return render(request, 'healthcare/mfa/backup_codes.html', context)
+            else:
+                messages.error(request, 'Incorrect password.')
+
+    context = {
+        'backup_codes_count': len(user_profile.backup_codes),
+    }
+    return render(request, 'healthcare/mfa/backup_codes.html', context)

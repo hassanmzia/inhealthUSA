@@ -1,0 +1,149 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Two-Factor Authentication Setup - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo; Two-Factor Authentication Setup
+</div>
+
+<div class="module" style="max-width: 700px; margin: 0 auto;">
+    <h1 style="color: #417690; margin-bottom: 20px;">🔒 Two-Factor Authentication</h1>
+
+    {% if step == 'initial' %}
+        {% if mfa_enabled %}
+        <div style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="color: #0c5460; margin: 0 0 10px 0;">✓ Two-Factor Authentication is Enabled</h3>
+            <p style="margin: 0; color: #0c5460;">Your account is protected with two-factor authentication.</p>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <a href="{% url 'mfa_backup_codes' %}" class="button" style="background: #5b80b2; color: white;">
+                📋 Manage Backup Codes
+            </a>
+            <a href="{% url 'mfa_disable' %}" class="button" style="background: #d9534f; color: white;">
+                🔓 Disable 2FA
+            </a>
+            <a href="{% url 'patient_profile' %}" class="button" style="background: #6c757d; color: white;">
+                ← Back to Profile
+            </a>
+        </div>
+        {% else %}
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="color: #856404; margin: 0 0 10px 0;">⚠️ Two-Factor Authentication is Not Enabled</h3>
+            <p style="margin: 0; color: #856404;">Enable two-factor authentication to add an extra layer of security to your account.</p>
+        </div>
+
+        <div style="background: white; border: 1px solid #ddd; padding: 25px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 15px 0;">How it Works</h3>
+            <ol style="margin: 0; padding-left: 25px; line-height: 1.8;">
+                <li>Install an authenticator app on your phone (Google Authenticator, Authy, Microsoft Authenticator, etc.)</li>
+                <li>Scan the QR code we'll provide with your authenticator app</li>
+                <li>Enter the 6-digit code from your app to verify setup</li>
+                <li>Save your backup codes in a secure location</li>
+            </ol>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="enable">
+            <div style="display: flex; gap: 15px;">
+                <button type="submit" class="button" style="background: #417690; color: white; padding: 12px 24px;">
+                    🔐 Enable Two-Factor Authentication
+                </button>
+                <a href="{% url 'patient_profile' %}" class="button" style="background: #6c757d; color: white; padding: 12px 24px; display: inline-block;">
+                    Cancel
+                </a>
+            </div>
+        </form>
+        {% endif %}
+
+    {% elif step == 'verify' %}
+        <div style="background: white; border: 1px solid #ddd; padding: 25px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 20px 0;">Step 1: Scan QR Code</h3>
+            <p style="margin-bottom: 20px;">Open your authenticator app and scan this QR code:</p>
+
+            <div style="text-align: center; margin: 20px 0;">
+                <img src="{{ qr_code }}" alt="QR Code" style="max-width: 250px; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+            </div>
+
+            <p style="margin: 20px 0; text-align: center; font-size: 14px; color: #666;">
+                Or enter this key manually: <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 3px;">{{ secret }}</code>
+            </p>
+        </div>
+
+        <div style="background: white; border: 1px solid #ddd; padding: 25px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 20px 0;">Step 2: Verify Code</h3>
+            <p style="margin-bottom: 20px;">Enter the 6-digit code from your authenticator app:</p>
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="verify">
+                <div style="margin-bottom: 20px;">
+                    <input type="text"
+                           name="token"
+                           maxlength="6"
+                           pattern="\d{6}"
+                           placeholder="000000"
+                           required
+                           autofocus
+                           style="width: 150px; padding: 12px; font-size: 24px; text-align: center; border: 2px solid #ddd; border-radius: 5px; letter-spacing: 5px; font-family: monospace;">
+                </div>
+
+                <div style="display: flex; gap: 15px;">
+                    <button type="submit" class="button" style="background: #417690; color: white; padding: 12px 24px;">
+                        ✓ Verify and Enable
+                    </button>
+                    <a href="{% url 'mfa_setup' %}" class="button" style="background: #6c757d; color: white; padding: 12px 24px; display: inline-block;">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+    {% elif step == 'complete' %}
+        <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="color: #155724; margin: 0 0 10px 0;">✓ Two-Factor Authentication Enabled!</h3>
+            <p style="margin: 0; color: #155724;">Your account is now protected with two-factor authentication.</p>
+        </div>
+
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="color: #856404; margin: 0 0 15px 0;">📋 Important: Save Your Backup Codes</h3>
+            <p style="margin-bottom: 15px; color: #856404;">
+                These backup codes can be used to access your account if you lose your authenticator device.
+                Store them in a secure location. Each code can only be used once.
+            </p>
+
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 14px;">
+                {% for code in backup_codes %}
+                <div style="padding: 5px;">{{ code }}</div>
+                {% endfor %}
+            </div>
+
+            <button onclick="printCodes()" class="button" style="background: #5b80b2; color: white; margin-top: 15px; padding: 8px 16px;">
+                🖨️ Print Codes
+            </button>
+            <button onclick="copyCodes()" class="button" style="background: #5b80b2; color: white; margin-top: 15px; padding: 8px 16px;">
+                📋 Copy Codes
+            </button>
+        </div>
+
+        <a href="{% url 'patient_profile' %}" class="button" style="background: #417690; color: white; padding: 12px 24px; display: inline-block;">
+            ← Back to Profile
+        </a>
+    {% endif %}
+</div>
+
+<script>
+function printCodes() {
+    window.print();
+}
+
+function copyCodes() {
+    const codes = '{{ backup_codes|join:"\n" }}';
+    navigator.clipboard.writeText(codes).then(() => {
+        alert('Backup codes copied to clipboard!');
+    });
+}
+</script>
+{% endblock %}

@@ -7,6 +7,12 @@ urlpatterns = [
     path('logout/', views.user_logout, name='logout'),
     path('register/', views.user_register, name='register'),
 
+    # Multi-Factor Authentication URLs
+    path('mfa/setup/', views.mfa_setup, name='mfa_setup'),
+    path('mfa/disable/', views.mfa_disable, name='mfa_disable'),
+    path('mfa/verify/', views.mfa_verify, name='mfa_verify'),
+    path('mfa/backup-codes/', views.mfa_backup_codes, name='mfa_backup_codes'),
+
     # Dashboard
     path('', views.index, name='index'),
 

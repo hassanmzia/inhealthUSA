@@ -1,0 +1,116 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Backup Codes - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo; <a href="{% url 'mfa_setup' %}">Two-Factor Authentication</a> &rsaquo; Backup Codes
+</div>
+
+<div class="module" style="max-width: 700px; margin: 0 auto;">
+    <h1 style="color: #417690; margin-bottom: 20px;">📋 Backup Codes</h1>
+
+    {% if show_codes %}
+        <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="color: #155724; margin: 0 0 10px 0;">✓ New Backup Codes Generated</h3>
+            <p style="margin: 0; color: #155724;">Your old backup codes have been replaced with new ones.</p>
+        </div>
+
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="color: #856404; margin: 0 0 15px 0;">⚠️ Important: Save These Codes</h3>
+            <p style="margin-bottom: 15px; color: #856404;">
+                These backup codes can be used to access your account if you lose your authenticator device.
+                Store them in a secure location. Each code can only be used once.
+            </p>
+
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 14px;">
+                {% for code in backup_codes %}
+                <div style="padding: 5px;">{{ code }}</div>
+                {% endfor %}
+            </div>
+
+            <div style="margin-top: 15px;">
+                <button onclick="printCodes()" class="button" style="background: #5b80b2; color: white; padding: 8px 16px;">
+                    🖨️ Print Codes
+                </button>
+                <button onclick="copyCodes()" class="button" style="background: #5b80b2; color: white; padding: 8px 16px;">
+                    📋 Copy Codes
+                </button>
+            </div>
+        </div>
+
+        <a href="{% url 'mfa_setup' %}" class="button" style="background: #417690; color: white; padding: 12px 24px; display: inline-block;">
+            ← Back to 2FA Settings
+        </a>
+
+    {% else %}
+        <div style="background: white; border: 1px solid #ddd; padding: 25px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 15px 0;">Backup Codes Status</h3>
+            <p style="margin-bottom: 20px;">
+                You have <strong>{{ backup_codes_count }}</strong> backup code(s) remaining.
+            </p>
+
+            {% if backup_codes_count <= 3 %}
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <p style="margin: 0; color: #856404;">
+                    ⚠️ You're running low on backup codes. Consider generating new ones.
+                </p>
+            </div>
+            {% endif %}
+
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 15px 0;">What are backup codes?</h4>
+                <p style="margin: 0; line-height: 1.6; color: #666;">
+                    Backup codes are one-time use codes that allow you to access your account if you lose your authenticator device.
+                    Each code can only be used once. When you use a backup code, it will be removed from your list.
+                </p>
+            </div>
+        </div>
+
+        <div style="background: white; border: 1px solid #ddd; padding: 25px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 15px 0;">Generate New Backup Codes</h3>
+            <p style="margin-bottom: 20px; color: #666;">
+                Generating new backup codes will replace all existing codes. Make sure to save the new codes in a secure location.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="regenerate">
+
+                <div style="margin-bottom: 20px;">
+                    <label for="password" style="display: block; margin-bottom: 8px; font-weight: 600;">
+                        Confirm Password
+                    </label>
+                    <input type="password"
+                           name="password"
+                           id="password"
+                           required
+                           style="width: 100%; max-width: 300px; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px;">
+                </div>
+
+                <div style="display: flex; gap: 15px;">
+                    <button type="submit" class="button" style="background: #417690; color: white; padding: 12px 24px;">
+                        🔄 Generate New Codes
+                    </button>
+                    <a href="{% url 'mfa_setup' %}" class="button" style="background: #6c757d; color: white; padding: 12px 24px; display: inline-block;">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function printCodes() {
+    window.print();
+}
+
+function copyCodes() {
+    const codes = '{{ backup_codes|join:"\n" }}';
+    navigator.clipboard.writeText(codes).then(() => {
+        alert('Backup codes copied to clipboard!');
+    });
+}
+</script>
+{% endblock %}
