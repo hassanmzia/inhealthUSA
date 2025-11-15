@@ -39,11 +39,16 @@
             <a href="{% url 'device_list' %}" class="button" style="background: #5b80b2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 13px;">
                 ⌚ All Devices
             </a>
-            <a href="{% url 'billing_information' %}" class="button" style="background: #5b80b2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 13px;">
+            <a href="{% url 'billing_information' %}" class="button" style="background: #5b80b2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 13px; position: relative;">
                 💳 All Billings
+                <span style="display: inline-block; background: #ff9800; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 8px;">{{ stats.total_billings }}</span>
+                {% if stats.unpaid_billings > 0 %}
+                <span style="display: inline-block; background: #f44336; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 4px;">{{ stats.unpaid_billings }} unpaid</span>
+                {% endif %}
             </a>
-            <a href="{% url 'payment_history' %}" class="button" style="background: #5b80b2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 13px;">
+            <a href="{% url 'payment_history' %}" class="button" style="background: #5b80b2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 13px; position: relative;">
                 💰 All Payments
+                <span style="display: inline-block; background: #4caf50; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 8px;">{{ stats.total_payments }}</span>
             </a>
         </div>
     </div>
