@@ -30,8 +30,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',  # Required for django-allauth
     'django_recaptcha',  # django-recaptcha for spam protection
+
+    # Enterprise Authentication
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.microsoft',
+    'allauth.socialaccount.providers.oauth2',
+    'mozilla_django_oidc',  # OIDC for Azure AD, Okta, AWS Cognito
+    'axes',  # Login attempt tracking and blocking
 ]
+
+# Sites framework (required for django-allauth)
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -41,6 +54,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # Required for django-allauth
+    'axes.middleware.AxesMiddleware',  # Login attempt tracking (must be last)
 ]
 
 ROOT_URLCONF = 'inhealth.urls'
@@ -114,10 +129,208 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DATE_FORMAT = 'Y-m-d'
 DATETIME_FORMAT = 'Y-m-d H:i:s'
 
-# Authentication settings
+# ============================================================================
+# AUTHENTICATION SETTINGS - Multi-Provider Enterprise Authentication
+# ============================================================================
+
+# Authentication Backends - Order matters! First successful auth wins.
+AUTHENTICATION_BACKENDS = [
+    # Standard Django authentication
+    'django.contrib.auth.backends.ModelBackend',
+
+    # Django-allauth for social/enterprise auth
+    'allauth.account.auth_backends.AuthenticationBackend',
+
+    # Mozilla Django OIDC for Azure AD, Okta, AWS Cognito
+    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
+
+    # Axes authentication backend for failed login tracking
+    'axes.backends.AxesBackend',
+]
+
+# Basic authentication settings
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'index'
 LOGOUT_REDIRECT_URL = 'login'
+
+# ============================================================================
+# DJANGO-ALLAUTH CONFIGURATION
+# ============================================================================
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'
+
+# Adapter for custom logic
+ACCOUNT_ADAPTER = 'healthcare.auth_adapters.EnterpriseAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'healthcare.auth_adapters.EnterpriseSocialAccountAdapter'
+
+# ============================================================================
+# OIDC CONFIGURATION - Azure AD, Okta, AWS Cognito
+# ============================================================================
+
+# Azure AD Configuration
+OIDC_RP_CLIENT_ID = os.environ.get('AZURE_AD_CLIENT_ID', '')
+OIDC_RP_CLIENT_SECRET = os.environ.get('AZURE_AD_CLIENT_SECRET', '')
+OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ.get(
+    'AZURE_AD_AUTHORIZATION_ENDPOINT',
+    'https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/authorize'
+)
+OIDC_OP_TOKEN_ENDPOINT = os.environ.get(
+    'AZURE_AD_TOKEN_ENDPOINT',
+    'https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token'
+)
+OIDC_OP_USER_ENDPOINT = os.environ.get(
+    'AZURE_AD_USER_ENDPOINT',
+    'https://graph.microsoft.com/v1.0/me'
+)
+OIDC_OP_JWKS_ENDPOINT = os.environ.get(
+    'AZURE_AD_JWKS_ENDPOINT',
+    'https://login.microsoftonline.com/{tenant_id}/discovery/v2.0/keys'
+)
+
+# Okta Configuration (when OKTA_ENABLED=True)
+OKTA_ENABLED = os.environ.get('OKTA_ENABLED', 'False') == 'True'
+OKTA_ORG_URL = os.environ.get('OKTA_ORG_URL', '')
+OKTA_CLIENT_ID = os.environ.get('OKTA_CLIENT_ID', '')
+OKTA_CLIENT_SECRET = os.environ.get('OKTA_CLIENT_SECRET', '')
+OKTA_ISSUER = os.environ.get('OKTA_ISSUER', f'{OKTA_ORG_URL}/oauth2/default')
+
+# AWS Cognito Configuration (when AWS_COGNITO_ENABLED=True)
+AWS_COGNITO_ENABLED = os.environ.get('AWS_COGNITO_ENABLED', 'False') == 'True'
+AWS_COGNITO_REGION = os.environ.get('AWS_COGNITO_REGION', 'us-east-1')
+AWS_COGNITO_USER_POOL_ID = os.environ.get('AWS_COGNITO_USER_POOL_ID', '')
+AWS_COGNITO_APP_CLIENT_ID = os.environ.get('AWS_COGNITO_APP_CLIENT_ID', '')
+AWS_COGNITO_APP_CLIENT_SECRET = os.environ.get('AWS_COGNITO_APP_CLIENT_SECRET', '')
+AWS_COGNITO_DOMAIN = os.environ.get('AWS_COGNITO_DOMAIN', '')
+
+# OIDC Settings
+OIDC_RP_SIGN_ALGO = os.environ.get('OIDC_RP_SIGN_ALGO', 'RS256')
+OIDC_RP_SCOPES = os.environ.get('OIDC_RP_SCOPES', 'openid email profile')
+OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = int(os.environ.get('OIDC_RENEW_TOKEN_EXPIRY', '3600'))
+OIDC_CREATE_USER = True
+OIDC_USE_NONCE = True
+OIDC_STORE_ID_TOKEN = True
+
+# Custom callback for user creation from OIDC
+OIDC_USERNAME_ALGO = 'healthcare.auth_backends.generate_username_from_email'
+
+# ============================================================================
+# SAML CONFIGURATION
+# ============================================================================
+SAML_ENABLED = os.environ.get('SAML_ENABLED', 'False') == 'True'
+SAML_SP_ENTITY_ID = os.environ.get('SAML_SP_ENTITY_ID', 'https://your-app.com/saml/metadata/')
+SAML_SP_ACS_URL = os.environ.get('SAML_SP_ACS_URL', 'https://your-app.com/saml/acs/')
+SAML_SP_SLS_URL = os.environ.get('SAML_SP_SLS_URL', 'https://your-app.com/saml/sls/')
+SAML_IDP_METADATA_URL = os.environ.get('SAML_IDP_METADATA_URL', '')
+SAML_IDP_ENTITY_ID = os.environ.get('SAML_IDP_ENTITY_ID', '')
+SAML_IDP_SSO_URL = os.environ.get('SAML_IDP_SSO_URL', '')
+SAML_IDP_X509_CERT = os.environ.get('SAML_IDP_X509_CERT', '')
+
+# SAML Attribute mapping
+SAML_ATTRIBUTE_MAPPING = {
+    'email': ['email', 'emailAddress', 'mail'],
+    'first_name': ['givenName', 'firstName'],
+    'last_name': ['surname', 'lastName', 'sn'],
+    'username': ['username', 'uid', 'userPrincipalName'],
+}
+
+# ============================================================================
+# CAC (Common Access Card) / PKI AUTHENTICATION
+# ============================================================================
+CAC_ENABLED = os.environ.get('CAC_ENABLED', 'False') == 'True'
+CAC_VERIFY_CLIENT_CERT = CAC_ENABLED
+CAC_CLIENT_CERT_HEADER = os.environ.get('CAC_CLIENT_CERT_HEADER', 'HTTP_X_SSL_CLIENT_CERT')
+CAC_CLIENT_DN_HEADER = os.environ.get('CAC_CLIENT_DN_HEADER', 'HTTP_X_SSL_CLIENT_S_DN')
+CAC_ISSUER_DN_HEADER = os.environ.get('CAC_ISSUER_DN_HEADER', 'HTTP_X_SSL_CLIENT_I_DN')
+
+# CAC Certificate validation
+CAC_CERT_AUTHORITY_CERT_PATH = os.environ.get(
+    'CAC_CERT_AUTHORITY_CERT_PATH',
+    '/etc/ssl/certs/dod_ca_bundle.pem'
+)
+CAC_REQUIRE_CERT_FOR_LOGIN = os.environ.get('CAC_REQUIRE_CERT_FOR_LOGIN', 'False') == 'True'
+
+# ============================================================================
+# SESSION SECURITY AND TOKEN STORAGE
+# ============================================================================
+
+# Enhanced session security
+SESSION_COOKIE_SECURE = not DEBUG  # Use secure cookies in production
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = int(os.environ.get('SESSION_COOKIE_AGE', '28800'))  # 8 hours
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = os.environ.get('SESSION_EXPIRE_AT_BROWSER_CLOSE', 'False') == 'True'
+
+# CSRF Protection
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = True
+
+# Secure token storage in database
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# ============================================================================
+# MULTI-FACTOR AUTHENTICATION (MFA) ENFORCEMENT
+# ============================================================================
+MFA_ENABLED = os.environ.get('MFA_ENABLED', 'True') == 'True'
+MFA_REQUIRED_FOR_STAFF = os.environ.get('MFA_REQUIRED_FOR_STAFF', 'True') == 'True'
+MFA_REQUIRED_FOR_SUPERUSER = os.environ.get('MFA_REQUIRED_FOR_SUPERUSER', 'True') == 'True'
+MFA_GRACE_PERIOD_DAYS = int(os.environ.get('MFA_GRACE_PERIOD_DAYS', '7'))
+
+# TOTP Settings (Time-based One-Time Password)
+OTP_TOTP_ISSUER = os.environ.get('OTP_TOTP_ISSUER', 'InHealth EHR')
+OTP_TOTP_DIGITS = 6
+OTP_TOTP_PERIOD = 30
+
+# ============================================================================
+# DJANGO-AXES CONFIGURATION (Failed Login Protection)
+# ============================================================================
+AXES_ENABLED = True
+AXES_FAILURE_LIMIT = int(os.environ.get('AXES_FAILURE_LIMIT', '5'))
+AXES_COOLOFF_TIME = int(os.environ.get('AXES_COOLOFF_TIME', '1'))  # Hours
+AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCKOUT_TEMPLATE = 'healthcare/auth/account_locked.html'
+AXES_LOCKOUT_URL = '/account-locked/'
+AXES_USERNAME_FORM_FIELD = 'email'
+AXES_ONLY_USER_FAILURES = False
+
+# ============================================================================
+# MICROSOFT ACTIVE DIRECTORY (LDAP) - Optional
+# ============================================================================
+AD_ENABLED = os.environ.get('AD_ENABLED', 'False') == 'True'
+if AD_ENABLED:
+    # Add LDAP authentication backend
+    AUTHENTICATION_BACKENDS.insert(1, 'django_auth_ldap.backend.LDAPBackend')
+
+    # LDAP Server settings
+    import ldap
+    from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
+
+    AUTH_LDAP_SERVER_URI = os.environ.get('AUTH_LDAP_SERVER_URI', 'ldap://ad.example.com')
+    AUTH_LDAP_BIND_DN = os.environ.get('AUTH_LDAP_BIND_DN', '')
+    AUTH_LDAP_BIND_PASSWORD = os.environ.get('AUTH_LDAP_BIND_PASSWORD', '')
+    AUTH_LDAP_USER_SEARCH = LDAPSearch(
+        os.environ.get('AUTH_LDAP_USER_SEARCH_BASE', 'ou=users,dc=example,dc=com'),
+        ldap.SCOPE_SUBTREE,
+        "(sAMAccountName=%(user)s)"
+    )
+
+    # User attribute mapping
+    AUTH_LDAP_USER_ATTR_MAP = {
+        "first_name": "givenName",
+        "last_name": "sn",
+        "email": "mail"
+    }
+
+    # Cache settings
+    AUTH_LDAP_CACHE_TIMEOUT = 3600
 
 # Email Settings
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
