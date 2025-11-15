@@ -423,7 +423,6 @@
         <div class="data-table-container">
             <div class="data-table-header">
                 <h3>Vital Signs Records</h3>
-                <a href="{% url 'patient_vital_create' patient.patient_id %}" class="add-button">+ Add Vital Signs</a>
             </div>
             {% if vital_signs %}
             <table class="data-table">
@@ -736,7 +735,6 @@
         <div class="data-table-container">
             <div class="data-table-header">
                 <h3>Laboratory Tests</h3>
-                <a href="{% url 'patient_lab_test_create' patient.patient_id %}" class="add-button">+ Add Lab Test</a>
             </div>
             {% if lab_tests %}
             <table class="data-table">
