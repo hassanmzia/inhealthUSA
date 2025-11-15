@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'captcha',  # django-recaptcha for spam protection
+    'django_recaptcha',  # django-recaptcha for spam protection
 ]
 
 MIDDLEWARE = [
