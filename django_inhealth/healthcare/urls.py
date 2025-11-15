@@ -17,6 +17,10 @@ urlpatterns = [
     path('mfa/verify/', views.mfa_verify, name='mfa_verify'),
     path('mfa/backup-codes/', views.mfa_backup_codes, name='mfa_backup_codes'),
 
+    # Profile Picture URLs
+    path('profile/picture/upload/', views.upload_profile_picture, name='upload_profile_picture'),
+    path('profile/picture/delete/', views.delete_profile_picture, name='delete_profile_picture'),
+
     # Dashboard
     path('', views.index, name='index'),
 

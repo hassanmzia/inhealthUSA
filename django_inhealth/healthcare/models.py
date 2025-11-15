@@ -51,6 +51,9 @@ class UserProfile(models.Model):
     email_verification_token = models.CharField(max_length=100, blank=True, null=True, help_text="Email verification token")
     email_verification_sent_at = models.DateTimeField(blank=True, null=True, help_text="When verification email was sent")
 
+    # Profile Picture
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True, help_text="User profile picture")
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
