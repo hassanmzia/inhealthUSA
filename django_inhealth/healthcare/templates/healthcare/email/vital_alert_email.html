@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Critical Vital Signs Alert</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px 0;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: {% if alert_type == 'emergency' %}linear-gradient(135deg, #dc3545 0%, #c82333 100%){% elif alert_type == 'doctor' %}linear-gradient(135deg, #e74c3c 0%, #c0392b 100%){% else %}linear-gradient(135deg, #ff9800 0%, #f57c00 100%){% endif %}; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 300;">
+                                {% if alert_type == 'emergency' %}🚨 EMERGENCY ALERT{% elif alert_type == 'doctor' %}🔴 CRITICAL ALERT{% else %}⚠️ WARNING ALERT{% endif %}
+                            </h1>
+                            <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.95); font-size: 16px; font-weight: 500;">
+                                Critical Vital Signs Detected
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #333333;">
+                                Hello <strong>{{ recipient_name }}</strong>,
+                            </p>
+
+                            <p style="margin: 0 0 30px 0; font-size: 16px; line-height: 1.6; color: #333333;">
+                                {% if alert_type == 'emergency' %}
+                                    <strong style="color: #dc3545;">⚠️ IMMEDIATE ATTENTION REQUIRED:</strong> Emergency-level vital signs have been detected for patient <strong>{{ patient_name }}</strong>. Please take immediate action.
+                                {% elif alert_type == 'doctor' %}
+                                    <strong style="color: #e74c3c;">Critical vital signs</strong> have been detected for patient <strong>{{ patient_name }}</strong>. Doctor consultation is recommended as soon as possible.
+                                {% else %}
+                                    <strong style="color: #ff9800;">Abnormal vital signs</strong> have been detected for patient <strong>{{ patient_name }}</strong>. Nurse monitoring is recommended.
+                                {% endif %}
+                            </p>
+
+                            <!-- Critical Vitals Table -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0; border: 1px solid #e9ecef; border-radius: 4px; overflow: hidden;">
+                                <thead>
+                                    <tr style="background-color: {% if alert_type == 'emergency' %}#dc3545{% elif alert_type == 'doctor' %}#e74c3c{% else %}#ff9800{% endif %};">
+                                        <th style="padding: 15px; text-align: left; color: white; font-size: 14px; font-weight: 600; width: 40%;">Vital Sign</th>
+                                        <th style="padding: 15px; text-align: left; color: white; font-size: 14px; font-weight: 600; width: 30%;">Value</th>
+                                        <th style="padding: 15px; text-align: left; color: white; font-size: 14px; font-weight: 600; width: 30%;">Alert Level</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vital_name, value, color, contact_level in critical_vitals %}
+                                    <tr style="border-bottom: 1px solid #e9ecef; {% if color == 'blue' %}background-color: #e3f2fd;{% elif color == 'red' %}background-color: #ffebee;{% else %}background-color: #fff3e0;{% endif %}">
+                                        <td style="padding: 15px; font-size: 14px; color: #333;">
+                                            <strong>{{ vital_name }}</strong>
+                                        </td>
+                                        <td style="padding: 15px; font-size: 14px; color: #333; font-weight: 600;">
+                                            {{ value }}
+                                        </td>
+                                        <td style="padding: 15px; font-size: 13px;">
+                                            <span style="display: inline-block; padding: 5px 12px; border-radius: 12px; font-weight: 600;
+                                                {% if color == 'blue' %}background-color: #2196F3; color: white;
+                                                {% elif color == 'red' %}background-color: #f44336; color: white;
+                                                {% else %}background-color: #ff9800; color: white;{% endif %}">
+                                                {{ contact_level }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                            <!-- Action Required -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0; background-color: {% if alert_type == 'emergency' %}#fff3f3{% elif alert_type == 'doctor' %}#fff5f5{% else %}#fff8e1{% endif %}; border-left: 4px solid {% if alert_type == 'emergency' %}#dc3545{% elif alert_type == 'doctor' %}#e74c3c{% else %}#ff9800{% endif %}; padding: 20px; border-radius: 4px;">
+                                <tr>
+                                    <td>
+                                        <p style="margin: 0 0 10px 0; font-size: 15px; font-weight: 600; color: #333;">
+                                            {% if alert_type == 'emergency' %}⚠️ Immediate Action Required{% elif alert_type == 'doctor' %}📋 Recommended Actions{% else %}📝 Monitoring Required{% endif %}
+                                        </p>
+                                        <ul style="margin: 10px 0 0 0; padding-left: 20px; font-size: 14px; line-height: 1.8; color: #666;">
+                                            {% if alert_type == 'emergency' %}
+                                            <li>Contact emergency services immediately</li>
+                                            <li>Check patient status and location</li>
+                                            <li>Review complete vital signs history</li>
+                                            <li>Prepare for immediate intervention</li>
+                                            {% elif alert_type == 'doctor' %}
+                                            <li>Review patient's vital signs in the system</li>
+                                            <li>Contact patient for follow-up</li>
+                                            <li>Consider scheduling immediate appointment</li>
+                                            <li>Review medication and treatment plan</li>
+                                            {% else %}
+                                            <li>Monitor patient's condition closely</li>
+                                            <li>Record any symptoms or changes</li>
+                                            <li>Contact doctor if condition worsens</li>
+                                            <li>Schedule follow-up measurement</li>
+                                            {% endif %}
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 30px 0 10px 0; font-size: 14px; line-height: 1.6; color: #666666;">
+                                <strong>Patient:</strong> {{ patient_name }}<br>
+                                <strong>Alert Time:</strong> {{ "now"|date:"F d, Y - h:i A" }}<br>
+                                <strong>System:</strong> InHealth EHR - Automated Vital Signs Monitoring
+                            </p>
+
+                            <p style="margin: 20px 0 0 0; font-size: 13px; line-height: 1.6; color: #999;">
+                                This is an automated alert from the InHealth EHR system. Please log in to the system for complete patient information and vital signs history.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px; text-align: center; border-top: 1px solid #e9ecef; background-color: #f8f9fa; border-radius: 0 0 8px 8px;">
+                            <p style="margin: 0 0 10px 0; font-size: 14px; color: #666666;">
+                                <strong>InHealth EHR</strong> - Electronic Health Records System
+                            </p>
+                            <p style="margin: 0; font-size: 12px; color: #999999;">
+                                This is an automated critical alert. Please do not reply to this email.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
