@@ -1,5 +1,6 @@
-# Core Django dependencies (existing)
+# Core Django dependencies
 Django>=4.2,<5.0
+psycopg2-binary>=2.9.0
 pillow>=10.0.0
 pyotp>=2.8.0
 qrcode>=7.4.2
