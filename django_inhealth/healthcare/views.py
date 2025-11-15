@@ -3035,7 +3035,7 @@ def provider_dashboard(request):
         provider=provider,
         encounter_date__gt=timezone.now(),
         status='Scheduled'
-    ).select_related('patient').order_by('encounter_date')[:10]
+    ).select_related('patient').order_by('encounter_date')
 
     # Recent appointments
     recent_appointments = Encounter.objects.filter(
