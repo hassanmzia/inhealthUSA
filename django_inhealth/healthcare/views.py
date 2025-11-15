@@ -4615,7 +4615,7 @@ def upload_profile_picture(request):
     elif user_profile.role == 'nurse':
         return redirect('nurse_profile')
     elif user_profile.role == 'office_admin':
-        return redirect('office_admin_dashboard')
+        return redirect('admin_profile')
     elif user_profile.role == 'admin':
         return redirect('admin_profile')
     else:
@@ -4650,7 +4650,7 @@ def delete_profile_picture(request):
     elif user_profile.role == 'nurse':
         return redirect('nurse_profile')
     elif user_profile.role == 'office_admin':
-        return redirect('office_admin_dashboard')
+        return redirect('admin_profile')
     elif user_profile.role == 'admin':
         return redirect('admin_profile')
     else:
@@ -4844,7 +4844,7 @@ def change_password(request):
             elif user_profile.role == 'nurse':
                 return redirect('nurse_profile')
             elif user_profile.role == 'office_admin':
-                return redirect('office_admin_dashboard')
+                return redirect('admin_profile')
             elif user_profile.role == 'admin':
                 return redirect('admin_profile')
             else:
