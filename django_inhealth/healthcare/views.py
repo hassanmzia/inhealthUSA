@@ -12,7 +12,7 @@ from .models import (
     FamilyHistory, LabTest, Message, Notification, InsuranceInformation,
     Billing, BillingItem, Payment, Device, UserProfile
 )
-from .forms import UserRegistrationForm
+from .forms import UserRegistrationForm, ProfilePictureForm
 from .permissions import (
     require_patient_access, require_patient_edit, require_role,
     require_provider_access, require_provider_edit, require_vital_edit,
@@ -4430,3 +4430,76 @@ def resend_verification_email(request):
         return redirect('login')
 
     return render(request, 'healthcare/auth/resend_verification.html')
+
+
+# ============================================================================
+# PROFILE PICTURE UPLOAD VIEW
+# ============================================================================
+
+@login_required
+def upload_profile_picture(request):
+    """Handle profile picture upload for any user"""
+    user_profile = request.user.profile
+
+    if request.method == 'POST':
+        form = ProfilePictureForm(request.POST, request.FILES, instance=user_profile)
+
+        if form.is_valid():
+            # Delete old profile picture if it exists
+            if user_profile.profile_picture:
+                try:
+                    import os
+                    if os.path.isfile(user_profile.profile_picture.path):
+                        os.remove(user_profile.profile_picture.path)
+                except Exception:
+                    pass  # Ignore errors when deleting old file
+
+            form.save()
+            messages.success(request, 'Profile picture updated successfully!')
+        else:
+            messages.error(request, 'Error uploading profile picture. Please check the file and try again.')
+
+    # Redirect back to appropriate profile based on user role
+    if user_profile.role == 'patient':
+        return redirect('patient_profile')
+    elif user_profile.role in ['doctor', 'nurse']:
+        return redirect('provider_profile')
+    elif user_profile.role == 'office_admin':
+        return redirect('office_admin_dashboard')
+    elif user_profile.role == 'admin':
+        return redirect('admin_profile')
+    else:
+        return redirect('index')
+
+
+@login_required
+def delete_profile_picture(request):
+    """Delete user's profile picture"""
+    user_profile = request.user.profile
+
+    if request.method == 'POST':
+        if user_profile.profile_picture:
+            try:
+                import os
+                if os.path.isfile(user_profile.profile_picture.path):
+                    os.remove(user_profile.profile_picture.path)
+            except Exception:
+                pass  # Ignore errors when deleting file
+
+            user_profile.profile_picture = None
+            user_profile.save()
+            messages.success(request, 'Profile picture deleted successfully!')
+        else:
+            messages.info(request, 'No profile picture to delete.')
+
+    # Redirect back to appropriate profile based on user role
+    if user_profile.role == 'patient':
+        return redirect('patient_profile')
+    elif user_profile.role in ['doctor', 'nurse']:
+        return redirect('provider_profile')
+    elif user_profile.role == 'office_admin':
+        return redirect('office_admin_dashboard')
+    elif user_profile.role == 'admin':
+        return redirect('admin_profile')
+    else:
+        return redirect('index')

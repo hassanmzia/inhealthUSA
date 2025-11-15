@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Checkbox
+from .models import UserProfile
 
 
 class UserRegistrationForm(UserCreationForm):
@@ -24,3 +25,31 @@ class UserRegistrationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+
+
+class ProfilePictureForm(forms.ModelForm):
+    """Form for uploading/updating profile picture"""
+
+    class Meta:
+        model = UserProfile
+        fields = ['profile_picture']
+        widgets = {
+            'profile_picture': forms.FileInput(attrs={
+                'accept': 'image/*',
+                'class': 'form-control'
+            })
+        }
+
+    def clean_profile_picture(self):
+        picture = self.cleaned_data.get('profile_picture')
+        if picture:
+            # Validate file size (max 5MB)
+            if picture.size > 5 * 1024 * 1024:
+                raise forms.ValidationError('Image file too large (max 5MB)')
+
+            # Validate file type
+            valid_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+            if hasattr(picture, 'content_type') and picture.content_type not in valid_types:
+                raise forms.ValidationError('Invalid image type. Allowed types: JPEG, PNG, GIF, WebP')
+
+        return picture
