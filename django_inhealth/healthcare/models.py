@@ -46,6 +46,11 @@ class UserProfile(models.Model):
     mfa_secret = models.CharField(max_length=32, blank=True, null=True, help_text="TOTP Secret Key")
     backup_codes = models.JSONField(default=list, blank=True, help_text="Backup codes for MFA recovery")
 
+    # Email Verification fields
+    email_verified = models.BooleanField(default=False, help_text="Email address verified")
+    email_verification_token = models.CharField(max_length=100, blank=True, null=True, help_text="Email verification token")
+    email_verification_sent_at = models.DateTimeField(blank=True, null=True, help_text="When verification email was sent")
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

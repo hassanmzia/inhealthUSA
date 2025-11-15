@@ -1,0 +1,43 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Resend Verification Email - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="module" style="max-width: 500px; margin: 50px auto;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #417690; margin-bottom: 10px;">📧 Resend Verification Email</h1>
+        <p style="color: #666; margin: 0;">Enter your email address to receive a new verification link</p>
+    </div>
+
+    <div style="background: white; border: 1px solid #ddd; padding: 30px; border-radius: 5px;">
+        <form method="post">
+            {% csrf_token %}
+
+            <div style="margin-bottom: 20px;">
+                <label for="email" style="display: block; margin-bottom: 8px; font-weight: 600;">
+                    Email Address
+                </label>
+                <input type="email"
+                       name="email"
+                       id="email"
+                       required
+                       autofocus
+                       placeholder="your@email.com"
+                       style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px;">
+            </div>
+
+            <button type="submit"
+                    class="button"
+                    style="width: 100%; background: #417690; color: white; padding: 15px; font-size: 16px; font-weight: 600; border-radius: 5px;">
+                Send Verification Email
+            </button>
+        </form>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="{% url 'login' %}" style="color: #417690; font-size: 14px; text-decoration: underline;">
+                ← Back to Login
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

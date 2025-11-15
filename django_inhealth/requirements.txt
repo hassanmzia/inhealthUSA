@@ -38,3 +38,6 @@ twilio==9.0.4
 # Multi-Factor Authentication
 pyotp==2.9.0
 qrcode==7.4.2
+
+# reCAPTCHA and Email Verification
+django-recaptcha==4.0.0

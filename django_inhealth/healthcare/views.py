@@ -69,16 +69,43 @@ def user_logout(request):
 
 
 def user_register(request):
-    """User registration view"""
+    """User registration view with email verification and reCAPTCHA"""
     if request.user.is_authenticated:
         return redirect('index')
 
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            # Create user but set as inactive until email is verified
+            user = form.save(commit=False)
+            user.is_active = False
+            user.save()
+
+            # Create user profile
+            user_profile = UserProfile.objects.create(
+                user=user,
+                role='patient',  # Default role
+                email_verified=False
+            )
+
+            # Send verification email
+            from .email_utils import send_verification_email
+            email_sent = send_verification_email(user, user_profile, request)
+
             username = form.cleaned_data.get('username')
-            messages.success(request, f'Account created successfully for {username}! You can now log in.')
+            if email_sent:
+                messages.success(
+                    request,
+                    f'Account created successfully for {username}! '
+                    'Please check your email to verify your account before logging in.'
+                )
+            else:
+                messages.warning(
+                    request,
+                    f'Account created for {username}, but we couldn\'t send the verification email. '
+                    'Please contact support for assistance.'
+                )
+
             return redirect('login')
     else:
         form = UserRegistrationForm()
@@ -4308,3 +4335,98 @@ def mfa_backup_codes(request):
         'backup_codes_count': len(user_profile.backup_codes),
     }
     return render(request, 'healthcare/mfa/backup_codes.html', context)
+
+
+# ============================================================================
+# EMAIL VERIFICATION VIEWS
+# ============================================================================
+
+def verify_email(request, token):
+    """Verify email address using token"""
+    try:
+        user_profile = UserProfile.objects.get(email_verification_token=token)
+        user = user_profile.user
+
+        # Check if already verified
+        if user_profile.email_verified:
+            messages.info(request, 'Your email has already been verified. You can login now.')
+            return redirect('login')
+
+        # Check if token is expired (24 hours)
+        from datetime import timedelta
+        if user_profile.email_verification_sent_at:
+            expiry_time = user_profile.email_verification_sent_at + timedelta(hours=24)
+            if timezone.now() > expiry_time:
+                messages.error(
+                    request,
+                    'Verification link has expired. Please contact support to resend verification email.'
+                )
+                return redirect('login')
+
+        # Verify email and activate account
+        user_profile.email_verified = True
+        user_profile.email_verification_token = None
+        user_profile.save()
+
+        user.is_active = True
+        user.save()
+
+        # Send welcome email
+        from .email_utils import send_welcome_email
+        send_welcome_email(user)
+
+        messages.success(
+            request,
+            'Email verified successfully! Your account is now active. You can login now.'
+        )
+        return redirect('login')
+
+    except UserProfile.DoesNotExist:
+        messages.error(request, 'Invalid verification link.')
+        return redirect('login')
+
+
+def resend_verification_email(request):
+    """Resend verification email"""
+    if request.method == 'POST':
+        email = request.POST.get('email')
+
+        try:
+            user = User.objects.get(email=email)
+            user_profile = user.profile
+
+            # Check if already verified
+            if user_profile.email_verified:
+                messages.info(request, 'Your email is already verified. You can login now.')
+                return redirect('login')
+
+            # Check if user is active
+            if user.is_active:
+                messages.info(request, 'Your account is already active. You can login now.')
+                return redirect('login')
+
+            # Resend verification email
+            from .email_utils import send_verification_email
+            email_sent = send_verification_email(user, user_profile, request)
+
+            if email_sent:
+                messages.success(
+                    request,
+                    'Verification email has been resent. Please check your inbox.'
+                )
+            else:
+                messages.error(
+                    request,
+                    'Failed to send verification email. Please try again later or contact support.'
+                )
+
+        except User.DoesNotExist:
+            # Don't reveal if email exists or not for security
+            messages.info(
+                request,
+                'If an account exists with this email, a verification link has been sent.'
+            )
+
+        return redirect('login')
+
+    return render(request, 'healthcare/auth/resend_verification.html')
