@@ -73,7 +73,6 @@
                     <th style="text-align: left; padding: 10px; background: #f0f0f0;">Provider</th>
                     <th style="text-align: left; padding: 10px; background: #f0f0f0;">Type</th>
                     <th style="text-align: left; padding: 10px; background: #f0f0f0;">Status</th>
-                    <th style="text-align: left; padding: 10px; background: #f0f0f0;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -88,14 +87,10 @@
                     <td style="padding: 10px;">
                         <span style="padding: 3px 8px; border-radius: 3px; background: #dfd; font-size: 12px;">{{ appointment.status }}</span>
                     </td>
-                    <td style="padding: 10px;">
-                        <a href="{% url 'patient_vital_create' appointment.patient.patient_id %}" style="margin-right: 10px;">Add Vitals</a>
-                        <a href="{% url 'appointment_detail' appointment.encounter_id %}">View</a>
-                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" style="padding: 10px; text-align: center; color: #999;">No appointments today</td>
+                    <td colspan="5" style="padding: 10px; text-align: center; color: #999;">No appointments today</td>
                 </tr>
                 {% endfor %}
             </tbody>
