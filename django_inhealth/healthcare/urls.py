@@ -7,6 +7,10 @@ urlpatterns = [
     path('logout/', views.user_logout, name='logout'),
     path('register/', views.user_register, name='register'),
 
+    # Email Verification URLs
+    path('verify-email/<str:token>/', views.verify_email, name='verify_email'),
+    path('resend-verification/', views.resend_verification_email, name='resend_verification_email'),
+
     # Multi-Factor Authentication URLs
     path('mfa/setup/', views.mfa_setup, name='mfa_setup'),
     path('mfa/disable/', views.mfa_disable, name='mfa_disable'),

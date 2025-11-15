@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InHealth EHR | Register</title>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         /* Django Admin-inspired styling */
         :root {
@@ -294,6 +295,13 @@
                 </p>
                 {% endif %}
 
+                <div style="background: #e7f3ff; padding: 15px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid var(--primary);">
+                    <p style="margin: 0; font-size: 13px; color: #0c5460;">
+                        <strong>📧 Email Verification Required:</strong> After registration, you'll receive a verification email.
+                        Please check your inbox and click the verification link to activate your account.
+                    </p>
+                </div>
+
                 <form method="POST" id="register-form">
                     {% csrf_token %}
 
@@ -376,6 +384,18 @@
                         {% endif %}
                         {% if form.password2.help_text %}
                         <span class="helptext">{{ form.password2.help_text|safe }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-row">
+                        <label class="required">Verify you're human:</label>
+                        {{ form.captcha }}
+                        {% if form.captcha.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.captcha.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
                         {% endif %}
                     </div>
 
