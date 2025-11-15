@@ -370,7 +370,7 @@ def patient_vital_create(request, patient_id):
         else:
             encounter = get_object_or_404(Encounter, encounter_id=encounter_id)
 
-        VitalSign.objects.create(
+        vital_sign = VitalSign.objects.create(
             encounter=encounter,
             temperature_value=request.POST.get('temperature_value') or None,
             temperature_unit=request.POST.get('temperature_unit') or None,
@@ -387,6 +387,11 @@ def patient_vital_create(request, patient_id):
             notes=request.POST.get('notes', ''),
             recorded_at=timezone.now(),
         )
+
+        # Send automated alerts for critical vital signs
+        from .vital_alerts import process_vital_alerts
+        process_vital_alerts(vital_sign)
+
         messages.success(request, 'Vital signs added successfully.')
         return redirect('patient_edit', patient_id=patient.patient_id)
 
@@ -420,6 +425,10 @@ def patient_vital_edit(request, patient_id, vital_signs_id):
         vital_sign.bmi = request.POST.get('bmi') or None
         vital_sign.notes = request.POST.get('notes', '')
         vital_sign.save()
+
+        # Send automated alerts for critical vital signs
+        from .vital_alerts import process_vital_alerts
+        process_vital_alerts(vital_sign)
 
         messages.success(request, 'Vital signs updated successfully.')
         return redirect('patient_edit', patient_id=patient.patient_id)
@@ -980,7 +989,7 @@ def encounter_vital_create(request, encounter_id):
         return redirect('appointment_detail', encounter_id=encounter.encounter_id)
 
     if request.method == 'POST':
-        VitalSign.objects.create(
+        vital_sign = VitalSign.objects.create(
             encounter=encounter,
             temperature_value=request.POST.get('temperature_value') or None,
             temperature_unit=request.POST.get('temperature_unit') or None,
@@ -997,6 +1006,11 @@ def encounter_vital_create(request, encounter_id):
             notes=request.POST.get('notes', ''),
             recorded_at=timezone.now(),
         )
+
+        # Send automated alerts for critical vital signs
+        from .vital_alerts import process_vital_alerts
+        process_vital_alerts(vital_sign)
+
         messages.success(request, 'Vital signs added successfully.')
         return redirect('appointment_edit', encounter_id=encounter.encounter_id)
 
@@ -1032,6 +1046,10 @@ def encounter_vital_edit(request, encounter_id, vital_signs_id):
         vital_sign.bmi = request.POST.get('bmi') or None
         vital_sign.notes = request.POST.get('notes', '')
         vital_sign.save()
+
+        # Send automated alerts for critical vital signs
+        from .vital_alerts import process_vital_alerts
+        process_vital_alerts(vital_sign)
 
         messages.success(request, 'Vital signs updated successfully.')
         return redirect('appointment_edit', encounter_id=encounter.encounter_id)
@@ -3999,6 +4017,10 @@ def nurse_vital_create(request, patient_id):
             recorded_at=timezone.now()
         )
 
+        # Send automated alerts for critical vital signs
+        from .vital_alerts import process_vital_alerts
+        process_vital_alerts(vital)
+
         messages.success(request, f'Vital signs recorded successfully for {patient.full_name}')
         return redirect('nurse_vitals_list')
 
@@ -4049,6 +4071,10 @@ def nurse_vital_edit(request, vital_signs_id):
         vital.height_unit = request.POST.get('height_unit') or 'in'
         vital.notes = request.POST.get('notes') or None
         vital.save()
+
+        # Send automated alerts for critical vital signs
+        from .vital_alerts import process_vital_alerts
+        process_vital_alerts(vital)
 
         messages.success(request, 'Vital signs updated successfully')
         return redirect('nurse_vitals_list')
