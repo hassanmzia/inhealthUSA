@@ -25,7 +25,7 @@
         {% csrf_token %}
 
         <!-- Vital Signs Form -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px;">
 
             <!-- Temperature -->
             <div class="form-group">
@@ -59,16 +59,6 @@
                            placeholder="Diastolic (80)"
                            style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 </div>
-            </div>
-
-            <!-- Heart Rate -->
-            <div class="form-group" style="margin-top: 20px;">
-                <label for="heart_rate" style="display: block; margin-bottom: 5px; font-weight: 600;">Heart Rate (bpm)</label>
-                <input type="number"
-                       name="heart_rate"
-                       id="heart_rate"
-                       placeholder="72"
-                       style="width: 50%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
             </div>
 
             <!-- Respiratory Rate -->
@@ -139,6 +129,16 @@
                         <option value="cm">cm</option>
                     </select>
                 </div>
+            </div>
+
+            <!-- Heart Rate -->
+            <div class="form-group">
+                <label for="heart_rate" style="display: block; margin-bottom: 5px; font-weight: 600;">Heart Rate (bpm)</label>
+                <input type="number"
+                       name="heart_rate"
+                       id="heart_rate"
+                       placeholder="72"
+                       style="width: 50%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
             </div>
         </div>
 
