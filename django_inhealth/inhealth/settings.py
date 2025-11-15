@@ -16,6 +16,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# Silence system checks for development
+SILENCED_SYSTEM_CHECKS = [
+    'django_recaptcha.recaptcha_test_key_error',  # Allow test keys in development
+]
+
 # Application definition
 INSTALLED_APPS = [
     'healthcare',  # Our main healthcare app - must come before django.contrib.admin to override templates
