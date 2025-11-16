@@ -27,6 +27,32 @@ def get_user_notification_preferences(user):
         return NotificationPreferences.objects.create(user=user)
 
 
+def create_dashboard_notification(user, title, message, notification_type='vital_alert'):
+    """
+    Create in-app dashboard notification for user
+
+    Args:
+        user: User object to notify
+        title: Notification title
+        message: Notification message
+        notification_type: Type of notification (default: 'vital_alert')
+
+    Returns:
+        Notification object created
+    """
+    from .models import Notification
+
+    notification = Notification.objects.create(
+        user=user,
+        title=title,
+        message=message,
+        notification_type=notification_type,
+        is_read=False
+    )
+
+    return notification
+
+
 def get_critical_vitals(vital_sign):
     """
     Analyze all vital signs and return critical ones with their status
@@ -674,6 +700,17 @@ def process_vital_alerts(vital_sign):
                     critical_vitals,
                     alert_type
                 )
+
+            # Create dashboard notification for doctor
+            alert_emoji = "🚨" if alert_type == 'emergency' else ("🔴" if alert_type == 'critical' else "⚠️")
+            vitals_summary = ", ".join([f"{v[0]}: {v[1]}" for v in critical_vitals[:3]])
+            create_dashboard_notification(
+                user=doctor_user,
+                title=f"{alert_emoji} Critical Vitals Alert - {patient_name}",
+                message=f"Patient {patient_name} has critical vital signs: {vitals_summary}. Please review immediately.",
+                notification_type='vital_alert'
+            )
+            doctor_notified = True
         else:
             # No user account, send alerts by default
             if doctor_email:
@@ -740,6 +777,16 @@ def process_vital_alerts(vital_sign):
                     critical_vitals,
                     alert_type
                 )
+
+            # Create dashboard notification for nurse
+            alert_emoji = "🚨" if alert_type == 'emergency' else ("🔴" if alert_type == 'critical' else "⚠️")
+            vitals_summary = ", ".join([f"{v[0]}: {v[1]}" for v in critical_vitals[:3]])
+            create_dashboard_notification(
+                user=nurse_user,
+                title=f"{alert_emoji} Critical Vitals Alert - {patient_name}",
+                message=f"Patient {patient_name} has critical vital signs: {vitals_summary}. Immediate attention required.",
+                notification_type='vital_alert'
+            )
         else:
             # No user account, send alerts by default
             if nurse_email:
@@ -834,6 +881,16 @@ def process_vital_alerts(vital_sign):
                 alert_type,
                 response_token
             )
+
+        # Create dashboard notification for patient
+        alert_emoji = "🚨" if alert_type == 'emergency' else ("🔴" if alert_type == 'critical' else "⚠️")
+        vitals_summary = ", ".join([f"{v[0]}: {v[1]}" for v in critical_vitals[:3]])
+        create_dashboard_notification(
+            user=patient_user,
+            title=f"{alert_emoji} Critical Health Alert - Your Vitals",
+            message=f"Your vital signs show critical values: {vitals_summary}. Your doctor and nurses have been notified. If you need emergency services, please respond to the alert message.",
+            notification_type='vital_alert'
+        )
     else:
         # No user account, send notifications by default
         if patient.email:
@@ -859,9 +916,9 @@ def process_vital_alerts(vital_sign):
     print(f"  Alert ID: {alert_response.alert_id}")
     print(f"  Alert type: {alert_type.upper()}")
     print(f"  Critical vitals: {len(critical_vitals)}")
-    print(f"  Doctor notified: {'Yes' if doctor_notified else 'No'}")
-    print(f"  Nurses notified: {nurses_notified}")
-    print(f"  Patient informed: Yes (can request EMS if needed)")
+    print(f"  Doctor notified: {'Yes' if doctor_notified else 'No'} (Email/SMS/WhatsApp + Dashboard)")
+    print(f"  Nurses notified: {nurses_notified} (Email/SMS/WhatsApp + Dashboard)")
+    print(f"  Patient informed: Yes (Email/SMS/WhatsApp + Dashboard, can request EMS if needed)")
 
     if alert_type == 'emergency':
         print(f"  Auto-EMS escalation in {alert_response.timeout_minutes} minutes if no patient response")
