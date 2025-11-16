@@ -1254,3 +1254,388 @@ class VitalSignAlertResponse(models.Model):
         self._send_provider_notifications()
 
         return True
+
+
+class AIProposedTreatmentPlan(models.Model):
+    """
+    AI-generated treatment plan proposals using Ollama/Llama
+    Only visible to doctors - patients cannot see these proposals
+    """
+    proposal_id = models.AutoField(primary_key=True)
+    patient = models.ForeignKey(
+        'Patient',
+        on_delete=models.CASCADE,
+        related_name='ai_treatment_proposals',
+        help_text='Patient for whom the treatment plan is proposed'
+    )
+    provider = models.ForeignKey(
+        'Provider',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ai_treatment_proposals',
+        help_text='Doctor who requested the AI proposal'
+    )
+
+    # Data used for generating the proposal
+    vital_signs_data = models.JSONField(
+        help_text='Vital signs data used for proposal',
+        blank=True,
+        null=True
+    )
+    diagnosis_data = models.JSONField(
+        help_text='Diagnosis information used for proposal',
+        blank=True,
+        null=True
+    )
+    lab_test_data = models.JSONField(
+        help_text='Lab test results used for proposal',
+        blank=True,
+        null=True
+    )
+    medical_history_data = models.JSONField(
+        help_text='Medical history used for proposal',
+        blank=True,
+        null=True
+    )
+    family_history_data = models.JSONField(
+        help_text='Family history used for proposal',
+        blank=True,
+        null=True
+    )
+    social_history_data = models.JSONField(
+        help_text='Social history used for proposal',
+        blank=True,
+        null=True
+    )
+
+    # AI-generated content
+    proposed_treatment = models.TextField(
+        help_text='AI-generated treatment plan proposal'
+    )
+    medications_suggested = models.TextField(
+        blank=True,
+        null=True,
+        help_text='AI-suggested medications'
+    )
+    lifestyle_recommendations = models.TextField(
+        blank=True,
+        null=True,
+        help_text='AI-suggested lifestyle changes'
+    )
+    follow_up_recommendations = models.TextField(
+        blank=True,
+        null=True,
+        help_text='AI-suggested follow-up care'
+    )
+    warnings_and_precautions = models.TextField(
+        blank=True,
+        null=True,
+        help_text='AI-generated warnings and precautions'
+    )
+
+    # AI model metadata
+    ai_model_name = models.CharField(
+        max_length=100,
+        default='llama3.2',
+        help_text='Name of AI model used'
+    )
+    ai_model_version = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text='Version of AI model'
+    )
+    generation_time_seconds = models.FloatField(
+        null=True,
+        blank=True,
+        help_text='Time taken to generate proposal'
+    )
+    prompt_tokens = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text='Number of tokens in prompt'
+    )
+    completion_tokens = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text='Number of tokens in completion'
+    )
+
+    # Doctor actions
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('reviewed', 'Reviewed'),
+        ('accepted', 'Accepted'),
+        ('modified', 'Modified and Used'),
+        ('rejected', 'Rejected'),
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        help_text='Doctor review status'
+    )
+    doctor_notes = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Doctor's notes on the AI proposal"
+    )
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When doctor reviewed the proposal'
+    )
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'ai_proposed_treatment_plans'
+        verbose_name = 'AI Proposed Treatment Plan'
+        verbose_name_plural = 'AI Proposed Treatment Plans'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['patient', '-created_at'], name='idx_ai_proposal_patient'),
+            models.Index(fields=['provider', '-created_at'], name='idx_ai_proposal_provider'),
+            models.Index(fields=['status'], name='idx_ai_proposal_status'),
+        ]
+
+    def __str__(self):
+        return f"AI Proposal for {self.patient.full_name} - {self.created_at.strftime('%Y-%m-%d')}"
+
+    def mark_as_reviewed(self, doctor_notes=None):
+        """Mark proposal as reviewed by doctor"""
+        self.status = 'reviewed'
+        self.reviewed_at = timezone.now()
+        if doctor_notes:
+            self.doctor_notes = doctor_notes
+        self.save()
+
+    def mark_as_accepted(self, doctor_notes=None):
+        """Mark proposal as accepted by doctor"""
+        self.status = 'accepted'
+        self.reviewed_at = timezone.now()
+        if doctor_notes:
+            self.doctor_notes = doctor_notes
+        self.save()
+
+    def mark_as_modified(self, doctor_notes=None):
+        """Mark proposal as modified and used by doctor"""
+        self.status = 'modified'
+        self.reviewed_at = timezone.now()
+        if doctor_notes:
+            self.doctor_notes = doctor_notes
+        self.save()
+
+    def mark_as_rejected(self, doctor_notes=None):
+        """Mark proposal as rejected by doctor"""
+        self.status = 'rejected'
+        self.reviewed_at = timezone.now()
+        if doctor_notes:
+            self.doctor_notes = doctor_notes
+        self.save()
+
+
+class DoctorTreatmentPlan(models.Model):
+    """
+    Doctor's final treatment plan for patient
+    This is what patients can see - the official treatment plan written by the doctor
+    """
+    plan_id = models.AutoField(primary_key=True)
+    patient = models.ForeignKey(
+        'Patient',
+        on_delete=models.CASCADE,
+        related_name='treatment_plans',
+        help_text='Patient receiving the treatment plan'
+    )
+    provider = models.ForeignKey(
+        'Provider',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='treatment_plans_created',
+        help_text='Doctor who created the treatment plan'
+    )
+    encounter = models.ForeignKey(
+        'Encounter',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='treatment_plans',
+        help_text='Related encounter/visit'
+    )
+
+    # Link to AI proposal (if doctor used it)
+    ai_proposal = models.ForeignKey(
+        'AIProposedTreatmentPlan',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='doctor_treatment_plans',
+        help_text='AI proposal that influenced this plan (if any)'
+    )
+
+    # Treatment plan content
+    plan_title = models.CharField(
+        max_length=255,
+        help_text='Title/summary of treatment plan'
+    )
+    chief_complaint = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Primary complaint being addressed'
+    )
+    assessment = models.TextField(
+        help_text="Doctor's clinical assessment"
+    )
+    treatment_goals = models.TextField(
+        help_text='Goals of the treatment plan'
+    )
+    medications = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Prescribed medications with dosage and instructions'
+    )
+    procedures = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Recommended procedures or interventions'
+    )
+    lifestyle_modifications = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Lifestyle changes recommended'
+    )
+    dietary_recommendations = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Diet and nutrition recommendations'
+    )
+    exercise_recommendations = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Exercise and physical activity recommendations'
+    )
+    follow_up_instructions = models.TextField(
+        help_text='Follow-up care instructions'
+    )
+    warning_signs = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Warning signs to watch for'
+    )
+    emergency_instructions = models.TextField(
+        blank=True,
+        null=True,
+        help_text='When to seek emergency care'
+    )
+    additional_notes = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Any additional notes or instructions'
+    )
+
+    # Status and visibility
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+        ('superseded', 'Superseded by Newer Plan'),
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='draft',
+        help_text='Status of treatment plan'
+    )
+    is_visible_to_patient = models.BooleanField(
+        default=False,
+        help_text='Whether patient can view this plan'
+    )
+
+    # Dates
+    plan_start_date = models.DateField(
+        default=timezone.now,
+        help_text='Start date of treatment plan'
+    )
+    plan_end_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text='Expected end date of treatment plan'
+    )
+    next_review_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text='Date for next review of plan'
+    )
+
+    # Patient acknowledgment
+    patient_viewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When patient first viewed the plan'
+    )
+    patient_acknowledged_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When patient acknowledged understanding'
+    )
+    patient_feedback = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Patient feedback or questions'
+    )
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'doctor_treatment_plans'
+        verbose_name = "Doctor's Treatment Plan"
+        verbose_name_plural = "Doctor's Treatment Plans"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['patient', '-created_at'], name='idx_treatment_plan_patient'),
+            models.Index(fields=['provider', '-created_at'], name='idx_treatment_plan_provider'),
+            models.Index(fields=['status'], name='idx_treatment_plan_status'),
+            models.Index(fields=['is_visible_to_patient'], name='idx_treatment_plan_visible'),
+        ]
+
+    def __str__(self):
+        return f"{self.plan_title} - {self.patient.full_name}"
+
+    def publish_to_patient(self):
+        """Make the treatment plan visible to patient"""
+        self.is_visible_to_patient = True
+        self.status = 'active'
+        self.save()
+
+    def mark_patient_viewed(self):
+        """Record when patient first viewed the plan"""
+        if not self.patient_viewed_at:
+            self.patient_viewed_at = timezone.now()
+            self.save()
+
+    def mark_patient_acknowledged(self):
+        """Record when patient acknowledged the plan"""
+        if not self.patient_acknowledged_at:
+            self.patient_acknowledged_at = timezone.now()
+            self.save()
+
+    def supersede(self):
+        """Mark this plan as superseded by a newer one"""
+        self.status = 'superseded'
+        self.save()
+
+    def is_current(self):
+        """Check if plan is currently active"""
+        return self.status == 'active' and self.is_visible_to_patient
+
+    def get_duration_days(self):
+        """Calculate duration of treatment plan"""
+        if self.plan_end_date:
+            return (self.plan_end_date - self.plan_start_date).days
+        return None
