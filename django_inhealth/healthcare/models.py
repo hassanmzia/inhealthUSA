@@ -772,6 +772,7 @@ class Notification(models.Model):
         ('lab_result', 'Lab Result'),
         ('prescription', 'Prescription'),
         ('message', 'Message'),
+        ('vital_alert', 'Vital Sign Alert'),
         ('system', 'System'),
     ])
     is_read = models.BooleanField(default=False)
