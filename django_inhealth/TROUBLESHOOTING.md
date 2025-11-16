@@ -552,7 +552,153 @@ curl -I https://yourdomain.com | grep -i content-security
 - Use CSP reporting to monitor violations: `Content-Security-Policy-Report-Only`
 - Consider self-hosting libraries instead of using CDNs for critical resources
 
-### 9. Permission Denied on SSL Certificate
+### 9. Media Files Showing 404 Not Found
+
+**Symptoms:**
+- Profile pictures show broken image icons
+- Server logs show: `GET /media/profile_pictures/image.jpg HTTP/1.1" 404`
+- Media files cannot be accessed
+
+**Cause:**
+This can occur for several reasons:
+1. **Media directory doesn't exist** - The `media/` directory hasn't been created yet
+2. **File doesn't actually exist** - Database has a reference to a file that was never uploaded or was deleted
+3. **Incorrect permissions** - Web server cannot read the media files
+4. **Nginx not configured** - In production, nginx must serve media files (Django won't)
+5. **DEBUG mode mismatch** - Media serving is only automatic when DEBUG=True
+
+**Diagnosis:**
+
+1. **Check if media directory exists:**
+   ```bash
+   ls -la django_inhealth/media/
+   ls -la django_inhealth/media/profile_pictures/
+   ```
+
+2. **Check if specific file exists:**
+   ```bash
+   # Look for the file mentioned in the 404 error
+   find django_inhealth/media -name "*.jpg" -o -name "*.png"
+   ```
+
+3. **Check Django logs:**
+   - Look for the full path Django is trying to access
+   - Verify MEDIA_ROOT setting is correct
+
+**Solution:**
+
+**Step 1: Create media directory structure**
+
+```bash
+cd django_inhealth
+mkdir -p media/profile_pictures
+chmod 755 media
+chmod 755 media/profile_pictures
+```
+
+**Step 2: Verify Django settings**
+
+Check `settings.py`:
+```python
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'  # Should point to your media directory
+```
+
+**Step 3: For Development (DEBUG=True)**
+
+Django automatically serves media files. Verify `urls.py` has:
+```python
+from django.conf import settings
+from django.conf.urls.static import static
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+**Step 4: For Production (DEBUG=False)**
+
+Configure nginx to serve media files. Add to your nginx site config:
+```nginx
+location /media/ {
+    alias /path/to/django_inhealth/media/;
+    expires 7d;
+    add_header Cache-Control "public";
+
+    # Prevent execution of uploaded files
+    location ~* \.(php|py|pl|sh|cgi|exe)$ {
+        deny all;
+    }
+}
+```
+
+**Step 5: Fix permissions**
+
+```bash
+# For development
+chmod -R 755 media/
+
+# For production with nginx
+sudo chown -R yourusername:www-data media/
+sudo chmod -R 755 media/
+```
+
+**Step 6: Handle missing files gracefully**
+
+The 404 might be expected if:
+- User hasn't uploaded a profile picture yet
+- Old database records reference deleted files
+- Database was migrated but files weren't copied
+
+**Fix stale file references:**
+```python
+# Django shell
+python manage.py shell
+
+from healthcare.models import UserProfile
+from django.core.files.storage import default_storage
+
+# Find profiles with missing images
+for profile in UserProfile.objects.exclude(profile_picture=''):
+    if profile.profile_picture and not default_storage.exists(profile.profile_picture.name):
+        print(f"Missing file for user {profile.user.username}: {profile.profile_picture.name}")
+        # Optionally clear the reference
+        # profile.profile_picture = None
+        # profile.save()
+```
+
+**Verification:**
+
+1. **Upload a test file:**
+   - Log in to the application
+   - Try uploading a profile picture
+   - Check if file appears in `media/profile_pictures/`
+
+2. **Test direct access:**
+   ```bash
+   # Create a test file
+   echo "test" > media/test.txt
+
+   # Access via browser or curl
+   curl http://localhost:8000/media/test.txt
+   ```
+
+3. **Check server logs:**
+   - Should see `GET /media/test.txt HTTP/1.1" 200` (not 404)
+
+**For Production Deployment:**
+- Use nginx or Apache to serve media files (NOT Django)
+- Set appropriate caching headers
+- Implement backup strategy for media files
+- Consider using cloud storage (S3, CloudFlare R2, etc.) for media files
+
+**Prevention:**
+- Always create media directory during deployment
+- Add media/.gitkeep to version control to preserve directory structure
+- Include media directory setup in deployment scripts
+- Document media storage requirements
+- Test file uploads in staging environment
+
+### 10. Permission Denied on SSL Certificate
 
 **Error Message:**
 ```
