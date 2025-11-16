@@ -310,6 +310,41 @@ CSRF_COOKIE_AGE = 31449600  # 1 year
 CSRF_USE_SESSIONS = True
 
 # ============================================================================
+# HTTPS/SSL SECURITY SETTINGS
+# ============================================================================
+# These settings ensure Django works properly with SSL certificates served by Nginx
+
+# Redirect all HTTP requests to HTTPS (only in production)
+# Nginx handles the actual SSL/TLS, this tells Django to enforce HTTPS URLs
+SECURE_SSL_REDIRECT = not DEBUG
+
+# Trust the X-Forwarded-Proto header from Nginx reverse proxy
+# This tells Django when a request came in via HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# HTTP Strict Transport Security (HSTS)
+# Tells browsers to always use HTTPS for this site
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000  # 1 year (31536000 seconds)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Apply to all subdomains
+    SECURE_HSTS_PRELOAD = True  # Eligible for browser HSTS preload list
+else:
+    SECURE_HSTS_SECONDS = 0  # Disabled in development
+
+# Content Security and Browser Protection
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME type sniffing
+SECURE_BROWSER_XSS_FILTER = True  # Enable browser XSS filter
+X_FRAME_OPTIONS = 'DENY'  # Prevent clickjacking (already set by middleware)
+
+# Referrer Policy - Control what information is sent in the Referer header
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+# SSL/TLS Certificate Paths (for reference - Nginx uses these, not Django directly)
+# Certificate location: /etc/ssl/inhealth/certificate.crt
+# Private key location: /etc/ssl/inhealth/private.key
+# Nginx config: /etc/nginx/conf.d/inhealth_ssl.conf
+
+# ============================================================================
 # MULTI-FACTOR AUTHENTICATION (MFA) ENFORCEMENT
 # ============================================================================
 MFA_ENABLED = os.environ.get('MFA_ENABLED', 'True') == 'True'
