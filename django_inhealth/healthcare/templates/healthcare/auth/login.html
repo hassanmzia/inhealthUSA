@@ -184,7 +184,33 @@
 
         .login .password-reset-link {
             text-align: center;
-            padding: 10px 0;
+            padding: 15px 0 20px;
+            border-top: 1px solid var(--hairline-color);
+            margin-top: 20px;
+        }
+
+        .login .password-reset-link p {
+            margin: 10px 0;
+            font-size: 13px;
+            line-height: 1.6;
+            font-family: "Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+        }
+
+        .login .password-reset-link a {
+            color: var(--link-fg);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .login .password-reset-link a:hover {
+            color: var(--link-hover-color);
+            text-decoration: underline;
+        }
+
+        .login .password-reset-link .separator {
+            color: #999;
+            margin: 0 8px;
         }
 
         .errornote {
@@ -314,7 +340,11 @@
                 </form>
 
                 <div class="password-reset-link">
-                    <p><a href="{% url 'password_reset_request' %}">🔐 Forgot password?</a> | <a href="{% url 'username_recovery' %}">🔑 Forgot username?</a></p>
+                    <p>
+                        <a href="{% url 'password_reset_request' %}">Forgot password?</a>
+                        <span class="separator">|</span>
+                        <a href="{% url 'username_recovery' %}">Forgot username?</a>
+                    </p>
                     <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
                     <p>Haven't received verification email? <a href="{% url 'resend_verification_email' %}">Resend verification</a></p>
                 </div>
