@@ -558,14 +558,22 @@ curl -I https://yourdomain.com | grep -i content-security
 - Profile pictures show broken image icons
 - Server logs show: `GET /media/profile_pictures/image.jpg HTTP/1.1" 404`
 - Media files cannot be accessed
+- **IMPORTANT**: Pictures work when `DEBUG = True` but fail when `DEBUG = False`
 
 **Cause:**
 This can occur for several reasons:
 1. **Media directory doesn't exist** - The `media/` directory hasn't been created yet
 2. **File doesn't actually exist** - Database has a reference to a file that was never uploaded or was deleted
 3. **Incorrect permissions** - Web server cannot read the media files
-4. **Nginx not configured** - In production, nginx must serve media files (Django won't)
+4. **Nginx not configured** - In production, nginx must serve media files (Django won't) ⚠️ **MOST COMMON**
 5. **DEBUG mode mismatch** - Media serving is only automatic when DEBUG=True
+
+**⚠️ MOST COMMON SCENARIO:**
+If pictures work with `DEBUG = True` but show 404 with `DEBUG = False`, nginx is NOT configured to serve media files. This is the issue! Jump to "Quick Fix for Production" below.
+
+**Understanding Django Media Serving:**
+- **DEBUG = True** (Development): Django automatically serves media files
+- **DEBUG = False** (Production): Django does NOT serve media files - nginx/Apache MUST do it
 
 **Diagnosis:**
 
@@ -585,7 +593,85 @@ This can occur for several reasons:
    - Look for the full path Django is trying to access
    - Verify MEDIA_ROOT setting is correct
 
-**Solution:**
+**Quick Fix for Production (DEBUG=False):**
+
+If your issue is: **"Works with DEBUG=True but not with DEBUG=False"**, follow these steps:
+
+**Step 1: Run the automated configuration helper**
+```bash
+cd scripts
+./configure_nginx_media.sh
+```
+
+This script will:
+- Detect your nginx configuration
+- Check if media location is configured
+- Verify paths and permissions
+- Provide you with the exact configuration needed
+
+**Step 2: Edit your nginx configuration**
+
+Find your nginx site config (usually one of these):
+- `/etc/nginx/sites-enabled/inhealth`
+- `/etc/nginx/conf.d/inhealth.conf`
+- `/etc/nginx/nginx.conf`
+
+Add this inside your `server` block:
+
+```nginx
+# Django Media Files (User uploads)
+location /media/ {
+    alias /home/zia/test2/inhealthUSA/django_inhealth/media/;  # UPDATE THIS PATH!
+    expires 7d;
+    add_header Cache-Control "public";
+
+    # Security: Prevent execution of uploaded scripts
+    location ~* \.(php|py|pl|sh|cgi|exe)$ {
+        deny all;
+    }
+}
+```
+
+**IMPORTANT**: Update the `alias` path to match YOUR actual path!
+
+**Step 3: Test and reload nginx**
+
+```bash
+# Test configuration
+sudo nginx -t
+
+# If test passes, reload nginx
+sudo systemctl reload nginx
+
+# Or restart nginx
+sudo systemctl restart nginx
+```
+
+**Step 4: Verify it works**
+
+```bash
+# Create a test file
+echo "test" > /home/zia/test2/inhealthUSA/django_inhealth/media/test.txt
+
+# Access it (replace yourdomain.com with your actual domain)
+curl https://yourdomain.com/media/test.txt
+# Should return: test
+
+# Or access in browser:
+# https://yourdomain.com/media/test.txt
+```
+
+If you see "test", it's working! Your profile pictures will now load.
+
+**Step 5: Check nginx error logs if it still doesn't work**
+
+```bash
+sudo tail -50 /var/log/nginx/error.log
+```
+
+---
+
+**Detailed Solution (Step-by-Step):**
 
 **Step 1: Create media directory structure**
 
