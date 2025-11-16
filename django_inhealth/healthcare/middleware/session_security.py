@@ -278,9 +278,9 @@ class SecurityHeadersMiddleware:
         if not response.has_header('Content-Security-Policy'):
             csp_directives = [
                 "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.heapanalytics.com https://www.google.com https://www.gstatic.com",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.heapanalytics.com https://www.google.com https://www.gstatic.com https://cdn.jsdelivr.net",
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-                "img-src 'self' data: https:",
+                "img-src 'self' data: https: blob:",
                 "font-src 'self' data: https://fonts.gstatic.com",
                 "connect-src 'self' https://cdn.heapanalytics.com",
                 "frame-src 'self' https://www.google.com",
@@ -307,11 +307,20 @@ class SecurityHeadersMiddleware:
             response['Cross-Origin-Opener-Policy'] = 'same-origin'
 
         # Cross-Origin-Resource-Policy: Prevent resource leaks
+        # Allow cross-origin for media files to enable CDN usage
         if not response.has_header('Cross-Origin-Resource-Policy'):
-            response['Cross-Origin-Resource-Policy'] = 'same-origin'
+            # Allow cross-origin for media and static files
+            if request.path.startswith('/media/') or request.path.startswith('/static/'):
+                response['Cross-Origin-Resource-Policy'] = 'cross-origin'
+            else:
+                response['Cross-Origin-Resource-Policy'] = 'same-origin'
 
         # Cross-Origin-Embedder-Policy: Require CORP
-        if not response.has_header('Cross-Origin-Embedder-Policy'):
-            response['Cross-Origin-Embedder-Policy'] = 'require-corp'
+        # Disabled in debug mode to allow external resources (CDNs, etc.)
+        # In production, this should be carefully evaluated based on your needs
+        if not self.debug and not response.has_header('Cross-Origin-Embedder-Policy'):
+            # Only enforce for non-media/static paths
+            if not request.path.startswith('/media/') and not request.path.startswith('/static/'):
+                response['Cross-Origin-Embedder-Policy'] = 'require-corp'
 
         return response
