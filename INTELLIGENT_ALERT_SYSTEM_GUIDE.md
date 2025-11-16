@@ -1,8 +1,20 @@
-# Intelligent Two-Stage Vital Sign Alert System
+# Intelligent Hybrid Vital Sign Alert System
 
 ## Overview
 
-The InHealth EHR system features an intelligent two-stage alert system that respects patient autonomy while ensuring timely medical intervention when needed. Instead of immediately notifying healthcare providers, the system first asks patients for permission, allowing them to decide who should be contacted.
+The InHealth EHR system features an intelligent hybrid alert system that balances patient autonomy with medical safety. When critical vital signs are detected:
+
+**IMMEDIATE ACTIONS (Patient Safety First):**
+- Doctors are notified IMMEDIATELY via Email/SMS/WhatsApp
+- Nurses are notified IMMEDIATELY via Email/SMS/WhatsApp
+- Patient is informed of critical vitals
+
+**PATIENT CHOICE (Additional Escalation):**
+- Patient can request EMS (Emergency Medical Services)
+- Patient can indicate "I'm okay" or request additional help
+- Auto-escalation to EMS for emergencies if no patient response
+
+This hybrid approach ensures healthcare providers are always aware of critical situations while giving patients control over additional emergency services.
 
 ## Table of Contents
 
@@ -21,19 +33,19 @@ The InHealth EHR system features an intelligent two-stage alert system that resp
 
 ## System Architecture
 
-### Two-Stage Process
+### Hybrid Alert Process
 
-**Stage 1: Patient Permission Request**
-- Critical vital signs detected
-- System creates `VitalSignAlertResponse` record
-- Patient receives notification via Email/SMS/WhatsApp
-- Patient is asked to choose who to notify
+**Immediate Notifications (happens instantly):**
+- ✅ Doctor notified via Email/SMS/WhatsApp
+- ✅ All active nurses notified via Email/SMS/WhatsApp
+- ✅ Patient informed of critical vitals
+- ✅ Alert record created in database
 
-**Stage 2: Provider Notification**
-- Triggered by patient response OR auto-escalation
-- Notifications sent only to selected providers
-- System tracks who was notified and when
-- If patient declines, no provider notifications sent
+**Patient Choice (optional escalation):**
+- Patient can request EMS if needed
+- Patient can indicate "I'm okay, no EMS needed"
+- System tracks patient response
+- Auto-escalates to EMS after timeout for emergencies
 
 ### Key Components
 
@@ -43,19 +55,19 @@ The InHealth EHR system features an intelligent two-stage alert system that resp
    - Records notification history
 
 2. **Alert Processing** (`vital_alerts.py`)
-   - `process_vital_alerts()`: Stage 1 - Creates alert and sends permission request
-   - `send_alert_to_providers()`: Stage 2 - Notifies selected providers
-   - Permission request functions for Email/SMS/WhatsApp
+   - `process_vital_alerts()`: Immediately notifies doctor and nurses, then sends patient notification
+   - `send_alert_to_providers()`: Additional provider notifications based on patient response
+   - Multi-channel notification functions for Email/SMS/WhatsApp
 
 3. **Response Handling** (`views.py` + `urls.py`)
-   - Web interface for patient responses
+   - Web interface for patient EMS requests
    - Token-based authentication for security
-   - Multiple action endpoints
+   - Multiple action endpoints (request EMS, decline, etc.)
 
 4. **Auto-Escalation** (Management Command)
-   - Checks for timed-out alerts
-   - Automatically escalates after timeout period
-   - Ensures no critical alert is missed
+   - Checks for timed-out emergency alerts
+   - Automatically calls EMS after timeout for emergencies
+   - Ensures critical cases get emergency response
 
 ---
 
@@ -66,10 +78,12 @@ The InHealth EHR system features an intelligent two-stage alert system that resp
 When a patient's vital signs enter critical ranges:
 
 ```python
-# Example: Heart rate = 150 bpm (red zone)
+# Example: Heart rate = 150 bpm (red zone), BP 180/110
 vital_sign = VitalSign.objects.create(
     encounter=encounter,
     heart_rate=150,
+    blood_pressure_systolic=180,
+    blood_pressure_diastolic=110,
     # ... other vitals
 )
 
@@ -78,7 +92,25 @@ from healthcare.vital_alerts import process_vital_alerts
 process_vital_alerts(vital_sign)
 ```
 
-### 2. Alert Creation
+### 2. IMMEDIATE: Doctor and Nurses Notified
+
+**The system immediately notifies the care team:**
+
+```python
+# Doctor receives notification via:
+- Email with critical vital details
+- SMS with summary
+- WhatsApp with formatted alert
+
+# All active nurses receive notification via:
+- Email with critical vital details
+- SMS with summary
+- WhatsApp with formatted alert
+```
+
+**This happens INSTANTLY when critical vitals are detected.**
+
+### 3. Alert Record Created
 
 The system creates a `VitalSignAlertResponse` record:
 
@@ -90,11 +122,16 @@ alert_response = VitalSignAlertResponse.objects.create(
     critical_vitals_json=[...],
     response_token='<unique-uuid>',
     patient_response_status='pending',
-    timeout_minutes=15
+    timeout_minutes=15,
+    # Mark as already notified
+    doctor_notified=True,
+    nurse_notified=True,
+    patient_wants_doctor=True,  # Already contacted
+    patient_wants_nurse=True    # Already contacted
 )
 ```
 
-### 3. Patient Notification
+### 4. Patient Notification (EMS Option)
 
 Patient receives notification via their preferred channels:
 
