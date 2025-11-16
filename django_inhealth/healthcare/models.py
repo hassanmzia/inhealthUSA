@@ -981,6 +981,13 @@ class NotificationPreferences(models.Model):
     sms_critical = models.BooleanField(default=True, help_text="Receive critical alerts via SMS")
     sms_warning = models.BooleanField(default=False, help_text="Receive warning alerts via SMS")
 
+    # WhatsApp notifications
+    whatsapp_enabled = models.BooleanField(default=False, help_text="Receive WhatsApp notifications")
+    whatsapp_emergency = models.BooleanField(default=True, help_text="Receive emergency alerts via WhatsApp")
+    whatsapp_critical = models.BooleanField(default=True, help_text="Receive critical alerts via WhatsApp")
+    whatsapp_warning = models.BooleanField(default=True, help_text="Receive warning alerts via WhatsApp")
+    whatsapp_number = models.CharField(max_length=20, blank=True, null=True, help_text="WhatsApp number with country code (e.g., +1234567890)")
+
     # Quiet hours (optional)
     enable_quiet_hours = models.BooleanField(default=False, help_text="Enable quiet hours (no non-emergency alerts)")
     quiet_start_time = models.TimeField(null=True, blank=True, help_text="Quiet hours start time")
@@ -1034,6 +1041,23 @@ class NotificationPreferences(models.Model):
             return self.sms_warning
 
         return False  # Default to not sending SMS for unknown types
+
+    def should_send_whatsapp(self, alert_type):
+        """
+        Check if WhatsApp notification should be sent for this alert type
+        alert_type: 'emergency', 'doctor', or 'nurse'
+        """
+        if not self.whatsapp_enabled:
+            return False
+
+        if alert_type == 'emergency':
+            return self.whatsapp_emergency
+        elif alert_type == 'doctor':
+            return self.whatsapp_critical
+        elif alert_type == 'nurse':
+            return self.whatsapp_warning
+
+        return False  # Default to not sending WhatsApp for unknown types
 
     def is_quiet_hours(self):
         """Check if current time is within quiet hours"""

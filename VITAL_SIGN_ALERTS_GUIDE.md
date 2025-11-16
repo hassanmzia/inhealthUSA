@@ -29,7 +29,7 @@ The Vital Sign Alert System monitors the following vital signs:
 When any vital sign falls outside the normal range, the system automatically:
 1. Determines the severity level (Emergency/Critical/Warning)
 2. Identifies who should be notified (Patient, Doctor, Nurses)
-3. Sends notifications via email and/or SMS
+3. Sends notifications via email, SMS, and/or WhatsApp
 4. Logs the alert for record keeping
 
 ## Alert Levels
@@ -60,11 +60,11 @@ The system categorizes vital sign alerts into three severity levels:
 
 For **ALL** critical vital signs (Emergency, Critical, and Warning levels):
 
-| Recipient | Notified | Email | SMS |
-|-----------|----------|-------|-----|
-| **Patient** | ✅ Always | ✅ Default ON | ⚠️ Default OFF |
-| **Doctor** | ✅ Always | ✅ Default ON | ⚠️ Optional |
-| **All Nurses** | ✅ Always | ✅ Default ON | ⚠️ Optional |
+| Recipient | Notified | Email | SMS | WhatsApp |
+|-----------|----------|-------|-----|----------|
+| **Patient** | ✅ Always | ✅ Default ON | ⚠️ Default OFF | ⚠️ Default OFF |
+| **Doctor** | ✅ Always | ✅ Default ON | ⚠️ Optional | ⚠️ Optional |
+| **All Nurses** | ✅ Always | ✅ Default ON | ⚠️ Optional | ⚠️ Optional |
 
 **Note:** Previously, only emergency and critical alerts would notify patients and doctors, while warning alerts only notified nurses. Now, **all critical vital signs notify everyone** for better patient safety.
 
@@ -110,6 +110,39 @@ For **ALL** critical vital signs (Emergency, Critical, and Warning levels):
   Please check your email for details.
   ```
 
+### WhatsApp Notifications
+
+- **Format:** Rich text message with formatting and emojis
+- **Content:**
+  - Alert level with visual indicators
+  - Patient name
+  - Complete list of critical vital signs (not limited like SMS)
+  - Color-coded status emojis (🔵 Emergency, 🔴 Critical, 🟠 Warning)
+  - Recommended actions
+- **Requires:** Twilio WhatsApp API configuration
+- **Advantages:**
+  - More reliable delivery than SMS in many countries
+  - Rich formatting for better readability
+  - Read receipts available
+  - Free messaging (except Twilio API fees)
+  - Better international support
+- **Example:**
+  ```
+  ⚠️ *EMERGENCY ALERT*
+
+  *InHealth EHR - Vital Signs Alert*
+  Patient: *John Doe*
+
+  *Critical Vital Signs Detected:*
+  🔵 Heart Rate: *155* (EMERGENCY)
+  🔵 Oxygen Saturation: *88%* (EMERGENCY)
+
+  📧 Check your email for complete details and recommended actions.
+
+  ⚠️ *IMMEDIATE ACTION REQUIRED*
+  Please seek medical attention immediately.
+  ```
+
 ## Notification Preferences
 
 Users can customize how they receive vital sign alerts through their notification preferences.
@@ -135,6 +168,22 @@ Users can customize how they receive vital sign alerts through their notificatio
 - **Warning SMS:** Receive warning alerts via SMS (Default: OFF)
 
 **Note:** SMS notifications require Twilio configuration and may incur charges.
+
+#### WhatsApp Notifications
+- **WhatsApp Enabled:** Master switch for all WhatsApp notifications (Default: OFF)
+- **WhatsApp Number:** Your WhatsApp number with country code (e.g., +1234567890). If not provided, your phone number will be used.
+- **Emergency WhatsApp:** Receive emergency alerts via WhatsApp (Default: ON if WhatsApp enabled)
+- **Critical WhatsApp:** Receive critical alerts via WhatsApp (Default: ON if WhatsApp enabled)
+- **Warning WhatsApp:** Receive warning alerts via WhatsApp (Default: ON if WhatsApp enabled)
+
+**Advantages of WhatsApp:**
+- More reliable delivery than SMS
+- Rich text formatting with emojis
+- Free international messaging
+- Better visual presentation of critical data
+- Read receipts for confirmation
+
+**Note:** WhatsApp notifications require Twilio WhatsApp API configuration.
 
 ## Quiet Hours
 
@@ -330,6 +379,62 @@ TWILIO_AUTH_TOKEN=your_auth_token
 TWILIO_PHONE_NUMBER=+1234567890
 ```
 
+#### WhatsApp Configuration (Twilio WhatsApp API)
+
+Twilio provides WhatsApp messaging through their API. Follow these steps:
+
+##### Step 1: Set Up Twilio WhatsApp
+1. Log in to your Twilio account: https://www.twilio.com/console
+2. Navigate to **Messaging** → **Try it out** → **Send a WhatsApp message**
+3. Follow the sandbox setup instructions (for testing)
+4. For production, apply for WhatsApp Business API approval
+
+##### Step 2: Twilio WhatsApp Sandbox (For Testing)
+1. From Twilio Console, go to **Messaging** → **Settings** → **WhatsApp sandbox**
+2. You'll see a sandbox number like: `+1 415 523 8886`
+3. Send the join code from your WhatsApp (e.g., "join <your-code>")
+4. You can now receive test messages
+
+##### Step 3: Configure InHealth EHR
+
+Edit `django_inhealth/.env`:
+
+```env
+# WhatsApp Settings (uses same Twilio credentials)
+TWILIO_ACCOUNT_SID=your_account_sid  # Same as SMS
+TWILIO_AUTH_TOKEN=your_auth_token    # Same as SMS
+TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886  # Twilio sandbox number
+
+# For production (after WhatsApp Business approval):
+# TWILIO_WHATSAPP_NUMBER=whatsapp:+1234567890
+```
+
+##### Step 4: User Setup
+Each user must:
+1. Set their WhatsApp number in Notification Preferences (with country code)
+2. Join the Twilio WhatsApp sandbox (testing) or be approved contact (production)
+3. Enable WhatsApp notifications in their preferences
+
+##### Production Setup (WhatsApp Business API)
+For production use:
+1. **Apply for WhatsApp Business API:** Contact Twilio sales
+2. **Get approved:** Usually takes 1-2 weeks
+3. **Configure your business profile:** Name, logo, description
+4. **Message templates:** Pre-approved templates for notifications
+5. **Update settings:** Use your production WhatsApp number
+
+**Important Notes:**
+- Sandbox is for testing only (max 5 contacts)
+- Production requires WhatsApp Business API approval
+- Message templates must be pre-approved by WhatsApp
+- 24-hour messaging window applies (after user interaction)
+- For critical alerts, consider using Template Messages
+
+**Costs:**
+- WhatsApp messages through Twilio: ~$0.005 per message
+- Much cheaper than SMS in most countries
+- Free for recipients (no SMS charges)
+
 #### Testing Alerts
 
 To test the alert system:
@@ -353,6 +458,7 @@ process_vital_alerts(vital_sign)
 New users automatically get these default preferences:
 - **Email notifications:** Enabled for all alert levels
 - **SMS notifications:** Disabled (must opt-in)
+- **WhatsApp notifications:** Disabled (must opt-in)
 - **Quiet hours:** Disabled
 - **Digest mode:** Disabled
 
@@ -430,6 +536,36 @@ active_nurses = Nurse.objects.filter(is_active=True)
 print(f"Active nurses: {active_nurses.count()}")
 ```
 
+### Not Receiving WhatsApp Alerts
+
+**Check:**
+1. WhatsApp notifications are enabled in preferences
+2. WhatsApp number is correct with country code (e.g., +1234567890)
+3. User has joined Twilio WhatsApp sandbox (for testing)
+4. Twilio WhatsApp credentials are configured
+5. Check Django logs for WhatsApp/Twilio errors
+
+**Solution for Sandbox (Testing):**
+```bash
+# 1. Get sandbox join code from Twilio Console
+# 2. From your WhatsApp app, send message to sandbox number:
+#    "join <your-sandbox-code>"
+# 3. Wait for confirmation message
+# 4. Test the alert system
+```
+
+**Solution for Production:**
+1. Ensure WhatsApp Business API is approved
+2. Verify message templates are approved
+3. Check Twilio WhatsApp number configuration
+4. Verify user's WhatsApp number is an approved contact
+
+**Common WhatsApp Errors:**
+- **"Not a valid WhatsApp number":** Number hasn't joined sandbox or isn't approved contact
+- **"Message template not found":** Using production without approved templates
+- **"Outside 24-hour window":** Need to use pre-approved template message
+- **"Twilio error 63033":** Recipient hasn't accepted Terms of Service
+
 ## Alert Workflow Diagram
 
 ```
@@ -448,7 +584,8 @@ Check Notification Preferences
 ↓             ↓          ↓
 PATIENT     DOCTOR    NURSES
 ↓             ↓          ↓
-Email/SMS   Email/SMS  Email/SMS
+Email/SMS/  Email/SMS/  Email/SMS/
+WhatsApp    WhatsApp    WhatsApp
 (if enabled) (if enabled) (if enabled)
        ↓
 Log Alert in System
@@ -461,10 +598,11 @@ Done
 ### For Healthcare Providers
 
 1. **Review alerts promptly** - Especially emergency and critical levels
-2. **Keep contact information updated** - Ensure email and phone are current
+2. **Keep contact information updated** - Ensure email, phone, and WhatsApp are current
 3. **Use quiet hours wisely** - Balance rest with patient safety
-4. **Enable SMS for emergencies** - Faster response to critical situations
-5. **Document responses** - Log actions taken in response to alerts
+4. **Enable WhatsApp or SMS for emergencies** - Faster response to critical situations
+5. **Consider WhatsApp for international staff** - More reliable and cost-effective than SMS
+6. **Document responses** - Log actions taken in response to alerts
 
 ### For Patients
 
@@ -476,11 +614,13 @@ Done
 
 ### For System Administrators
 
-1. **Test the system regularly** - Ensure alerts are working
+1. **Test the system regularly** - Ensure all notification methods are working
 2. **Monitor email delivery** - Check for bounced emails
-3. **Review Twilio usage** - Monitor SMS costs and delivery
-4. **Keep documentation updated** - Train staff on the system
-5. **Backup alert logs** - Maintain records for compliance
+3. **Review Twilio usage** - Monitor SMS and WhatsApp costs and delivery
+4. **Set up WhatsApp Business API** - For production use beyond sandbox
+5. **Keep documentation updated** - Train staff on all notification methods
+6. **Backup alert logs** - Maintain records for compliance
+7. **Monitor WhatsApp template approval** - Keep message templates compliant
 
 ## Privacy and Security
 

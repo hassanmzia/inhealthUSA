@@ -135,6 +135,74 @@ def send_vital_alert_sms(phone_number, patient_name, critical_vitals, alert_type
         return False
 
 
+def send_vital_alert_whatsapp(whatsapp_number, patient_name, critical_vitals, alert_type):
+    """
+    Send WhatsApp alert for critical vital signs via Twilio WhatsApp API
+    """
+    if not whatsapp_number or not settings.TWILIO_ACCOUNT_SID:
+        return False
+
+    try:
+        # Format phone number for WhatsApp
+        if not whatsapp_number.startswith('+'):
+            whatsapp_number = f"+1{whatsapp_number.replace('-', '').replace(' ', '').replace('(', '').replace(')', '')}"
+
+        # Build WhatsApp message (can be longer and more detailed than SMS)
+        alert_emoji = "🚨" if alert_type in ['emergency', 'doctor'] else "⚠️"
+
+        if alert_type == 'emergency':
+            alert_level = "⚠️ *EMERGENCY ALERT*"
+        elif alert_type == 'doctor':
+            alert_level = "🔴 *CRITICAL ALERT*"
+        else:
+            alert_level = "⚠️ *WARNING ALERT*"
+
+        message = f"{alert_level}\n\n"
+        message += f"*InHealth EHR - Vital Signs Alert*\n"
+        message += f"Patient: *{patient_name}*\n\n"
+        message += f"*Critical Vital Signs Detected:*\n"
+
+        for vital_name, value, color, contact_level in critical_vitals:
+            # Use emojis for visual impact
+            if color == 'blue':
+                status_emoji = "🔵"
+            elif color == 'red':
+                status_emoji = "🔴"
+            else:
+                status_emoji = "🟠"
+
+            message += f"{status_emoji} {vital_name}: *{value}* ({contact_level})\n"
+
+        message += f"\n📧 Check your email for complete details and recommended actions.\n"
+
+        if alert_type == 'emergency':
+            message += f"\n⚠️ *IMMEDIATE ACTION REQUIRED*\n"
+            message += f"Please seek medical attention immediately."
+
+        # Send WhatsApp message via Twilio
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+
+        # Get WhatsApp sender number from settings or use default format
+        whatsapp_from = getattr(settings, 'TWILIO_WHATSAPP_NUMBER', None)
+        if not whatsapp_from:
+            # Twilio WhatsApp sandbox format
+            whatsapp_from = f"whatsapp:{settings.TWILIO_PHONE_NUMBER}"
+        elif not whatsapp_from.startswith('whatsapp:'):
+            whatsapp_from = f"whatsapp:{whatsapp_from}"
+
+        whatsapp_to = f"whatsapp:{whatsapp_number}"
+
+        client.messages.create(
+            body=message,
+            from_=whatsapp_from,
+            to=whatsapp_to
+        )
+        return True
+    except Exception as e:
+        print(f"Failed to send WhatsApp message to {whatsapp_number}: {str(e)}")
+        return False
+
+
 def get_active_nurses(patient):
     """
     Get all active nurses who should be notified about patient alerts
@@ -213,6 +281,16 @@ def process_vital_alerts(vital_sign):
                     critical_vitals,
                     alert_type
                 )
+
+            # Send WhatsApp if enabled
+            whatsapp_num = prefs.whatsapp_number or patient.phone
+            if whatsapp_num and prefs.should_send_whatsapp(alert_type):
+                send_vital_alert_whatsapp(
+                    whatsapp_num,
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
     else:
         # No user account, send alerts by default
         if patient.email:
@@ -266,6 +344,16 @@ def process_vital_alerts(vital_sign):
                 if hasattr(doctor, 'phone') and doctor.phone and prefs.should_send_sms(alert_type):
                     send_vital_alert_sms(
                         doctor.phone,
+                        patient_name,
+                        critical_vitals,
+                        alert_type
+                    )
+
+                # Send WhatsApp if enabled
+                doctor_whatsapp = prefs.whatsapp_number if prefs.whatsapp_number else (doctor.phone if hasattr(doctor, 'phone') else None)
+                if doctor_whatsapp and prefs.should_send_whatsapp(alert_type):
+                    send_vital_alert_whatsapp(
+                        doctor_whatsapp,
                         patient_name,
                         critical_vitals,
                         alert_type
@@ -328,6 +416,16 @@ def process_vital_alerts(vital_sign):
                 if hasattr(nurse, 'phone') and nurse.phone and prefs.should_send_sms(alert_type):
                     send_vital_alert_sms(
                         nurse.phone,
+                        patient_name,
+                        critical_vitals,
+                        alert_type
+                    )
+
+                # Send WhatsApp if enabled
+                nurse_whatsapp = prefs.whatsapp_number if prefs.whatsapp_number else (nurse.phone if hasattr(nurse, 'phone') else None)
+                if nurse_whatsapp and prefs.should_send_whatsapp(alert_type):
+                    send_vital_alert_whatsapp(
+                        nurse_whatsapp,
                         patient_name,
                         critical_vitals,
                         alert_type
