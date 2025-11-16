@@ -286,7 +286,154 @@ python manage.py collectstatic --noinput
 - Avoid using `sudo` when running Django management commands unless absolutely necessary
 - In production, ensure the web server user has write access to the staticfiles directory
 
-### 7. Permission Denied on SSL Certificate
+### 7. User Profile Pictures Blocked After Enabling SSL
+
+**Symptoms:**
+- Profile pictures don't load after enabling HTTPS/SSL
+- Browser console shows "Mixed Content" errors
+- Images worked fine with HTTP but fail with HTTPS
+
+**Cause:**
+This issue occurs when browsers block "mixed content" - when an HTTPS page tries to load resources over HTTP. Common causes include:
+- Django not detecting that requests came over HTTPS
+- Nginx not forwarding the protocol information correctly
+- Incorrect nginx media file configuration
+- File permission issues preventing nginx from serving media files
+
+**Solution:**
+
+**Step 1: Verify Nginx Configuration**
+
+Ensure your nginx configuration includes the X-Forwarded-Proto header:
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:8000;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;  # CRITICAL - Tells Django if HTTPS
+    proxy_set_header X-Forwarded-Host $server_name;
+}
+```
+
+**Step 2: Verify Django Settings**
+
+Ensure these settings are in your `settings.py`:
+
+```python
+# Trust the X-Forwarded-Proto header from Nginx
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Use relative URL (not absolute with http://)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+```
+
+**Step 3: Check Media Directory Permissions**
+
+The nginx user (usually `www-data` or `nginx`) needs read access to media files:
+
+```bash
+cd django_inhealth
+
+# Check current permissions
+ls -la media/
+
+# Fix permissions if needed
+sudo chown -R $USER:www-data media/
+sudo chmod -R 755 media/
+
+# Ensure uploaded files have correct permissions
+sudo chmod -R 755 media/profile_pictures/
+```
+
+**Step 4: Verify Nginx Media Configuration**
+
+Ensure nginx is configured to serve media files. In your nginx site configuration:
+
+```nginx
+# Django Media Files (User uploads)
+location /media/ {
+    alias /path/to/django_inhealth/media/;  # Update this path
+    expires 7d;
+    add_header Cache-Control "public";
+
+    # Security: Prevent execution of uploaded scripts
+    location ~* \.(php|py|pl|sh|cgi|exe)$ {
+        deny all;
+    }
+}
+```
+
+**Step 5: Test Media File Access**
+
+Test if nginx can serve media files directly:
+
+```bash
+# Create a test file
+echo "test" > django_inhealth/media/test.txt
+
+# Try accessing via browser or curl
+curl https://yourdomain.com/media/test.txt
+# Should return "test"
+
+# If it fails, check nginx error logs
+sudo tail -f /var/log/nginx/error.log
+```
+
+**Step 6: Restart Services**
+
+After making changes, restart nginx:
+
+```bash
+# Test nginx configuration
+sudo nginx -t
+
+# Reload nginx
+sudo systemctl reload nginx
+
+# Or restart nginx
+sudo systemctl restart nginx
+```
+
+**Step 7: Check Browser Console**
+
+Open your browser's developer console (F12) and look for errors:
+- **Mixed Content errors**: Django is generating HTTP URLs instead of HTTPS
+  - Solution: Ensure `SECURE_PROXY_SSL_HEADER` is set correctly
+- **404 errors**: Nginx can't find the media files
+  - Solution: Check the media path in nginx config
+- **403 errors**: Permission denied
+  - Solution: Fix file permissions (see Step 3)
+
+**Debugging Commands:**
+
+```bash
+# Check if media directory exists and has files
+ls -la /path/to/django_inhealth/media/profile_pictures/
+
+# Check nginx user
+ps aux | grep nginx
+
+# Test file permissions as nginx user
+sudo -u www-data cat /path/to/django_inhealth/media/profile_pictures/some_image.jpg
+
+# Check nginx error logs
+sudo tail -50 /var/log/nginx/error.log
+
+# Check if X-Forwarded-Proto header is being received by Django
+# Add this to a Django view temporarily:
+# print(request.META.get('HTTP_X_FORWARDED_PROTO'))
+```
+
+**Prevention:**
+- Always use relative URLs for MEDIA_URL and STATIC_URL
+- Ensure proper permissions on media directory before going to production
+- Test HTTPS thoroughly before deploying
+- Use `SECURE_PROXY_SSL_HEADER` when behind a reverse proxy
+
+### 8. Permission Denied on SSL Certificate
 
 **Error Message:**
 ```
