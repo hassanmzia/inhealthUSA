@@ -1,11 +1,26 @@
 """
 Vital Signs Alert Notification System
 Sends email and SMS alerts based on vital sign status
+Respects user notification preferences
 """
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
 from twilio.rest import Client
+
+
+def get_user_notification_preferences(user):
+    """
+    Get or create notification preferences for a user
+    Returns default preferences if not set
+    """
+    from .models import NotificationPreferences
+
+    try:
+        return NotificationPreferences.objects.get(user=user)
+    except NotificationPreferences.DoesNotExist:
+        # Create default preferences
+        return NotificationPreferences.objects.create(user=user)
 
 
 def get_critical_vitals(vital_sign):
@@ -120,9 +135,96 @@ def send_vital_alert_sms(phone_number, patient_name, critical_vitals, alert_type
         return False
 
 
+def send_vital_alert_whatsapp(whatsapp_number, patient_name, critical_vitals, alert_type):
+    """
+    Send WhatsApp alert for critical vital signs via Twilio WhatsApp API
+    """
+    if not whatsapp_number or not settings.TWILIO_ACCOUNT_SID:
+        return False
+
+    try:
+        # Format phone number for WhatsApp
+        if not whatsapp_number.startswith('+'):
+            whatsapp_number = f"+1{whatsapp_number.replace('-', '').replace(' ', '').replace('(', '').replace(')', '')}"
+
+        # Build WhatsApp message (can be longer and more detailed than SMS)
+        alert_emoji = "🚨" if alert_type in ['emergency', 'doctor'] else "⚠️"
+
+        if alert_type == 'emergency':
+            alert_level = "⚠️ *EMERGENCY ALERT*"
+        elif alert_type == 'doctor':
+            alert_level = "🔴 *CRITICAL ALERT*"
+        else:
+            alert_level = "⚠️ *WARNING ALERT*"
+
+        message = f"{alert_level}\n\n"
+        message += f"*InHealth EHR - Vital Signs Alert*\n"
+        message += f"Patient: *{patient_name}*\n\n"
+        message += f"*Critical Vital Signs Detected:*\n"
+
+        for vital_name, value, color, contact_level in critical_vitals:
+            # Use emojis for visual impact
+            if color == 'blue':
+                status_emoji = "🔵"
+            elif color == 'red':
+                status_emoji = "🔴"
+            else:
+                status_emoji = "🟠"
+
+            message += f"{status_emoji} {vital_name}: *{value}* ({contact_level})\n"
+
+        message += f"\n📧 Check your email for complete details and recommended actions.\n"
+
+        if alert_type == 'emergency':
+            message += f"\n⚠️ *IMMEDIATE ACTION REQUIRED*\n"
+            message += f"Please seek medical attention immediately."
+
+        # Send WhatsApp message via Twilio
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+
+        # Get WhatsApp sender number from settings or use default format
+        whatsapp_from = getattr(settings, 'TWILIO_WHATSAPP_NUMBER', None)
+        if not whatsapp_from:
+            # Twilio WhatsApp sandbox format
+            whatsapp_from = f"whatsapp:{settings.TWILIO_PHONE_NUMBER}"
+        elif not whatsapp_from.startswith('whatsapp:'):
+            whatsapp_from = f"whatsapp:{whatsapp_from}"
+
+        whatsapp_to = f"whatsapp:{whatsapp_number}"
+
+        client.messages.create(
+            body=message,
+            from_=whatsapp_from,
+            to=whatsapp_to
+        )
+        return True
+    except Exception as e:
+        print(f"Failed to send WhatsApp message to {whatsapp_number}: {str(e)}")
+        return False
+
+
+def get_active_nurses(patient):
+    """
+    Get all active nurses who should be notified about patient alerts
+    Returns nurses from the patient's hospital/department
+    """
+    from .models import Nurse
+
+    # Try to get nurses from patient's hospital
+    if hasattr(patient, 'hospital') and patient.hospital:
+        return Nurse.objects.filter(
+            hospital=patient.hospital,
+            is_active=True
+        )
+
+    # If no hospital, get all active nurses (fallback)
+    return Nurse.objects.filter(is_active=True)[:5]  # Limit to 5 nurses
+
+
 def process_vital_alerts(vital_sign):
     """
     Main function to process vital sign alerts and send notifications
+    Sends alerts to PATIENT, DOCTOR, and NURSES for ALL critical vital signs
     """
     # Get all critical vitals
     critical_vitals = get_critical_vitals(vital_sign)
@@ -140,11 +242,57 @@ def process_vital_alerts(vital_sign):
     has_red = any(v[2] == 'red' for v in critical_vitals)
     has_orange = any(v[2] == 'orange' for v in critical_vitals)
 
-    # Blue or Red alerts: Notify patient and doctor
-    if has_blue or has_red:
-        alert_type = 'emergency' if has_blue else 'doctor'
+    # Determine alert type based on severity
+    if has_blue:
+        alert_type = 'emergency'
+    elif has_red:
+        alert_type = 'doctor'
+    else:
+        alert_type = 'nurse'
 
-        # Notify Patient
+    # ============================================================================
+    # NOTIFY PATIENT - For ALL critical vital signs
+    # ============================================================================
+    # Get patient's user account if exists
+    patient_user = getattr(patient, 'user', None)
+
+    # Check notification preferences
+    if patient_user:
+        prefs = get_user_notification_preferences(patient_user)
+        # Skip non-emergency alerts during quiet hours
+        if alert_type != 'emergency' and prefs.is_quiet_hours():
+            print(f"Skipping patient alert during quiet hours for {patient_name}")
+        else:
+            # Send email if enabled
+            if patient.email and prefs.should_send_email(alert_type):
+                send_vital_alert_email(
+                    patient.email,
+                    patient.full_name,
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+
+            # Send SMS if enabled
+            if patient.phone and prefs.should_send_sms(alert_type):
+                send_vital_alert_sms(
+                    patient.phone,
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+
+            # Send WhatsApp if enabled
+            whatsapp_num = prefs.whatsapp_number or patient.phone
+            if whatsapp_num and prefs.should_send_whatsapp(alert_type):
+                send_vital_alert_whatsapp(
+                    whatsapp_num,
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+    else:
+        # No user account, send alerts by default
         if patient.email:
             send_vital_alert_email(
                 patient.email,
@@ -162,19 +310,66 @@ def process_vital_alerts(vital_sign):
                 alert_type
             )
 
-        # Notify Doctor
-        if doctor:
-            doctor_user = doctor.user
-            if doctor_user.email:
+    # ============================================================================
+    # NOTIFY DOCTOR - For ALL critical vital signs
+    # ============================================================================
+    if doctor:
+        # Try to get doctor's email from user or provider model
+        doctor_email = None
+        doctor_user = getattr(doctor, 'user', None)
+
+        if doctor_user and doctor_user.email:
+            doctor_email = doctor_user.email
+        elif hasattr(doctor, 'email') and doctor.email:
+            doctor_email = doctor.email
+
+        # Check notification preferences
+        if doctor_user:
+            prefs = get_user_notification_preferences(doctor_user)
+            # Skip non-emergency alerts during quiet hours
+            if alert_type != 'emergency' and prefs.is_quiet_hours():
+                print(f"Skipping doctor alert during quiet hours for Dr. {doctor.full_name}")
+            else:
+                # Send email if enabled
+                if doctor_email and prefs.should_send_email(alert_type):
+                    send_vital_alert_email(
+                        doctor_email,
+                        f"Dr. {doctor.full_name}",
+                        patient_name,
+                        critical_vitals,
+                        alert_type
+                    )
+
+                # Send SMS if enabled
+                if hasattr(doctor, 'phone') and doctor.phone and prefs.should_send_sms(alert_type):
+                    send_vital_alert_sms(
+                        doctor.phone,
+                        patient_name,
+                        critical_vitals,
+                        alert_type
+                    )
+
+                # Send WhatsApp if enabled
+                doctor_whatsapp = prefs.whatsapp_number if prefs.whatsapp_number else (doctor.phone if hasattr(doctor, 'phone') else None)
+                if doctor_whatsapp and prefs.should_send_whatsapp(alert_type):
+                    send_vital_alert_whatsapp(
+                        doctor_whatsapp,
+                        patient_name,
+                        critical_vitals,
+                        alert_type
+                    )
+        else:
+            # No user account, send alerts by default
+            if doctor_email:
                 send_vital_alert_email(
-                    doctor_user.email,
+                    doctor_email,
                     f"Dr. {doctor.full_name}",
                     patient_name,
                     critical_vitals,
                     alert_type
                 )
 
-            if doctor.phone:
+            if hasattr(doctor, 'phone') and doctor.phone:
                 send_vital_alert_sms(
                     doctor.phone,
                     patient_name,
@@ -182,26 +377,81 @@ def process_vital_alerts(vital_sign):
                     alert_type
                 )
 
-    # Orange alerts: Notify nurse
-    elif has_orange:
-        # Get the nurse who recorded the vitals or any nurse assigned to the patient
-        nurse = vital_sign.recorded_by_nurse
+    # ============================================================================
+    # NOTIFY ALL NURSES - For ALL critical vital signs
+    # ============================================================================
+    # Get all active nurses for this patient
+    active_nurses = get_active_nurses(patient)
+    nurses_notified = 0
 
-        if nurse:
-            nurse_user = nurse.user
-            if nurse_user.email:
+    for nurse in active_nurses:
+        nurse_user = getattr(nurse, 'user', None)
+        nurse_email = None
+
+        if nurse_user and nurse_user.email:
+            nurse_email = nurse_user.email
+        elif hasattr(nurse, 'email') and nurse.email:
+            nurse_email = nurse.email
+
+        # Check notification preferences
+        if nurse_user:
+            prefs = get_user_notification_preferences(nurse_user)
+            # Skip non-emergency alerts during quiet hours
+            if alert_type != 'emergency' and prefs.is_quiet_hours():
+                print(f"Skipping nurse alert during quiet hours for {nurse.full_name}")
+                continue
+            else:
+                # Send email if enabled
+                if nurse_email and prefs.should_send_email(alert_type):
+                    send_vital_alert_email(
+                        nurse_email,
+                        nurse.full_name,
+                        patient_name,
+                        critical_vitals,
+                        alert_type
+                    )
+                    nurses_notified += 1
+
+                # Send SMS if enabled
+                if hasattr(nurse, 'phone') and nurse.phone and prefs.should_send_sms(alert_type):
+                    send_vital_alert_sms(
+                        nurse.phone,
+                        patient_name,
+                        critical_vitals,
+                        alert_type
+                    )
+
+                # Send WhatsApp if enabled
+                nurse_whatsapp = prefs.whatsapp_number if prefs.whatsapp_number else (nurse.phone if hasattr(nurse, 'phone') else None)
+                if nurse_whatsapp and prefs.should_send_whatsapp(alert_type):
+                    send_vital_alert_whatsapp(
+                        nurse_whatsapp,
+                        patient_name,
+                        critical_vitals,
+                        alert_type
+                    )
+        else:
+            # No user account, send alerts by default
+            if nurse_email:
                 send_vital_alert_email(
-                    nurse_user.email,
+                    nurse_email,
                     nurse.full_name,
                     patient_name,
                     critical_vitals,
-                    'nurse'
+                    alert_type
                 )
+                nurses_notified += 1
 
-            if nurse.phone:
+            if hasattr(nurse, 'phone') and nurse.phone:
                 send_vital_alert_sms(
                     nurse.phone,
                     patient_name,
                     critical_vitals,
-                    'nurse'
+                    alert_type
                 )
+
+    # Log the alert for record keeping
+    print(f"Vital sign alert sent for patient {patient_name}")
+    print(f"Alert type: {alert_type.upper()}")
+    print(f"Critical vitals: {len(critical_vitals)}")
+    print(f"Notified: Patient, {1 if doctor else 0} doctor(s), {nurses_notified} nurse(s)")

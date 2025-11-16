@@ -4,7 +4,8 @@ from django.contrib.auth.models import User
 from .models import (
     Hospital, UserProfile, Patient, Department, Provider, Nurse, OfficeAdministrator, Encounter, VitalSign,
     Diagnosis, Prescription, Allergy, MedicalHistory, SocialHistory, FamilyHistory,
-    Message, LabTest, Notification, InsuranceInformation, Billing, BillingItem, Payment, Device
+    Message, LabTest, Notification, InsuranceInformation, Billing, BillingItem, Payment, Device,
+    NotificationPreferences
 )
 
 
@@ -315,3 +316,42 @@ class DeviceAdmin(admin.ModelAdmin):
     date_hierarchy = 'registration_date'
     raw_id_fields = ['patient']
     readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(NotificationPreferences)
+class NotificationPreferencesAdmin(admin.ModelAdmin):
+    list_display = ['user', 'email_enabled', 'sms_enabled', 'whatsapp_enabled', 'enable_quiet_hours', 'digest_mode']
+    list_filter = ['email_enabled', 'sms_enabled', 'whatsapp_enabled', 'enable_quiet_hours', 'digest_mode']
+    search_fields = ['user__username', 'user__first_name', 'user__last_name', 'user__email', 'whatsapp_number']
+    raw_id_fields = ['user']
+    readonly_fields = ['created_at', 'updated_at']
+
+    fieldsets = (
+        ('User', {
+            'fields': ('user',)
+        }),
+        ('Email Notifications', {
+            'fields': ('email_enabled', 'email_emergency', 'email_critical', 'email_warning'),
+            'description': 'Configure email alerts for different severity levels'
+        }),
+        ('SMS Notifications', {
+            'fields': ('sms_enabled', 'sms_emergency', 'sms_critical', 'sms_warning'),
+            'description': 'SMS notifications require Twilio configuration in settings'
+        }),
+        ('WhatsApp Notifications', {
+            'fields': ('whatsapp_enabled', 'whatsapp_number', 'whatsapp_emergency', 'whatsapp_critical', 'whatsapp_warning'),
+            'description': 'WhatsApp notifications via Twilio WhatsApp API. Provide WhatsApp number with country code (e.g., +1234567890). If not provided, phone number will be used.'
+        }),
+        ('Quiet Hours', {
+            'fields': ('enable_quiet_hours', 'quiet_start_time', 'quiet_end_time'),
+            'description': 'Emergency alerts will still be sent during quiet hours'
+        }),
+        ('Advanced Settings', {
+            'fields': ('digest_mode', 'digest_frequency_hours'),
+            'description': 'Digest mode sends a summary of alerts instead of individual messages'
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
