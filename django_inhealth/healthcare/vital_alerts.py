@@ -586,9 +586,17 @@ def send_alert_to_providers(alert_response):
 
 def process_vital_alerts(vital_sign):
     """
-    STAGE 1: Two-stage intelligent alert system
-    Creates alert and sends permission request to PATIENT ONLY
-    Providers are only notified based on patient's response (Stage 2)
+    Hybrid intelligent alert system for critical vital signs
+
+    IMMEDIATE ACTIONS (for patient safety):
+    - Notify doctor IMMEDIATELY
+    - Notify nurses IMMEDIATELY
+    - Inform patient of critical vitals
+
+    PATIENT CHOICE (for additional escalation):
+    - Patient can request EMS
+    - Patient can request additional providers
+    - Auto-escalate to EMS if no response on emergencies
     """
     # Get all critical vitals
     critical_vitals = get_critical_vitals(vital_sign)
@@ -601,6 +609,7 @@ def process_vital_alerts(vital_sign):
     # Get patient info
     patient = vital_sign.encounter.patient
     patient_name = patient.full_name
+    doctor = vital_sign.encounter.provider
 
     # Determine highest alert level
     has_blue = any(v[2] == 'blue' for v in critical_vitals)
@@ -615,10 +624,147 @@ def process_vital_alerts(vital_sign):
         alert_type = 'warning'
 
     # ============================================================================
-    # STAGE 1: Create Alert Response Record and Send Permission Request to Patient
+    # IMMEDIATE NOTIFICATION: Notify Doctor and Nurses RIGHT AWAY
+    # This ensures medical staff know about critical vitals immediately
     # ============================================================================
 
-    # Generate unique response token
+    print(f"CRITICAL VITAL ALERT for {patient_name} - Notifying care team immediately...")
+
+    # NOTIFY DOCTOR IMMEDIATELY
+    doctor_notified = False
+    if doctor:
+        doctor_email = None
+        doctor_user = getattr(doctor, 'user', None)
+
+        if doctor_user and doctor_user.email:
+            doctor_email = doctor_user.email
+        elif hasattr(doctor, 'email') and doctor.email:
+            doctor_email = doctor.email
+
+        # Check notification preferences
+        if doctor_user:
+            prefs = get_user_notification_preferences(doctor_user)
+
+            # Send email if enabled
+            if doctor_email and prefs.should_send_email(alert_type):
+                send_vital_alert_email(
+                    doctor_email,
+                    f"Dr. {doctor.full_name}",
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+                doctor_notified = True
+
+            # Send SMS if enabled
+            if hasattr(doctor, 'phone') and doctor.phone and prefs.should_send_sms(alert_type):
+                send_vital_alert_sms(
+                    doctor.phone,
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+
+            # Send WhatsApp if enabled
+            doctor_whatsapp = prefs.whatsapp_number if prefs.whatsapp_number else (doctor.phone if hasattr(doctor, 'phone') else None)
+            if doctor_whatsapp and prefs.should_send_whatsapp(alert_type):
+                send_vital_alert_whatsapp(
+                    doctor_whatsapp,
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+        else:
+            # No user account, send alerts by default
+            if doctor_email:
+                send_vital_alert_email(
+                    doctor_email,
+                    f"Dr. {doctor.full_name}",
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+                doctor_notified = True
+
+            if hasattr(doctor, 'phone') and doctor.phone:
+                send_vital_alert_sms(
+                    doctor.phone,
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+
+    # NOTIFY ALL NURSES IMMEDIATELY
+    active_nurses = get_active_nurses(patient)
+    nurses_notified = 0
+
+    for nurse in active_nurses:
+        nurse_user = getattr(nurse, 'user', None)
+        nurse_email = None
+
+        if nurse_user and nurse_user.email:
+            nurse_email = nurse_user.email
+        elif hasattr(nurse, 'email') and nurse.email:
+            nurse_email = nurse.email
+
+        # Check notification preferences
+        if nurse_user:
+            prefs = get_user_notification_preferences(nurse_user)
+
+            # Send email if enabled
+            if nurse_email and prefs.should_send_email(alert_type):
+                send_vital_alert_email(
+                    nurse_email,
+                    nurse.full_name,
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+                nurses_notified += 1
+
+            # Send SMS if enabled
+            if hasattr(nurse, 'phone') and nurse.phone and prefs.should_send_sms(alert_type):
+                send_vital_alert_sms(
+                    nurse.phone,
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+
+            # Send WhatsApp if enabled
+            nurse_whatsapp = prefs.whatsapp_number if prefs.whatsapp_number else (nurse.phone if hasattr(nurse, 'phone') else None)
+            if nurse_whatsapp and prefs.should_send_whatsapp(alert_type):
+                send_vital_alert_whatsapp(
+                    nurse_whatsapp,
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+        else:
+            # No user account, send alerts by default
+            if nurse_email:
+                send_vital_alert_email(
+                    nurse_email,
+                    nurse.full_name,
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+                nurses_notified += 1
+
+            if hasattr(nurse, 'phone') and nurse.phone:
+                send_vital_alert_sms(
+                    nurse.phone,
+                    patient_name,
+                    critical_vitals,
+                    alert_type
+                )
+
+    # ============================================================================
+    # PATIENT NOTIFICATION: Inform patient and ask if they need EMS/additional help
+    # ============================================================================
+
+    # Generate unique response token for patient to request EMS if needed
     response_token = str(uuid.uuid4())
 
     # Convert critical_vitals list to JSON-serializable format
@@ -640,18 +786,25 @@ def process_vital_alerts(vital_sign):
         critical_vitals_json=critical_vitals_json,
         response_token=response_token,
         patient_response_status='pending',
-        timeout_minutes=15  # Default 15 minutes before auto-escalation
+        timeout_minutes=15,  # Auto-call EMS if emergency and no response
+        # Mark doctor and nurses as already notified
+        doctor_notified=doctor_notified,
+        nurse_notified=(nurses_notified > 0)
     )
+
+    # Update the response to show doctor and nurse were already contacted
+    alert_response.patient_wants_doctor = True  # Already notified
+    alert_response.patient_wants_nurse = True   # Already notified
+    alert_response.save()
 
     # Get patient's user account if exists
     patient_user = getattr(patient, 'user', None)
 
-    # Send permission request to patient
-    # This is the ONLY notification sent in Stage 1
+    # Send notification to patient (informational + EMS option)
     if patient_user:
         prefs = get_user_notification_preferences(patient_user)
 
-        # Send email permission request if enabled
+        # Send email notification if enabled
         if patient.email and prefs.should_send_email(alert_type):
             send_patient_permission_request_email(
                 patient.email,
@@ -661,7 +814,7 @@ def process_vital_alerts(vital_sign):
                 response_token
             )
 
-        # Send SMS permission request if enabled
+        # Send SMS notification if enabled
         if patient.phone and prefs.should_send_sms(alert_type):
             send_patient_permission_request_sms(
                 patient.phone,
@@ -671,7 +824,7 @@ def process_vital_alerts(vital_sign):
                 response_token
             )
 
-        # Send WhatsApp permission request if enabled
+        # Send WhatsApp notification if enabled
         whatsapp_num = prefs.whatsapp_number or patient.phone
         if whatsapp_num and prefs.should_send_whatsapp(alert_type):
             send_patient_permission_request_whatsapp(
@@ -682,7 +835,7 @@ def process_vital_alerts(vital_sign):
                 response_token
             )
     else:
-        # No user account, send permission requests by default
+        # No user account, send notifications by default
         if patient.email:
             send_patient_permission_request_email(
                 patient.email,
@@ -701,14 +854,19 @@ def process_vital_alerts(vital_sign):
                 response_token
             )
 
-    # Log the alert creation
-    print(f"Two-stage vital sign alert created for patient {patient_name}")
-    print(f"Alert ID: {alert_response.alert_id}")
-    print(f"Alert type: {alert_type.upper()}")
-    print(f"Critical vitals: {len(critical_vitals)}")
-    print(f"Permission request sent to patient. Waiting for response...")
-    print(f"Auto-escalation in {alert_response.timeout_minutes} minutes if no response")
+    # Log the alert
+    print(f"✓ Critical vital sign alert processed for patient {patient_name}")
+    print(f"  Alert ID: {alert_response.alert_id}")
+    print(f"  Alert type: {alert_type.upper()}")
+    print(f"  Critical vitals: {len(critical_vitals)}")
+    print(f"  Doctor notified: {'Yes' if doctor_notified else 'No'}")
+    print(f"  Nurses notified: {nurses_notified}")
+    print(f"  Patient informed: Yes (can request EMS if needed)")
 
-    # STAGE 2 happens when:
-    # 1. Patient responds via link -> VitalSignAlertResponse.process_patient_response() -> send_alert_to_providers()
-    # 2. Timeout occurs -> Auto-escalation task -> VitalSignAlertResponse.auto_escalate() -> send_alert_to_providers()
+    if alert_type == 'emergency':
+        print(f"  Auto-EMS escalation in {alert_response.timeout_minutes} minutes if no patient response")
+
+    # PATIENT CAN:
+    # 1. Click "Call EMS" -> VitalSignAlertResponse.process_patient_response('approve_ems')
+    # 2. Click "I'm okay" -> VitalSignAlertResponse.process_patient_response('decline')
+    # 3. No response + emergency -> Auto-escalation task calls EMS after timeout
