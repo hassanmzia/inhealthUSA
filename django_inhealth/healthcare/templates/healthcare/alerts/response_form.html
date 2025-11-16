@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Alert Response - InHealth EHR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            max-width: 700px;
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .alert-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .patient-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .patient-info h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .vitals-grid {
+            display: grid;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .vital-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #dee2e6;
+        }
+        .vital-item.critical {
+            border-left-color: #dc3545;
+        }
+        .vital-item.warning {
+            border-left-color: #ffc107;
+        }
+        .vital-name {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        .vital-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .vital-status {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .question {
+            text-align: center;
+            margin: 30px 0;
+            font-size: 22px;
+            color: #333;
+            font-weight: 600;
+        }
+        .action-buttons {
+            display: grid;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .btn {
+            display: block;
+            padding: 18px 24px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-doctor {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
+        }
+        .btn-nurse {
+            background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+            color: white;
+        }
+        .btn-ems {
+            background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+            color: white;
+        }
+        .btn-all {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+            color: white;
+        }
+        .btn-decline {
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+            color: white;
+        }
+        .icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        .timeout-notice {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 30px;
+            font-size: 14px;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="alert-badge">
+                {% if alert_type == 'emergency' %}
+                🚨 EMERGENCY ALERT
+                {% elif alert_type == 'critical' %}
+                🔴 CRITICAL ALERT
+                {% else %}
+                ⚠️ WARNING ALERT
+                {% endif %}
+            </div>
+            <h1>Health Alert Response</h1>
+            <p>InHealth EHR Vital Signs Monitoring</p>
+        </div>
+
+        <div class="content">
+            <div class="patient-info">
+                <h2>Patient: {{ patient.full_name }}</h2>
+                <p style="color: #6c757d;">Critical vital signs have been detected and require your attention.</p>
+
+                <div class="vitals-grid">
+                    {% for vital in critical_vitals %}
+                    <div class="vital-item {% if vital.color == 'red' or vital.color == 'blue' %}critical{% else %}warning{% endif %}">
+                        <div class="vital-name">{{ vital.vital_name }}</div>
+                        <div class="vital-value">{{ vital.value }}</div>
+                        <div class="vital-status">{{ vital.contact_level }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="question">
+                📋 Who would you like us to notify?
+            </div>
+
+            <div class="action-buttons">
+                <a href="{% url 'vital_alert_respond_action' alert_response.response_token 'approve_doctor' %}" class="btn btn-doctor">
+                    <span class="icon">👨‍⚕️</span>Notify My Doctor
+                </a>
+
+                <a href="{% url 'vital_alert_respond_action' alert_response.response_token 'approve_nurse' %}" class="btn btn-nurse">
+                    <span class="icon">👩‍⚕️</span>Notify Nursing Staff
+                </a>
+
+                <a href="{% url 'vital_alert_respond_action' alert_response.response_token 'approve_ems' %}" class="btn btn-ems">
+                    <span class="icon">🚑</span>Call Emergency Services (EMS)
+                </a>
+
+                <a href="{% url 'vital_alert_respond_action' alert_response.response_token 'approve_all' %}" class="btn btn-all">
+                    <span class="icon">📢</span>Notify Everyone
+                </a>
+
+                <a href="{% url 'vital_alert_respond_action' alert_response.response_token 'decline' %}" class="btn btn-decline">
+                    <span class="icon">❌</span>I'm Fine - No Action Needed
+                </a>
+            </div>
+
+            <div class="timeout-notice">
+                <strong>⏰ Time-Sensitive:</strong>
+                {% if alert_type == 'emergency' %}
+                For your safety, if we don't receive a response within 15 minutes, we will automatically
+                notify your doctor to ensure you receive timely medical attention.
+                {% else %}
+                Please respond within 15 minutes. If we don't receive a response, we may automatically
+                escalate this alert to your healthcare team.
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="footer">
+            <strong>InHealth EHR</strong> - Intelligent Electronic Health Record System<br>
+            If you need immediate assistance, call 911 or your local emergency number.
+        </div>
+    </div>
+</body>
+</html>
