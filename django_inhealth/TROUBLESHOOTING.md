@@ -433,7 +433,126 @@ sudo tail -50 /var/log/nginx/error.log
 - Test HTTPS thoroughly before deploying
 - Use `SECURE_PROXY_SSL_HEADER` when behind a reverse proxy
 
-### 8. Permission Denied on SSL Certificate
+### 8. Charts and Images Not Loading (Content Security Policy Blocking)
+
+**Symptoms:**
+- Charts/graphs don't render on the page
+- Profile pictures or other images don't load
+- Browser console shows CSP (Content Security Policy) violations
+- Console errors like: "Refused to load the script because it violates the following Content Security Policy directive"
+
+**Example Error Messages:**
+```
+Refused to load the script 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'
+because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline'"
+
+Refused to load the image because it violates the following Content Security Policy directive: "img-src 'self'"
+```
+
+**Cause:**
+The `SecurityHeadersMiddleware` in `healthcare/middleware/session_security.py` sets Content Security Policy (CSP) headers that restrict which external resources can be loaded. If a CDN or external resource is not whitelisted, the browser blocks it.
+
+**Diagnosis:**
+
+1. **Check Browser Console (F12)**
+   - Open Developer Tools (F12)
+   - Go to the Console tab
+   - Look for CSP violation errors
+   - Note which URLs are being blocked
+
+2. **Check Response Headers**
+   - In Developer Tools, go to Network tab
+   - Click on the main page request
+   - Look for `Content-Security-Policy` header
+   - Verify which domains are allowed
+
+**Solution:**
+
+The CSP configuration is in `django_inhealth/healthcare/middleware/session_security.py` (around line 279).
+
+**Quick Fix (Already Applied):**
+
+The CSP has been updated to allow:
+- Chart.js from `https://cdn.jsdelivr.net`
+- Images from HTTPS sources and blob URIs
+- Cross-origin resources in debug mode
+
+**If you need to add more CDN domains:**
+
+Edit `healthcare/middleware/session_security.py` and update the CSP directives:
+
+```python
+csp_directives = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://your-cdn.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: https: blob:",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    # ... add more as needed
+]
+```
+
+**Testing the Fix:**
+
+1. **Restart Django development server:**
+   ```bash
+   python manage.py runserver
+   ```
+
+2. **Clear browser cache:**
+   - Press Ctrl+F5 (or Cmd+Shift+R on Mac)
+   - Or clear cache in browser settings
+
+3. **Check browser console:**
+   - Open F12 Developer Tools
+   - Refresh the page
+   - Verify no CSP violations
+
+4. **Test specific pages:**
+   - Visit a page with charts (e.g., patient vitals chart)
+   - Verify charts render correctly
+   - Check profile pages for images
+
+**Alternative Solution (Disable CSP in Development):**
+
+If you want to completely disable CSP during development, comment out the CSP section:
+
+```python
+# In healthcare/middleware/session_security.py
+# Comment out lines 276-297 (the entire CSP section)
+```
+
+**For Production:**
+- Keep CSP enabled for security
+- Whitelist only necessary CDNs
+- Use `'nonce-'` or `'hash-'` instead of `'unsafe-inline'` where possible
+- Test thoroughly before deployment
+
+**Common CSP Directives:**
+- `script-src` - Controls JavaScript sources
+- `style-src` - Controls CSS sources
+- `img-src` - Controls image sources
+- `font-src` - Controls font sources
+- `connect-src` - Controls AJAX/WebSocket connections
+- `frame-src` - Controls iframe sources
+
+**Debugging Commands:**
+
+```bash
+# Check current CSP policy via curl
+curl -I https://yourdomain.com | grep -i content-security
+
+# View in browser
+# Open F12 -> Network -> Click main page -> Headers -> Look for Content-Security-Policy
+```
+
+**Prevention:**
+- Document all external CDNs used in your application
+- Test CSP policy changes in development first
+- Use CSP reporting to monitor violations: `Content-Security-Policy-Report-Only`
+- Consider self-hosting libraries instead of using CDNs for critical resources
+
+### 9. Permission Denied on SSL Certificate
 
 **Error Message:**
 ```
