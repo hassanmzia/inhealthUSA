@@ -5,7 +5,7 @@ from .models import (
     Hospital, UserProfile, Patient, Department, Provider, Nurse, OfficeAdministrator, Encounter, VitalSign,
     Diagnosis, Prescription, Allergy, MedicalHistory, SocialHistory, FamilyHistory,
     Message, LabTest, Notification, InsuranceInformation, Billing, BillingItem, Payment, Device,
-    NotificationPreferences
+    NotificationPreferences, VitalSignAlertResponse
 )
 
 
@@ -355,3 +355,40 @@ class NotificationPreferencesAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(VitalSignAlertResponse)
+class VitalSignAlertResponseAdmin(admin.ModelAdmin):
+    list_display = ['alert_id', 'patient', 'alert_type', 'patient_response_status', 'auto_escalated', 'doctor_notified', 'nurse_notified', 'ems_notified', 'created_at']
+    list_filter = ['patient_response_status', 'alert_type', 'auto_escalated', 'doctor_notified', 'nurse_notified', 'ems_notified']
+    search_fields = ['patient__first_name', 'patient__last_name', 'response_token']
+    raw_id_fields = ['vital_sign', 'patient']
+    readonly_fields = ['response_token', 'patient_response_time', 'auto_escalation_time', 'notifications_sent_at', 'created_at', 'updated_at']
+    date_hierarchy = 'created_at'
+
+    fieldsets = (
+        ('Alert Information', {
+            'fields': ('vital_sign', 'patient', 'alert_type', 'critical_vitals_json')
+        }),
+        ('Patient Response', {
+            'fields': ('patient_response_status', 'patient_wants_doctor', 'patient_wants_nurse', 'patient_wants_ems', 'patient_response_time', 'patient_response_method')
+        }),
+        ('Auto-Escalation', {
+            'fields': ('timeout_minutes', 'auto_escalated', 'auto_escalation_time')
+        }),
+        ('Notifications', {
+            'fields': ('doctor_notified', 'nurse_notified', 'ems_notified', 'notifications_sent_at')
+        }),
+        ('Response Tracking', {
+            'fields': ('response_token',),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def has_add_permission(self, request):
+        # Alerts are created automatically, not manually
+        return False

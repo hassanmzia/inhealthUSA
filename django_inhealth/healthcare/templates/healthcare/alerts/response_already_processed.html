@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Already Responded - InHealth EHR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            max-width: 600px;
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            text-align: center;
+        }
+        .header {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
+            padding: 40px 30px;
+        }
+        .info-icon {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 48px;
+        }
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .status-box {
+            background: #e7f3ff;
+            border-left: 4px solid #0d6efd;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .status-box h2 {
+            color: #0d6efd;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        .status-detail {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .info-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        .info-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .info-section p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="info-icon">ℹ️</div>
+            <h1>Already Responded</h1>
+            <p>This alert has already been processed</p>
+        </div>
+
+        <div class="content">
+            <div class="status-box">
+                <h2>Alert Status:</h2>
+                <div class="status-detail">
+                    <strong>Current Status:</strong> {{ status }}
+                </div>
+                {% if alert_response.patient_response_time %}
+                <div class="status-detail">
+                    <strong>Response Time:</strong> {{ alert_response.patient_response_time|date:"F j, Y, g:i a" }}
+                </div>
+                {% endif %}
+                {% if alert_response.patient_response_method %}
+                <div class="status-detail">
+                    <strong>Response Method:</strong> {{ alert_response.patient_response_method|upper }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="info-section">
+                <h3>ℹ️ What This Means:</h3>
+                <p>
+                    You (or someone with access to this link) have already responded to this health alert.
+                    Each alert can only be responded to once to ensure accurate tracking and prevent
+                    duplicate notifications.
+                </p>
+
+                {% if alert_response.patient_response_status == 'declined' %}
+                <p style="margin-top: 15px;">
+                    <strong>Your Previous Response:</strong> You indicated that no action was needed.
+                    If your condition has changed or worsened, please contact your healthcare provider directly.
+                </p>
+                {% elif alert_response.patient_response_status == 'timeout' %}
+                <p style="margin-top: 15px;">
+                    <strong>Auto-Escalation:</strong> This alert was automatically escalated to your
+                    healthcare team because no response was received within the timeout period.
+                </p>
+                {% else %}
+                <p style="margin-top: 15px;">
+                    <strong>Your Previous Response:</strong> Your healthcare team has been notified
+                    according to your preferences. They should be in contact with you soon.
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="info-section" style="background: #fff3cd; border-left: 4px solid #ffc107;">
+                <h3>📞 Need Additional Help?</h3>
+                <p>
+                    If you need to make changes to your response or have additional concerns:
+                </p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Contact your healthcare provider's office directly</li>
+                    <li>Call 911 if you have a medical emergency</li>
+                    <li>Log into your patient portal for more information</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <strong>InHealth EHR</strong> - Intelligent Electronic Health Record System<br>
+            You may close this window.
+        </div>
+    </div>
+</body>
+</html>

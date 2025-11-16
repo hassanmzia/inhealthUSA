@@ -4915,3 +4915,66 @@ def change_password(request):
         form = UserPasswordChangeForm(user=request.user)
 
     return render(request, 'healthcare/auth/change_password.html', {'form': form})
+
+
+# ============================================================================
+# Vital Sign Alert Response Views
+# ============================================================================
+
+def vital_alert_respond(request, token, action=None):
+    """
+    Handle patient response to vital sign alerts
+    Supports actions: approve_doctor, approve_nurse, approve_ems, approve_all, decline
+    """
+    from .models import VitalSignAlertResponse
+
+    # Get the alert response by token
+    try:
+        alert_response = VitalSignAlertResponse.objects.get(response_token=token)
+    except VitalSignAlertResponse.DoesNotExist:
+        return render(request, 'healthcare/alerts/response_error.html', {
+            'error_title': 'Invalid Alert Link',
+            'error_message': 'This alert response link is invalid or has expired.'
+        })
+
+    # Check if alert is still pending
+    if not alert_response.is_pending():
+        return render(request, 'healthcare/alerts/response_already_processed.html', {
+            'alert_response': alert_response,
+            'status': alert_response.get_patient_response_status_display()
+        })
+
+    # If no action specified, show the response form
+    if not action:
+        return render(request, 'healthcare/alerts/response_form.html', {
+            'alert_response': alert_response,
+            'patient': alert_response.patient,
+            'critical_vitals': alert_response.critical_vitals_json,
+            'alert_type': alert_response.alert_type,
+        })
+
+    # Process the action
+    valid_actions = ['approve_doctor', 'approve_nurse', 'approve_ems', 'approve_all', 'decline']
+    if action not in valid_actions:
+        return render(request, 'healthcare/alerts/response_error.html', {
+            'error_title': 'Invalid Action',
+            'error_message': f'The action "{action}" is not recognized.'
+        })
+
+    # Determine response method (email, sms, whatsapp, or web)
+    response_method = request.GET.get('method', 'web')
+
+    # Process the patient's response
+    success = alert_response.process_patient_response(action, response_method)
+
+    if success:
+        return render(request, 'healthcare/alerts/response_success.html', {
+            'alert_response': alert_response,
+            'action': action,
+            'patient': alert_response.patient,
+        })
+    else:
+        return render(request, 'healthcare/alerts/response_error.html', {
+            'error_title': 'Processing Error',
+            'error_message': 'There was an error processing your response. Please try again or contact support.'
+        })

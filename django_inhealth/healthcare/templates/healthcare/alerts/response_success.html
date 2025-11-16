@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Response Received - InHealth EHR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            max-width: 600px;
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            text-align: center;
+        }
+        .header {
+            background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+            color: white;
+            padding: 40px 30px;
+        }
+        .checkmark {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 48px;
+        }
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .response-summary {
+            background: #e7f3ff;
+            border-left: 4px solid #0d6efd;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .response-summary h2 {
+            color: #0d6efd;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        .response-detail {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .next-steps {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        .next-steps h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .next-steps ul {
+            text-align: left;
+            margin-left: 20px;
+        }
+        .next-steps li {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .emergency-notice {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="checkmark">✓</div>
+            <h1>Response Received</h1>
+            <p>Thank you for responding to your health alert</p>
+        </div>
+
+        <div class="content">
+            <div class="response-summary">
+                <h2>Your Response:</h2>
+                <div class="response-detail">
+                    <strong>Patient:</strong> {{ patient.full_name }}
+                </div>
+                <div class="response-detail">
+                    <strong>Action Selected:</strong>
+                    {% if action == 'approve_doctor' %}
+                        👨‍⚕️ Notify My Doctor
+                    {% elif action == 'approve_nurse' %}
+                        👩‍⚕️ Notify Nursing Staff
+                    {% elif action == 'approve_ems' %}
+                        🚑 Call Emergency Services (EMS)
+                    {% elif action == 'approve_all' %}
+                        📢 Notify Everyone (Doctor, Nurse, and EMS)
+                    {% elif action == 'decline' %}
+                        ❌ No Action Needed
+                    {% endif %}
+                </div>
+                <div class="response-detail" style="margin-top: 15px;">
+                    {% if action != 'decline' %}
+                        <strong>Status:</strong> Notifications are being sent to your healthcare team now.
+                    {% else %}
+                        <strong>Status:</strong> No notifications will be sent. Please monitor your health closely.
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if action != 'decline' %}
+            <div class="next-steps">
+                <h3>📋 What Happens Next:</h3>
+                <ul>
+                    {% if alert_response.patient_wants_doctor %}
+                    <li>Your doctor has been notified via email{{ alert_response.doctor_notified|yesno:', SMS,' }} and will review your vital signs.</li>
+                    {% endif %}
+                    {% if alert_response.patient_wants_nurse %}
+                    <li>Nursing staff have been alerted and may contact you for a follow-up.</li>
+                    {% endif %}
+                    {% if alert_response.patient_wants_ems %}
+                    <li>Emergency services have been contacted and will respond as quickly as possible.</li>
+                    {% endif %}
+                    <li>Keep your phone nearby in case your healthcare team needs to reach you.</li>
+                    <li>If you experience worsening symptoms, call 911 immediately.</li>
+                </ul>
+            </div>
+            {% else %}
+            <div class="next-steps">
+                <h3>📋 Recommendations:</h3>
+                <ul>
+                    <li>Continue to monitor your vital signs closely.</li>
+                    <li>If symptoms worsen or new symptoms develop, contact your doctor immediately.</li>
+                    <li>Keep a record of any unusual symptoms or changes in your condition.</li>
+                    <li>Consider scheduling a follow-up appointment with your healthcare provider.</li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="emergency-notice">
+                <strong>⚠️ Important:</strong>
+                If you experience severe symptoms such as chest pain, difficulty breathing, severe bleeding,
+                loss of consciousness, or any other medical emergency, call 911 immediately.
+            </div>
+        </div>
+
+        <div class="footer">
+            <strong>InHealth EHR</strong> - Intelligent Electronic Health Record System<br>
+            Your response has been recorded. You may close this window.
+        </div>
+    </div>
+</body>
+</html>

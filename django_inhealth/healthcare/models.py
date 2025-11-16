@@ -1072,3 +1072,185 @@ class NotificationPreferences(models.Model):
             return self.quiet_start_time <= now <= self.quiet_end_time
         else:
             return now >= self.quiet_start_time or now <= self.quiet_end_time
+
+
+class VitalSignAlertResponse(models.Model):
+    """
+    Tracks patient responses to critical vital sign alerts
+    Implements two-stage alerting: Patient permission → Provider notification
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Waiting for Patient Response'),
+        ('approved_doctor', 'Patient Approved - Notify Doctor'),
+        ('approved_nurse', 'Patient Approved - Notify Nurse'),
+        ('approved_ems', 'Patient Approved - Notify EMS'),
+        ('approved_all', 'Patient Approved - Notify All'),
+        ('declined', 'Patient Declined Notification'),
+        ('timeout', 'No Response - Auto-escalated'),
+        ('completed', 'Notifications Sent'),
+    ]
+
+    alert_id = models.AutoField(primary_key=True)
+    vital_sign = models.ForeignKey('VitalSign', on_delete=models.CASCADE, related_name='alert_responses')
+    patient = models.ForeignKey('Patient', on_delete=models.CASCADE, related_name='vital_alert_responses')
+
+    # Alert details
+    alert_type = models.CharField(max_length=20, help_text="emergency, doctor, or nurse")
+    critical_vitals_json = models.JSONField(help_text="JSON array of critical vital signs")
+
+    # Patient response
+    patient_response_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    patient_wants_doctor = models.BooleanField(default=False, help_text="Patient wants to contact doctor")
+    patient_wants_nurse = models.BooleanField(default=False, help_text="Patient wants to contact nurse")
+    patient_wants_ems = models.BooleanField(default=False, help_text="Patient wants to contact EMS")
+    patient_response_time = models.DateTimeField(null=True, blank=True, help_text="When patient responded")
+    patient_response_method = models.CharField(max_length=20, null=True, blank=True, help_text="email, sms, or whatsapp")
+
+    # Auto-escalation
+    timeout_minutes = models.IntegerField(default=15, help_text="Minutes before auto-escalation")
+    auto_escalated = models.BooleanField(default=False, help_text="Alert was auto-escalated due to timeout")
+    auto_escalation_time = models.DateTimeField(null=True, blank=True, help_text="When auto-escalation occurred")
+
+    # Notifications sent
+    doctor_notified = models.BooleanField(default=False)
+    nurse_notified = models.BooleanField(default=False)
+    ems_notified = models.BooleanField(default=False)
+    notifications_sent_at = models.DateTimeField(null=True, blank=True)
+
+    # Response tracking
+    response_token = models.CharField(max_length=100, unique=True, help_text="Unique token for response links")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'vital_sign_alert_responses'
+        verbose_name = 'Vital Sign Alert Response'
+        verbose_name_plural = 'Vital Sign Alert Responses'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Alert {self.alert_id} - {self.patient.full_name} - {self.patient_response_status}"
+
+    def is_pending(self):
+        """Check if alert is still waiting for patient response"""
+        return self.patient_response_status == 'pending'
+
+    def is_timeout_exceeded(self):
+        """Check if the timeout period has been exceeded"""
+        if self.patient_response_status != 'pending':
+            return False
+
+        from datetime import timedelta
+        timeout_threshold = self.created_at + timedelta(minutes=self.timeout_minutes)
+        return timezone.now() > timeout_threshold
+
+    def should_auto_escalate(self):
+        """Determine if alert should be auto-escalated"""
+        return self.is_pending() and self.is_timeout_exceeded() and not self.auto_escalated
+
+    def get_response_url(self, action):
+        """
+        Generate response URL for email/SMS/WhatsApp
+        action: 'approve_doctor', 'approve_nurse', 'approve_ems', 'approve_all', 'decline'
+        """
+        from django.urls import reverse
+        from django.conf import settings
+
+        base_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+        path = reverse('vital_alert_response', kwargs={'token': self.response_token, 'action': action})
+        return f"{base_url}{path}"
+
+    def process_patient_response(self, action, response_method='web'):
+        """
+        Process patient's response to alert
+        action: 'approve_doctor', 'approve_nurse', 'approve_ems', 'approve_all', 'decline'
+        """
+        if not self.is_pending():
+            return False, "Alert has already been responded to"
+
+        self.patient_response_time = timezone.now()
+        self.patient_response_method = response_method
+
+        if action == 'decline':
+            self.patient_response_status = 'declined'
+            self.save()
+            return True, "Patient declined notification. No providers will be contacted."
+
+        elif action == 'approve_doctor':
+            self.patient_wants_doctor = True
+            self.patient_response_status = 'approved_doctor'
+
+        elif action == 'approve_nurse':
+            self.patient_wants_nurse = True
+            self.patient_response_status = 'approved_nurse'
+
+        elif action == 'approve_ems':
+            self.patient_wants_ems = True
+            self.patient_response_status = 'approved_ems'
+
+        elif action == 'approve_all':
+            self.patient_wants_doctor = True
+            self.patient_wants_nurse = True
+            self.patient_wants_ems = True
+            self.patient_response_status = 'approved_all'
+
+        else:
+            return False, "Invalid action"
+
+        self.save()
+
+        # Send notifications to approved providers
+        self._send_provider_notifications()
+
+        return True, f"Notifications will be sent as requested."
+
+    def _send_provider_notifications(self):
+        """Send notifications to providers based on patient approval"""
+        from .vital_alerts import send_alert_to_providers
+
+        send_alert_to_providers(
+            vital_sign=self.vital_sign,
+            patient=self.patient,
+            alert_type=self.alert_type,
+            critical_vitals=self.critical_vitals_json,
+            notify_doctor=self.patient_wants_doctor,
+            notify_nurse=self.patient_wants_nurse,
+            notify_ems=self.patient_wants_ems
+        )
+
+        self.doctor_notified = self.patient_wants_doctor
+        self.nurse_notified = self.patient_wants_nurse
+        self.ems_notified = self.patient_wants_ems
+        self.notifications_sent_at = timezone.now()
+        self.patient_response_status = 'completed'
+        self.save()
+
+    def auto_escalate(self):
+        """Auto-escalate alert when timeout is exceeded"""
+        if not self.should_auto_escalate():
+            return False
+
+        self.auto_escalated = True
+        self.auto_escalation_time = timezone.now()
+        self.patient_response_status = 'timeout'
+
+        # For emergencies, notify everyone
+        if self.alert_type == 'emergency':
+            self.patient_wants_doctor = True
+            self.patient_wants_nurse = True
+            self.patient_wants_ems = True
+        # For critical, notify doctor and nurse
+        elif self.alert_type == 'doctor':
+            self.patient_wants_doctor = True
+            self.patient_wants_nurse = True
+        # For warnings, notify nurse
+        else:
+            self.patient_wants_nurse = True
+
+        self.save()
+
+        # Send notifications
+        self._send_provider_notifications()
+
+        return True
