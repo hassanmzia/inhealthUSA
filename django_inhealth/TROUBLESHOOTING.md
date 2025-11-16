@@ -201,7 +201,92 @@ mkdir -p static
 python manage.py collectstatic --noinput
 ```
 
-### 6. Permission Denied on SSL Certificate
+### 6. Permission Denied on Staticfiles Directory
+
+**Error Message:**
+```
+PermissionError: [Errno 13] Permission denied: '/path/to/staticfiles/admin/css/autocomplete.css'
+```
+
+**Full Error Context:**
+```
+File "/path/to/django/contrib/staticfiles/management/commands/collectstatic.py", line 270, in clear_dir
+    self.storage.delete(fpath)
+File "/path/to/django/core/files/storage/filesystem.py", line 158, in delete
+    os.remove(name)
+PermissionError: [Errno 13] Permission denied: '/path/to/staticfiles/admin/css/autocomplete.css'
+```
+
+**Cause:**
+This error occurs when the `staticfiles` directory exists but is owned by a different user (e.g., root or another user). This typically happens when:
+- Static files were previously collected with sudo or by a different user
+- The directory was created with incorrect ownership
+- A deployment process created files with different permissions
+
+**Solution:**
+
+**Option 1: Using the Fix Script (Recommended - Removes and Recreates)**
+```bash
+cd scripts
+./fix_staticfiles_permissions.sh
+```
+
+This script will:
+1. Remove the existing staticfiles directory (using sudo if needed)
+2. Create a fresh staticfiles directory with proper permissions
+3. Set correct permissions (755)
+
+**Option 2: Using the Ownership Fix Script (Preserves Existing Files)**
+```bash
+cd scripts
+./fix_staticfiles_ownership.sh
+```
+
+This script will:
+1. Change ownership of the staticfiles directory to the current user
+2. Set proper permissions (755)
+3. Preserve all existing static files
+
+**Option 3: Manual Fix (Remove and Recreate)**
+```bash
+cd django_inhealth
+
+# Remove existing directory (may need sudo)
+sudo rm -rf staticfiles
+
+# Create fresh directory
+mkdir -p staticfiles
+chmod 755 staticfiles
+
+# Collect static files
+python manage.py collectstatic --noinput
+```
+
+**Option 4: Manual Fix (Change Ownership)**
+```bash
+cd django_inhealth
+
+# Change ownership to current user
+sudo chown -R $(whoami):$(whoami) staticfiles
+sudo chmod -R 755 staticfiles
+
+# Collect static files
+python manage.py collectstatic --noinput
+```
+
+**After Fixing Permissions:**
+
+Once permissions are fixed, collect static files:
+```bash
+python manage.py collectstatic --noinput
+```
+
+**Prevention:**
+- Always run `python manage.py collectstatic` as the same user that runs the Django application
+- Avoid using `sudo` when running Django management commands unless absolutely necessary
+- In production, ensure the web server user has write access to the staticfiles directory
+
+### 7. Permission Denied on SSL Certificate
 
 **Error Message:**
 ```
