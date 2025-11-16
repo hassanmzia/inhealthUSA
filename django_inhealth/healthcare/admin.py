@@ -5,7 +5,7 @@ from .models import (
     Hospital, UserProfile, Patient, Department, Provider, Nurse, OfficeAdministrator, Encounter, VitalSign,
     Diagnosis, Prescription, Allergy, MedicalHistory, SocialHistory, FamilyHistory,
     Message, LabTest, Notification, InsuranceInformation, Billing, BillingItem, Payment, Device,
-    NotificationPreferences, VitalSignAlertResponse
+    NotificationPreferences, VitalSignAlertResponse, AIProposedTreatmentPlan, DoctorTreatmentPlan
 )
 
 
@@ -392,3 +392,94 @@ class VitalSignAlertResponseAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         # Alerts are created automatically, not manually
         return False
+
+
+@admin.register(AIProposedTreatmentPlan)
+class AIProposedTreatmentPlanAdmin(admin.ModelAdmin):
+    list_display = ['proposal_id', 'patient', 'provider', 'status', 'ai_model_name', 'generation_time_seconds', 'created_at']
+    list_filter = ['status', 'ai_model_name', 'created_at']
+    search_fields = ['patient__first_name', 'patient__last_name', 'provider__first_name', 'provider__last_name']
+    raw_id_fields = ['patient', 'provider']
+    readonly_fields = ['ai_model_name', 'ai_model_version', 'generation_time_seconds', 'prompt_tokens', 'completion_tokens', 'reviewed_at', 'created_at', 'updated_at']
+    date_hierarchy = 'created_at'
+
+    fieldsets = (
+        ('Proposal Information', {
+            'fields': ('patient', 'provider', 'status', 'doctor_notes', 'reviewed_at')
+        }),
+        ('AI-Generated Content', {
+            'fields': ('proposed_treatment', 'medications_suggested', 'lifestyle_recommendations', 'follow_up_recommendations', 'warnings_and_precautions')
+        }),
+        ('Source Data', {
+            'fields': ('vital_signs_data', 'diagnosis_data', 'lab_test_data', 'medical_history_data', 'family_history_data', 'social_history_data'),
+            'classes': ('collapse',)
+        }),
+        ('AI Model Information', {
+            'fields': ('ai_model_name', 'ai_model_version', 'generation_time_seconds', 'prompt_tokens', 'completion_tokens'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def has_add_permission(self, request):
+        # AI proposals are generated automatically, not manually created
+        return False
+
+
+@admin.register(DoctorTreatmentPlan)
+class DoctorTreatmentPlanAdmin(admin.ModelAdmin):
+    list_display = ['plan_id', 'plan_title', 'patient', 'provider', 'status', 'is_visible_to_patient', 'plan_start_date', 'created_at']
+    list_filter = ['status', 'is_visible_to_patient', 'plan_start_date', 'created_at']
+    search_fields = ['plan_title', 'patient__first_name', 'patient__last_name', 'provider__first_name', 'provider__last_name']
+    raw_id_fields = ['patient', 'provider', 'encounter', 'ai_proposal']
+    readonly_fields = ['patient_viewed_at', 'patient_acknowledged_at', 'created_at', 'updated_at']
+    date_hierarchy = 'created_at'
+
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('plan_title', 'patient', 'provider', 'encounter', 'ai_proposal', 'status', 'is_visible_to_patient')
+        }),
+        ('Clinical Assessment', {
+            'fields': ('chief_complaint', 'assessment', 'treatment_goals')
+        }),
+        ('Treatment Details', {
+            'fields': ('medications', 'procedures', 'lifestyle_modifications', 'dietary_recommendations', 'exercise_recommendations')
+        }),
+        ('Follow-up and Safety', {
+            'fields': ('follow_up_instructions', 'warning_signs', 'emergency_instructions', 'additional_notes')
+        }),
+        ('Schedule', {
+            'fields': ('plan_start_date', 'plan_end_date', 'next_review_date')
+        }),
+        ('Patient Interaction', {
+            'fields': ('patient_viewed_at', 'patient_acknowledged_at', 'patient_feedback'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    actions = ['publish_to_patients', 'mark_as_completed']
+
+    def publish_to_patients(self, request, queryset):
+        """Publish selected treatment plans to patients"""
+        count = 0
+        for plan in queryset:
+            if plan.status == 'draft':
+                plan.publish_to_patient()
+                count += 1
+        self.message_user(request, f'{count} treatment plan(s) published to patients.')
+
+    publish_to_patients.short_description = "Publish selected plans to patients"
+
+    def mark_as_completed(self, request, queryset):
+        """Mark selected treatment plans as completed"""
+        count = queryset.update(status='completed')
+        self.message_user(request, f'{count} treatment plan(s) marked as completed.')
+
+    mark_as_completed.short_description = "Mark selected plans as completed"
