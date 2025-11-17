@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from .models import Device, Patient, Encounter, VitalSign, Provider
-from .vital_alerts import trigger_vital_sign_alert
+from .vital_alerts import process_vital_alerts
 import logging
 
 logger = logging.getLogger(__name__)
@@ -283,9 +283,9 @@ class IoTDataProcessor:
         alerts_triggered = 0
 
         try:
-            # Use the existing vital_alerts.trigger_vital_sign_alert function
+            # Use the existing vital_alerts.process_vital_alerts function
             # This function handles the two-stage alert system (patient consent then provider notification)
-            alert_response = trigger_vital_sign_alert(vital_sign)
+            alert_response = process_vital_alerts(vital_sign)
 
             if alert_response:
                 alerts_triggered = 1
