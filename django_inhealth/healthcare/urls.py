@@ -267,13 +267,13 @@ urlpatterns = [
     # ============================================================================
     # IOT FILE MANAGEMENT URLS (Admin dashboard for managing IoT data files)
     # ============================================================================
-    path('admin/iot-files/', iot_file_management_views.iot_file_manager, name='iot_file_manager'),
-    path('admin/iot-files/archive/<str:date>/', iot_file_management_views.view_archive_date, name='iot_archive_date'),
-    path('admin/iot-files/view/<str:location>/<str:filename>/', iot_file_management_views.view_file_content, name='iot_view_file'),
-    path('admin/iot-files/upload/', iot_file_management_views.upload_file, name='iot_upload_file'),
-    path('admin/iot-files/delete/<str:location>/<str:filename>/', iot_file_management_views.delete_file, name='iot_delete_file'),
-    path('admin/iot-files/download/<str:location>/<str:filename>/', iot_file_management_views.download_file, name='iot_download_file'),
-    path('admin/iot-files/stats/', iot_file_management_views.get_folder_stats, name='iot_folder_stats'),
+    path('management/iot-files/', iot_file_management_views.iot_file_manager, name='iot_file_manager'),
+    path('management/iot-files/archive/<str:date>/', iot_file_management_views.view_archive_date, name='iot_archive_date'),
+    path('management/iot-files/view/<str:location>/<str:filename>/', iot_file_management_views.view_file_content, name='iot_view_file'),
+    path('management/iot-files/upload/', iot_file_management_views.upload_file, name='iot_upload_file'),
+    path('management/iot-files/delete/<str:location>/<str:filename>/', iot_file_management_views.delete_file, name='iot_delete_file'),
+    path('management/iot-files/download/<str:location>/<str:filename>/', iot_file_management_views.download_file, name='iot_download_file'),
+    path('management/iot-files/stats/', iot_file_management_views.get_folder_stats, name='iot_folder_stats'),
 
     # ============================================================================
     # VITAL SIGN ALERT RESPONSE URLS (No authentication required)
