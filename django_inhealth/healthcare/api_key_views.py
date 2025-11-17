@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 from .models import APIKey
-from .decorators import require_role
+from .permissions import require_role
 
 
 @login_required
