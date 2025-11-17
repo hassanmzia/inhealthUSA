@@ -1,0 +1,24 @@
+{
+    "device_id": "DEV011",
+    "timestamp": "2025-11-17T09:30:00Z",
+
+    "_comment": "Hypertensive patient - Medication compliance check",
+
+    "heart_rate": 76,
+    "blood_pressure_systolic": 142,
+    "blood_pressure_diastolic": 92,
+    "temperature": 98.5,
+    "temperature_unit": "F",
+    "respiratory_rate": 16,
+    "oxygen_saturation": 97.0,
+    "glucose": 108.0,
+    "weight": 210.5,
+    "weight_unit": "lbs",
+    "height": 69.0,
+    "height_unit": "in",
+
+    "signal_quality": 92,
+    "battery_level": 76,
+
+    "notes": "Hypertensive patient vitals - Blood pressure elevated (142/92). Patient states took morning medications. Will notify provider for possible medication adjustment. Patient advised to rest and avoid sodium."
+}

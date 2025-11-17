@@ -1,0 +1,24 @@
+{
+    "device_id": "DEV006",
+    "timestamp": "2025-11-17T13:45:00Z",
+
+    "_comment": "Post-meal vitals - Diabetic patient monitoring",
+
+    "heart_rate": 82,
+    "blood_pressure_systolic": 128,
+    "blood_pressure_diastolic": 82,
+    "temperature": 98.4,
+    "temperature_unit": "F",
+    "respiratory_rate": 18,
+    "oxygen_saturation": 96.5,
+    "glucose": 145.0,
+    "weight": 198.7,
+    "weight_unit": "lbs",
+    "height": 70.0,
+    "height_unit": "in",
+
+    "signal_quality": 93,
+    "battery_level": 78,
+
+    "notes": "Post-lunch vitals - 2 hours after meal. Glucose slightly elevated but within acceptable range for diabetic patient. Patient reports feeling normal."
+}

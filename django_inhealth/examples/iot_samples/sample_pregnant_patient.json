@@ -1,0 +1,24 @@
+{
+    "device_id": "DEV013",
+    "timestamp": "2025-11-17T15:15:00Z",
+
+    "_comment": "Pregnant patient - Third trimester monitoring",
+
+    "heart_rate": 88,
+    "blood_pressure_systolic": 120,
+    "blood_pressure_diastolic": 75,
+    "temperature": 98.8,
+    "temperature_unit": "F",
+    "respiratory_rate": 18,
+    "oxygen_saturation": 98.0,
+    "glucose": 98.0,
+    "weight": 182.0,
+    "weight_unit": "lbs",
+    "height": 64.0,
+    "height_unit": "in",
+
+    "signal_quality": 97,
+    "battery_level": 90,
+
+    "notes": "Prenatal vitals check - 32 weeks gestation. All vitals within normal pregnancy ranges. No edema noted. Fetal movement reported as active. Next OB appointment in 2 weeks."
+}

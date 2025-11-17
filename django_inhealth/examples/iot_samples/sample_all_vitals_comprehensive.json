@@ -1,0 +1,32 @@
+{
+    "device_id": "DEV001",
+    "timestamp": "2025-11-17T14:30:00Z",
+
+    "_comment": "=== Vital Signs - All Fields ===",
+
+    "heart_rate": 78,
+    "blood_pressure_systolic": 118,
+    "blood_pressure_diastolic": 76,
+
+    "temperature": 98.2,
+    "temperature_unit": "F",
+
+    "respiratory_rate": 16,
+    "oxygen_saturation": 97.5,
+
+    "glucose": 102.0,
+
+    "weight": 165.5,
+    "weight_unit": "lbs",
+
+    "height": 68.0,
+    "height_unit": "in",
+
+    "_comment_bmi": "BMI is auto-calculated by the system based on height and weight",
+
+    "_comment_metadata": "=== Device Metadata ===",
+    "signal_quality": 98,
+    "battery_level": 85,
+
+    "notes": "Complete vital signs monitoring - Patient resting comfortably, no complaints. Automated reading from multi-function vital signs monitor."
+}

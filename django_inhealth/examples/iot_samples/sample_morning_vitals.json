@@ -1,0 +1,24 @@
+{
+    "device_id": "DEV005",
+    "timestamp": "2025-11-17T08:15:00Z",
+
+    "_comment": "Morning vitals check - Stable patient",
+
+    "heart_rate": 72,
+    "blood_pressure_systolic": 122,
+    "blood_pressure_diastolic": 78,
+    "temperature": 98.6,
+    "temperature_unit": "F",
+    "respiratory_rate": 14,
+    "oxygen_saturation": 98.0,
+    "glucose": 95.0,
+    "weight": 152.3,
+    "weight_unit": "lbs",
+    "height": 65.0,
+    "height_unit": "in",
+
+    "signal_quality": 95,
+    "battery_level": 92,
+
+    "notes": "Morning routine vital signs check. Patient fasting for glucose test. All readings within normal range."
+}
