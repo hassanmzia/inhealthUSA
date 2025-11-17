@@ -1,0 +1,17 @@
+{
+  "device_id": "DEV001",
+  "patient_id": 123,
+  "heart_rate": 75,
+  "blood_pressure_systolic": 120,
+  "blood_pressure_diastolic": 80,
+  "temperature": 98.6,
+  "temperature_unit": "F",
+  "respiratory_rate": 16,
+  "oxygen_saturation": 98.0,
+  "glucose": 95.0,
+  "weight": 150.0,
+  "weight_unit": "lbs",
+  "notes": "Patient feeling well, regular checkup",
+  "signal_quality": 95,
+  "battery_level": 80
+}
