@@ -5104,4 +5104,218 @@ def treatment_plan_detail(request, plan_id):
 # ============================================================================
 from .iot_api_views import submit_vitals as iot_submit_vitals
 from .iot_api_views import device_status as iot_device_status
+
+
+# ============================================================================
+# MULTI-FACTOR AUTHENTICATION VIEWS
+# ============================================================================
+
+import pyotp
+import qrcode
+import io
+import base64
+import json
+import secrets
+
+
+@login_required
+def mfa_setup(request):
+    """
+    MFA Setup view - Generates QR code and backup codes
+    Required for admin/staff users to access Django admin
+    """
+    # Get or create user profile
+    try:
+        profile = request.user.profile
+    except:
+        # Create profile if doesn't exist
+        from .models import UserProfile
+        profile = UserProfile.objects.create(user=request.user)
+
+    if request.method == 'POST':
+        # Verify the code entered by user
+        verification_code = request.POST.get('verification_code', '').strip()
+        secret_key = request.POST.get('secret_key', '')
+        backup_codes_json = request.POST.get('backup_codes', '')
+
+        # Validate TOTP code
+        totp = pyotp.TOTP(secret_key)
+        if totp.verify(verification_code, valid_window=1):
+            # Code is valid, enable MFA
+            profile.mfa_secret = secret_key
+            profile.backup_codes = json.loads(backup_codes_json)
+            profile.mfa_enabled = True
+            profile.save()
+
+            # Set MFA as verified in session
+            request.session['mfa_verified'] = True
+            request.session.modified = True
+
+            messages.success(
+                request,
+                'Multi-Factor Authentication has been successfully enabled for your account!'
+            )
+
+            # Redirect to intended URL or admin dashboard
+            redirect_url = request.session.pop('mfa_redirect_url', '/admin/')
+            return redirect(redirect_url)
+        else:
+            messages.error(
+                request,
+                'Invalid verification code. Please try again.'
+            )
+            # Re-render the form with the same secret and backup codes
+            return render(request, 'healthcare/admin_mfa_setup.html', {
+                'qr_code_url': request.POST.get('qr_code_url', ''),
+                'secret_key': secret_key,
+                'backup_codes': json.loads(backup_codes_json),
+                'backup_codes_json': backup_codes_json,
+            })
+
+    # GET request - Generate new MFA setup
+    # Generate new TOTP secret
+    secret_key = pyotp.random_base32()
+
+    # Generate QR code
+    totp = pyotp.TOTP(secret_key)
+    provisioning_uri = totp.provisioning_uri(
+        name=request.user.email or request.user.username,
+        issuer_name='InHealth EHR'
+    )
+
+    # Create QR code image
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(provisioning_uri)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    # Convert to base64 for embedding in HTML
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+    qr_code_url = f"data:image/png;base64,{qr_code_base64}"
+
+    # Generate backup codes (10 codes)
+    backup_codes = [secrets.token_hex(4).upper() for _ in range(10)]
+
+    context = {
+        'qr_code_url': qr_code_url,
+        'secret_key': secret_key,
+        'backup_codes': backup_codes,
+        'backup_codes_json': json.dumps(backup_codes),
+    }
+
+    return render(request, 'healthcare/admin_mfa_setup.html', context)
+
+
+@login_required
+def mfa_verify(request):
+    """
+    MFA Verification view - Validates TOTP code during login
+    Required for each session to access admin interface
+    """
+    # Check if user has MFA enabled
+    try:
+        profile = request.user.profile
+        if not profile.mfa_enabled:
+            messages.warning(request, 'MFA is not enabled for your account.')
+            return redirect('mfa_setup')
+    except:
+        messages.error(request, 'User profile not found.')
+        return redirect('index')
+
+    if request.method == 'POST':
+        verification_code = request.POST.get('verification_code', '').strip()
+
+        # Check if it's a backup code
+        if verification_code.upper() in [code.upper() for code in profile.backup_codes]:
+            # Valid backup code - remove it from the list
+            profile.backup_codes = [
+                code for code in profile.backup_codes
+                if code.upper() != verification_code.upper()
+            ]
+            profile.save()
+
+            # Set MFA as verified in session
+            request.session['mfa_verified'] = True
+            request.session.modified = True
+
+            messages.success(
+                request,
+                f'Backup code accepted. You have {len(profile.backup_codes)} backup codes remaining.'
+            )
+
+            # Redirect to intended URL
+            redirect_url = request.session.pop('mfa_redirect_url', '/admin/')
+            return redirect(redirect_url)
+
+        # Validate TOTP code
+        totp = pyotp.TOTP(profile.mfa_secret)
+        if totp.verify(verification_code, valid_window=1):
+            # Code is valid
+            request.session['mfa_verified'] = True
+            request.session.modified = True
+
+            messages.success(request, 'MFA verification successful!')
+
+            # Redirect to intended URL
+            redirect_url = request.session.pop('mfa_redirect_url', '/admin/')
+            return redirect(redirect_url)
+        else:
+            messages.error(
+                request,
+                'Invalid verification code. Please try again or use a backup code.'
+            )
+
+    context = {
+        'backup_codes_count': len(profile.backup_codes) if profile.backup_codes else 0,
+    }
+
+    return render(request, 'healthcare/mfa_verify.html', context)
+
+
+@login_required
+def mfa_disable(request):
+    """
+    Disable MFA for user account
+    Requires password confirmation
+    """
+    try:
+        profile = request.user.profile
+    except:
+        messages.error(request, 'User profile not found.')
+        return redirect('index')
+
+    if not profile.mfa_enabled:
+        messages.info(request, 'MFA is not currently enabled for your account.')
+        return redirect('index')
+
+    if request.method == 'POST':
+        password = request.POST.get('password', '')
+
+        # Verify password
+        from django.contrib.auth import authenticate
+        user = authenticate(username=request.user.username, password=password)
+
+        if user is not None:
+            # Password is correct, disable MFA
+            profile.mfa_enabled = False
+            profile.mfa_secret = None
+            profile.backup_codes = []
+            profile.save()
+
+            # Clear MFA verification from session
+            request.session['mfa_verified'] = False
+            request.session.modified = True
+
+            messages.success(
+                request,
+                'Multi-Factor Authentication has been disabled for your account.'
+            )
+            return redirect('index')
+        else:
+            messages.error(request, 'Invalid password. Please try again.')
+
+    return render(request, 'healthcare/mfa_disable.html')
 from .iot_api_views import submit_vitals_batch as iot_submit_vitals_batch
