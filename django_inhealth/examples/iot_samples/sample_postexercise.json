@@ -1,0 +1,24 @@
+{
+    "device_id": "DEV008",
+    "timestamp": "2025-11-17T16:20:00Z",
+
+    "_comment": "Post-exercise vitals - Athletic patient",
+
+    "heart_rate": 95,
+    "blood_pressure_systolic": 132,
+    "blood_pressure_diastolic": 84,
+    "temperature": 99.1,
+    "temperature_unit": "F",
+    "respiratory_rate": 20,
+    "oxygen_saturation": 97.0,
+    "glucose": 88.0,
+    "weight": 175.0,
+    "weight_unit": "lbs",
+    "height": 72.0,
+    "height_unit": "in",
+
+    "signal_quality": 89,
+    "battery_level": 74,
+
+    "notes": "Post-exercise recovery monitoring - 10 minutes after moderate cardio workout. Heart rate and respiratory rate elevated but returning to baseline. Patient hydrating well."
+}

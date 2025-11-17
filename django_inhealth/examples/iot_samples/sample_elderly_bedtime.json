@@ -1,0 +1,24 @@
+{
+    "device_id": "DEV007",
+    "timestamp": "2025-11-17T22:00:00Z",
+
+    "_comment": "Elderly patient - Bedtime vitals check",
+
+    "heart_rate": 65,
+    "blood_pressure_systolic": 135,
+    "blood_pressure_diastolic": 85,
+    "temperature": 97.8,
+    "temperature_unit": "F",
+    "respiratory_rate": 15,
+    "oxygen_saturation": 95.0,
+    "glucose": 110.0,
+    "weight": 142.0,
+    "weight_unit": "lbs",
+    "height": 62.0,
+    "height_unit": "in",
+
+    "signal_quality": 91,
+    "battery_level": 68,
+
+    "notes": "Bedtime vitals check for elderly patient (75 years old). Blood pressure slightly elevated - will monitor. Patient preparing for sleep, vital signs stable."
+}

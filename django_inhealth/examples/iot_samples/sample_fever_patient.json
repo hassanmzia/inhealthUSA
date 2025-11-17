@@ -1,0 +1,24 @@
+{
+    "device_id": "DEV009",
+    "timestamp": "2025-11-17T03:30:00Z",
+
+    "_comment": "Night shift vitals - Patient with fever",
+
+    "heart_rate": 88,
+    "blood_pressure_systolic": 115,
+    "blood_pressure_diastolic": 72,
+    "temperature": 100.8,
+    "temperature_unit": "F",
+    "respiratory_rate": 19,
+    "oxygen_saturation": 96.0,
+    "glucose": 105.0,
+    "weight": 158.0,
+    "weight_unit": "lbs",
+    "height": 66.0,
+    "height_unit": "in",
+
+    "signal_quality": 94,
+    "battery_level": 81,
+
+    "notes": "Night vitals check - Patient has mild fever (100.8°F). Administered acetaminophen 500mg at 03:15. Will recheck temperature in 2 hours. Patient resting, denies chills."
+}

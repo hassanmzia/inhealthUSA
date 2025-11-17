@@ -1,0 +1,24 @@
+{
+    "device_id": "DEV012",
+    "timestamp": "2025-11-17T06:45:00Z",
+
+    "_comment": "COPD patient - Oxygen saturation monitoring",
+
+    "heart_rate": 82,
+    "blood_pressure_systolic": 125,
+    "blood_pressure_diastolic": 80,
+    "temperature": 98.1,
+    "temperature_unit": "F",
+    "respiratory_rate": 24,
+    "oxygen_saturation": 91.0,
+    "glucose": 115.0,
+    "weight": 168.0,
+    "weight_unit": "lbs",
+    "height": 67.0,
+    "height_unit": "in",
+
+    "signal_quality": 88,
+    "battery_level": 72,
+
+    "notes": "COPD patient morning vitals - Oxygen saturation at 91% (baseline for patient). Respiratory rate slightly elevated. Patient on 2L O2 via nasal cannula. Breath sounds clear bilaterally."
+}

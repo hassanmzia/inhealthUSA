@@ -1,0 +1,24 @@
+{
+    "device_id": "DEV010",
+    "timestamp": "2025-11-17T11:00:00Z",
+
+    "_comment": "Pediatric patient vitals (10 years old, 80 lbs, 54 inches)",
+
+    "heart_rate": 90,
+    "blood_pressure_systolic": 105,
+    "blood_pressure_diastolic": 65,
+    "temperature": 98.3,
+    "temperature_unit": "F",
+    "respiratory_rate": 22,
+    "oxygen_saturation": 99.0,
+    "glucose": 92.0,
+    "weight": 80.0,
+    "weight_unit": "lbs",
+    "height": 54.0,
+    "height_unit": "in",
+
+    "signal_quality": 96,
+    "battery_level": 88,
+
+    "notes": "Pediatric patient vitals - 10-year-old male. All vitals within normal pediatric ranges. Child cooperative during measurement. Parent present."
+}
