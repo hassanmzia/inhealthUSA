@@ -1,0 +1,9 @@
+{
+    "device_id": "DEV004",
+    "timestamp": "2025-11-17T16:45:00Z",
+    "heart_rate": 68,
+    "oxygen_saturation": 97.5,
+    "signal_quality": 92,
+    "battery_level": 65,
+    "notes": "Rest state measurement"
+}

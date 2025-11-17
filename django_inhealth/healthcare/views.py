@@ -5043,3 +5043,11 @@ def treatment_plan_detail(request, plan_id):
     }
 
     return render(request, 'healthcare/treatment_plans/detail.html', context)
+
+
+# ============================================================================
+# IOT DEVICE API VIEWS
+# ============================================================================
+from .iot_api_views import submit_vitals as iot_submit_vitals
+from .iot_api_views import device_status as iot_device_status
+from .iot_api_views import submit_vitals_batch as iot_submit_vitals_batch

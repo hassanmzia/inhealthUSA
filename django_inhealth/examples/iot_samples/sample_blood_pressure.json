@@ -1,0 +1,8 @@
+{
+    "device_id": "DEV002",
+    "timestamp": "2025-11-17T14:15:00Z",
+    "heart_rate": 82,
+    "blood_pressure_systolic": 125,
+    "blood_pressure_diastolic": 85,
+    "notes": "Afternoon blood pressure reading"
+}
