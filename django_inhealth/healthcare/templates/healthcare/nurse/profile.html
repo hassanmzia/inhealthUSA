@@ -84,6 +84,42 @@
                         🔑 Change Password
                     </a>
                 </div>
+
+                <!-- MFA Security Section -->
+                <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid {% if nurse_profile.mfa_enabled %}#28a745{% else %}#ffc107{% endif %};">
+                    <h3 style="margin-top: 0; font-size: 16px; color: #333;">🔐 Two-Factor Authentication</h3>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Status:</strong>
+                        {% if nurse_profile.mfa_enabled %}
+                            <span style="color: #28a745; font-weight: bold;">✓ Enabled</span>
+                        {% else %}
+                            <span style="color: #ffc107; font-weight: bold;">⚠ Disabled</span>
+                        {% endif %}
+                    </div>
+
+                    {% if nurse_profile.mfa_enabled %}
+                        <div style="margin-bottom: 10px; font-size: 13px; color: #666;">
+                            Your account is protected with two-factor authentication.
+                            <br>
+                            Backup codes available: <strong>{{ nurse_profile.backup_codes|length }}</strong>
+                        </div>
+                        <div style="display: flex; gap: 5px; flex-direction: column; margin-top: 10px;">
+                            <a href="{% url 'mfa_backup_codes' %}" class="button" style="display: inline-block; padding: 8px 15px; background: #17a2b8; color: white; text-decoration: none; border-radius: 3px; text-align: center; font-size: 13px;">
+                                View Backup Codes
+                            </a>
+                            <a href="{% url 'mfa_disable' %}" class="button" style="display: inline-block; padding: 8px 15px; background: #dc3545; color: white; text-decoration: none; border-radius: 3px; text-align: center; font-size: 13px;">
+                                Disable MFA
+                            </a>
+                        </div>
+                    {% else %}
+                        <div style="margin-bottom: 10px; font-size: 13px; color: #666;">
+                            Add an extra layer of security to your account by enabling two-factor authentication.
+                        </div>
+                        <a href="{% url 'mfa_setup' %}" class="button" style="display: inline-block; padding: 8px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 3px; text-align: center; font-size: 13px; margin-top: 10px;">
+                            Enable MFA
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
