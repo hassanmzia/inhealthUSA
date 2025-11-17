@@ -1,0 +1,189 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}IoT Device File Manager - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a> &rsaquo;
+    IoT File Manager
+</div>
+
+<div class="module">
+    <h1>IoT Device Data File Manager</h1>
+    <p>Manage IoT device data files in the inbox and archive directories</p>
+
+    <!-- Statistics -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
+        <div class="stat-card" style="background: #e7f3ff; padding: 15px; border-radius: 5px; border-left: 4px solid #417690;">
+            <h3 style="margin: 0 0 10px 0; color: #417690; font-size: 14px;">Inbox Files</h3>
+            <p style="font-size: 28px; font-weight: bold; margin: 0;">{{ inbox_count }}</p>
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">Pending processing</p>
+        </div>
+
+        <div class="stat-card" style="background: #e7ffe7; padding: 15px; border-radius: 5px; border-left: 4px solid #4caf50;">
+            <h3 style="margin: 0 0 10px 0; color: #4caf50; font-size: 14px;">Archive Dates</h3>
+            <p style="font-size: 28px; font-weight: bold; margin: 0;">{{ archive_dates|length }}</p>
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">Processed batches</p>
+        </div>
+
+        <div class="stat-card" style="background: #fff3e7; padding: 15px; border-radius: 5px; border-left: 4px solid #ff9800;">
+            <h3 style="margin: 0 0 10px 0; color: #ff9800; font-size: 14px;">Devices</h3>
+            <p style="font-size: 28px; font-weight: bold; margin: 0;">{{ devices|length }}</p>
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">Registered devices</p>
+        </div>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="module" style="margin-top: 20px;">
+        <h2>Upload JSON File</h2>
+        <form method="post" action="{% url 'iot_upload_file' %}" enctype="multipart/form-data" style="margin-top: 15px;">
+            {% csrf_token %}
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="file" name="file" accept=".json" required style="flex: 1; padding: 8px;">
+                <button type="submit" class="button" style="background: #4caf50; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer;">
+                    Upload to Inbox
+                </button>
+            </div>
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                Only .json files (max 1MB). File must contain device_id and timestamp fields.
+            </p>
+        </form>
+    </div>
+
+    <!-- Inbox Files -->
+    <div class="module" style="margin-top: 20px;">
+        <h2>Inbox Files ({{ inbox_count }})</h2>
+        <p style="font-size: 14px; color: #666;">Files waiting to be processed by the system</p>
+
+        {% if inbox_files %}
+        <table style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f0f0f0;">
+                    <th style="padding: 10px; text-align: left;">Filename</th>
+                    <th style="padding: 10px; text-align: left;">Size</th>
+                    <th style="padding: 10px; text-align: left;">Modified</th>
+                    <th style="padding: 10px; text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in inbox_files %}
+                <tr style="border-bottom: 1px solid #e8e8e8;">
+                    <td style="padding: 10px;">
+                        <a href="{% url 'iot_view_file' 'inbox' file.name %}" style="color: #417690; text-decoration: none;">
+                            {{ file.name }}
+                        </a>
+                    </td>
+                    <td style="padding: 10px;">{{ file.size|filesizeformat }}</td>
+                    <td style="padding: 10px;">{{ file.modified|date:"M d, Y H:i:s" }}</td>
+                    <td style="padding: 10px; text-align: center;">
+                        <a href="{% url 'iot_view_file' 'inbox' file.name %}" class="button" style="font-size: 12px; padding: 5px 10px; background: #417690; color: white; text-decoration: none; border-radius: 3px; margin-right: 5px;">
+                            View
+                        </a>
+                        <a href="{% url 'iot_download_file' 'inbox' file.name %}" class="button" style="font-size: 12px; padding: 5px 10px; background: #4caf50; color: white; text-decoration: none; border-radius: 3px; margin-right: 5px;">
+                            Download
+                        </a>
+                        <form method="post" action="{% url 'iot_delete_file' 'inbox' file.name %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this file?');">
+                            {% csrf_token %}
+                            <button type="submit" class="button" style="font-size: 12px; padding: 5px 10px; background: #f44336; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="margin-top: 15px; padding: 20px; background: #f9f9f9; text-align: center; color: #999;">
+            No files in inbox
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Archive Directories -->
+    <div class="module" style="margin-top: 20px;">
+        <h2>Archive ({{ archive_dates|length }} dates)</h2>
+        <p style="font-size: 14px; color: #666;">Processed files organized by date</p>
+
+        {% if archive_dates %}
+        <table style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f0f0f0;">
+                    <th style="padding: 10px; text-align: left;">Date</th>
+                    <th style="padding: 10px; text-align: left;">Files</th>
+                    <th style="padding: 10px; text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for date_entry in archive_dates %}
+                <tr style="border-bottom: 1px solid #e8e8e8;">
+                    <td style="padding: 10px;">
+                        <a href="{% url 'iot_archive_date' date_entry.date %}" style="color: #417690; text-decoration: none;">
+                            {{ date_entry.date }}
+                        </a>
+                    </td>
+                    <td style="padding: 10px;">{{ date_entry.file_count }} file{{ date_entry.file_count|pluralize }}</td>
+                    <td style="padding: 10px; text-align: center;">
+                        <a href="{% url 'iot_archive_date' date_entry.date %}" class="button" style="font-size: 12px; padding: 5px 10px; background: #417690; color: white; text-decoration: none; border-radius: 3px;">
+                            View Files
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="margin-top: 15px; padding: 20px; background: #f9f9f9; text-align: center; color: #999;">
+            No archived files
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Registered Devices -->
+    <div class="module" style="margin-top: 20px;">
+        <h2>Registered Devices ({{ devices|length }})</h2>
+        <p style="font-size: 14px; color: #666;">Recent devices that can submit data</p>
+
+        {% if devices %}
+        <table style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f0f0f0;">
+                    <th style="padding: 10px; text-align: left;">Device ID</th>
+                    <th style="padding: 10px; text-align: left;">Name</th>
+                    <th style="padding: 10px; text-align: left;">Type</th>
+                    <th style="padding: 10px; text-align: left;">Patient</th>
+                    <th style="padding: 10px; text-align: left;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for device in devices %}
+                <tr style="border-bottom: 1px solid #e8e8e8;">
+                    <td style="padding: 10px; font-family: monospace;">{{ device.device_unique_id }}</td>
+                    <td style="padding: 10px;">{{ device.device_name }}</td>
+                    <td style="padding: 10px;">{{ device.device_type }}</td>
+                    <td style="padding: 10px;">{{ device.patient.full_name }}</td>
+                    <td style="padding: 10px;">
+                        <span style="padding: 3px 8px; border-radius: 3px; background: {% if device.status == 'Active' %}#dfd{% else %}#ffc{% endif %}; font-size: 12px;">
+                            {{ device.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="margin-top: 15px; padding: 20px; background: #f9f9f9; text-align: center; color: #999;">
+            No devices registered
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Directory Info -->
+    <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+        <h3 style="margin: 0 0 10px 0; font-size: 14px;">Directory Paths</h3>
+        <p style="font-size: 12px; margin: 5px 0; font-family: monospace;">Inbox: {{ inbox_dir }}</p>
+        <p style="font-size: 12px; margin: 5px 0; font-family: monospace;">Archive: {{ archive_dir }}</p>
+    </div>
+</div>
+{% endblock %}

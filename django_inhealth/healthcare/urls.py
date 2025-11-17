@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import iot_file_management_views
 
 urlpatterns = [
     # Enterprise Authentication URLs
@@ -262,6 +263,17 @@ urlpatterns = [
     path('api/iot/vitals/', views.iot_submit_vitals, name='iot_submit_vitals'),
     path('api/iot/vitals/batch/', views.iot_submit_vitals_batch, name='iot_submit_vitals_batch'),
     path('api/iot/status/', views.iot_device_status, name='iot_device_status'),
+
+    # ============================================================================
+    # IOT FILE MANAGEMENT URLS (Admin dashboard for managing IoT data files)
+    # ============================================================================
+    path('admin/iot-files/', iot_file_management_views.iot_file_manager, name='iot_file_manager'),
+    path('admin/iot-files/archive/<str:date>/', iot_file_management_views.view_archive_date, name='iot_archive_date'),
+    path('admin/iot-files/view/<str:location>/<str:filename>/', iot_file_management_views.view_file_content, name='iot_view_file'),
+    path('admin/iot-files/upload/', iot_file_management_views.upload_file, name='iot_upload_file'),
+    path('admin/iot-files/delete/<str:location>/<str:filename>/', iot_file_management_views.delete_file, name='iot_delete_file'),
+    path('admin/iot-files/download/<str:location>/<str:filename>/', iot_file_management_views.download_file, name='iot_download_file'),
+    path('admin/iot-files/stats/', iot_file_management_views.get_folder_stats, name='iot_folder_stats'),
 
     # ============================================================================
     # VITAL SIGN ALERT RESPONSE URLS (No authentication required)
