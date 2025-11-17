@@ -52,13 +52,13 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    # Multi-Factor Authentication middleware - Enforces MFA for admin users
-    'healthcare.admin_mfa_middleware.AdminMFAMiddleware',
     # Session security middleware - Auto-logout on inactivity
     'healthcare.middleware.session_security.SessionSecurityMiddleware',
     'healthcare.middleware.session_security.ConcurrentSessionMiddleware',
     'healthcare.middleware.session_security.SecurityHeadersMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    # Multi-Factor Authentication middleware - Enforces MFA for admin users (must be after MessageMiddleware)
+    'healthcare.admin_mfa_middleware.AdminMFAMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',  # Required for django-allauth
     'axes.middleware.AxesMiddleware',  # Login attempt tracking (must be last)
