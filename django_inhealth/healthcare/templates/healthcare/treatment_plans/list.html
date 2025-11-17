@@ -24,7 +24,7 @@
             <tr>
                 <th style="text-align: left; padding: 10px; background: #f0f0f0;">Created</th>
                 <th style="text-align: left; padding: 10px; background: #f0f0f0;">Patient</th>
-                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Encounter Date</th>
+                <th style="text-align: left; padding: 10px; background: #f0f0f0;">Status</th>
                 <th style="text-align: left; padding: 10px; background: #f0f0f0;">Plan Summary</th>
                 <th style="text-align: left; padding: 10px; background: #f0f0f0;">AI Model</th>
                 <th style="text-align: left; padding: 10px; background: #f0f0f0;">Actions</th>
@@ -35,15 +35,19 @@
             <tr style="border-bottom: 1px solid #e8e8e8;">
                 <td style="padding: 10px;">{{ plan.created_at|date:"M d, Y H:i" }}</td>
                 <td style="padding: 10px;">
-                    <a href="{% url 'patient_detail' plan.encounter.patient.patient_id %}">{{ plan.encounter.patient.full_name }}</a>
+                    <a href="{% url 'patient_detail' plan.patient.patient_id %}">{{ plan.patient.full_name }}</a>
                 </td>
-                <td style="padding: 10px;">{{ plan.encounter.encounter_date|date:"M d, Y" }}</td>
+                <td style="padding: 10px;">
+                    <span style="padding: 3px 8px; border-radius: 3px; background: {% if plan.status == 'reviewed' %}#dfd{% else %}#ffd{% endif %}; font-size: 12px;">
+                        {{ plan.status|default:"pending"|title }}
+                    </span>
+                </td>
                 <td style="padding: 10px;">
                     <div style="max-width: 300px;">
-                        {{ plan.plan_description|truncatewords:15|default:"-" }}
+                        {{ plan.proposed_treatment|truncatewords:15|default:"-" }}
                     </div>
                 </td>
-                <td style="padding: 10px;">{{ plan.ai_model_used|default:"Llama 3" }}</td>
+                <td style="padding: 10px;">{{ plan.ai_model_name|default:"Llama 3" }}</td>
                 <td style="padding: 10px;">
                     <a href="{% url 'treatment_plan_detail' plan.proposal_id %}" style="color: #9c27b0; font-weight: bold;">View Details</a>
                 </td>
