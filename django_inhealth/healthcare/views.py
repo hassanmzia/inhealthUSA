@@ -3411,6 +3411,7 @@ def admin_dashboard(request):
 def system_admin_dashboard(request):
     """System Administrator Dashboard - comprehensive system management and analytics"""
     from datetime import timedelta
+    import os
 
     # Core Statistics
     stats = {
@@ -3466,6 +3467,31 @@ def system_admin_dashboard(request):
         'total_prescriptions': Prescription.objects.count(),
         'total_lab_tests': LabTest.objects.count(),
     }
+
+    # Get IoT file statistics
+    try:
+        from django.conf import settings
+        inbox_dir = getattr(settings, 'IOT_INBOX_DIR', '/var/iot_data/inbox')
+        archive_dir = getattr(settings, 'IOT_ARCHIVE_DIR', '/var/iot_data/archive')
+
+        # Count inbox files
+        inbox_count = 0
+        if os.path.exists(inbox_dir):
+            inbox_count = sum(1 for f in os.listdir(inbox_dir) if f.endswith('.json'))
+
+        # Count archive files
+        archive_count = 0
+        if os.path.exists(archive_dir):
+            for dirname in os.listdir(archive_dir):
+                dirpath = os.path.join(archive_dir, dirname)
+                if os.path.isdir(dirpath):
+                    archive_count += sum(1 for f in os.listdir(dirpath) if f.endswith('.json'))
+
+        stats['iot_inbox_files'] = inbox_count
+        stats['iot_archive_files'] = archive_count
+    except:
+        stats['iot_inbox_files'] = 0
+        stats['iot_archive_files'] = 0
 
     # Recent Activity - All Hospitals
     recent_hospitals = Hospital.objects.filter(is_active=True).order_by('-created_at')[:5]

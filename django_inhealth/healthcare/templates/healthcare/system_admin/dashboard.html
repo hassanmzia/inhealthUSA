@@ -47,6 +47,12 @@
                 💰 All Payments
                 <span style="display: inline-block; background: #4caf50; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 8px;">{{ stats.total_payments }}</span>
             </a>
+            <a href="{% url 'iot_file_manager' %}" class="button" style="background: #00bcd4; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 13px; position: relative;">
+                📁 IoT Device Files
+                {% if stats.iot_inbox_files > 0 %}
+                <span style="display: inline-block; background: #ff9800; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 8px;">{{ stats.iot_inbox_files }} pending</span>
+                {% endif %}
+            </a>
         </div>
     </div>
 
@@ -120,7 +126,7 @@
 
     <!-- Device Stats -->
     <div style="margin-bottom: 30px;">
-        <h3 style="color: #5b80b2; margin-bottom: 15px;">⌚ IoT Devices</h3>
+        <h3 style="color: #5b80b2; margin-bottom: 15px;">⌚ IoT Devices & Data</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
             <div style="background: #ffe7f3; padding: 15px; border-radius: 5px; border-left: 4px solid #e91e63;">
                 <div style="font-size: 28px; font-weight: bold; color: #e91e63; margin-bottom: 5px;">{{ stats.total_devices }}</div>
@@ -129,6 +135,15 @@
             <div style="background: #e7ffe7; padding: 15px; border-radius: 5px; border-left: 4px solid #4caf50;">
                 <div style="font-size: 28px; font-weight: bold; color: #4caf50; margin-bottom: 5px;">{{ stats.active_devices }}</div>
                 <div style="font-size: 13px; color: #666;">Active Devices</div>
+            </div>
+            <div style="background: #e7f9ff; padding: 15px; border-radius: 5px; border-left: 4px solid #00bcd4; cursor: pointer;" onclick="window.location='{% url 'iot_file_manager' %}'">
+                <div style="font-size: 28px; font-weight: bold; color: #00bcd4; margin-bottom: 5px;">{{ stats.iot_inbox_files|default:0 }}</div>
+                <div style="font-size: 13px; color: #666;">IoT Files Pending</div>
+                <a href="{% url 'iot_file_manager' %}" style="font-size: 11px; color: #00bcd4;">Manage Files</a>
+            </div>
+            <div style="background: #f0f0f0; padding: 15px; border-radius: 5px; border-left: 4px solid #9e9e9e;">
+                <div style="font-size: 28px; font-weight: bold; color: #9e9e9e; margin-bottom: 5px;">{{ stats.iot_archive_files|default:0 }}</div>
+                <div style="font-size: 13px; color: #666;">IoT Files Archived</div>
             </div>
         </div>
     </div>
