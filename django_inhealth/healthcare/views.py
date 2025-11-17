@@ -11,7 +11,7 @@ from .models import (
     Hospital, Patient, Provider, Encounter, VitalSign, Diagnosis,
     Prescription, Department, Allergy, MedicalHistory, SocialHistory,
     FamilyHistory, LabTest, Message, Notification, InsuranceInformation,
-    Billing, BillingItem, Payment, Device, UserProfile
+    Billing, BillingItem, Payment, Device, UserProfile, AIProposedTreatmentPlan
 )
 from .forms import (
     UserRegistrationForm, ProfilePictureForm, PasswordResetRequestForm,
