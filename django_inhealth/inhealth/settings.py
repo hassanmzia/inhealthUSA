@@ -52,6 +52,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Multi-Factor Authentication middleware - Enforces MFA for admin users
+    'healthcare.admin_mfa_middleware.AdminMFAMiddleware',
     # Session security middleware - Auto-logout on inactivity
     'healthcare.middleware.session_security.SessionSecurityMiddleware',
     'healthcare.middleware.session_security.ConcurrentSessionMiddleware',
@@ -101,13 +103,34 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'healthcare.password_validators.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
+    },
+    {
+        'NAME': 'healthcare.password_validators.MaximumLengthValidator',
+        'OPTIONS': {
+            'max_length': 128,
+        }
+    },
+    {
+        'NAME': 'healthcare.password_validators.ComplexityValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    {
+        'NAME': 'healthcare.password_validators.NoConsecutiveCharactersValidator',
+        'OPTIONS': {
+            'max_consecutive': 3,
+        }
+    },
+    {
+        'NAME': 'healthcare.password_validators.NoCommonPatternsValidator',
     },
 ]
 

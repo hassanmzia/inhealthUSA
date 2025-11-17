@@ -1,0 +1,120 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block title %}Verify Multi-Factor Authentication{% endblock %}
+
+{% block extrastyle %}
+<style>
+    .mfa-container {
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .verify-form {
+        margin: 30px 0;
+    }
+    .verify-form input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        font-size: 18px;
+        font-family: monospace;
+        text-align: center;
+        letter-spacing: 5px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        margin: 10px 0;
+    }
+    .verify-form button {
+        width: 100%;
+        padding: 15px;
+        background: #417690;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    .verify-form button:hover {
+        background: #2d5468;
+    }
+    .info-box {
+        background: #e7f3ff;
+        padding: 20px;
+        border-radius: 5px;
+        margin: 20px 0;
+        border-left: 4px solid #417690;
+    }
+    .backup-codes-info {
+        background: #fff3cd;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+        border-left: 4px solid #ffc107;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mfa-container">
+    <h1 style="text-align: center; color: #417690;">🔐 Verify Your Identity</h1>
+    <p style="text-align: center; color: #666; margin-bottom: 30px;">
+        Enter the 6-digit code from your authenticator app
+    </p>
+
+    <div class="info-box">
+        <p style="margin: 0;">
+            <strong>Security Check Required</strong><br>
+            To access the admin interface, please verify your identity using your authenticator app.
+        </p>
+    </div>
+
+    <div class="verify-form">
+        <form method="post" action="{% url 'mfa_verify' %}">
+            {% csrf_token %}
+            <label for="verification_code" style="display: block; margin-bottom: 10px; font-weight: bold;">
+                Enter 6-digit code:
+            </label>
+            <input
+                type="text"
+                id="verification_code"
+                name="verification_code"
+                maxlength="6"
+                pattern="[0-9]{6}"
+                placeholder="000000"
+                required
+                autofocus
+            >
+            <button type="submit">✓ Verify and Continue</button>
+        </form>
+    </div>
+
+    {% if backup_codes_count > 0 %}
+    <div class="backup-codes-info">
+        <strong>Lost your authenticator app?</strong><br>
+        You can use one of your {{ backup_codes_count }} backup code{{ backup_codes_count|pluralize }} instead.
+        Enter it in the code field above.
+    </div>
+    {% endif %}
+
+    {% if messages %}
+    <div style="margin-top: 20px;">
+        {% for message in messages %}
+        <div class="{% if message.tags %}{{ message.tags }}{% endif %}" style="padding: 10px; margin: 10px 0; border-radius: 5px; background: {% if 'error' in message.tags %}#ffebee{% elif 'success' in message.tags %}#e8f5e9{% else %}#fff3e0{% endif %};">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+        <p style="font-size: 14px; color: #666;">
+            Need help? Contact your system administrator.
+        </p>
+    </div>
+</div>
+{% endblock %}
