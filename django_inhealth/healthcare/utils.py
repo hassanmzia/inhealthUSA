@@ -25,8 +25,9 @@ def send_email_notification(to_email, subject, message_body, from_email=None, cc
         return (False, 'Invalid recipient email address')
 
     # Get from_email from settings if not provided
+    # Must match EMAIL_HOST_USER for Gmail SMTP authentication
     if not from_email:
-        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@inhealthehr.com')
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', 'noreply@example.com')
 
     # Prepare CC list
     cc_list = []
