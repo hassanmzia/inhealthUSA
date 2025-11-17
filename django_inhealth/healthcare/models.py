@@ -1640,3 +1640,97 @@ class DoctorTreatmentPlan(models.Model):
         if self.plan_end_date:
             return (self.plan_end_date - self.plan_start_date).days
         return None
+
+
+class APIKey(models.Model):
+    """
+    REST API Key model for external system integrations
+    Managed by system administrators
+    """
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('revoked', 'Revoked'),
+    ]
+
+    api_key_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255, help_text='Descriptive name for this API key')
+    description = models.TextField(blank=True, null=True, help_text='Purpose and usage of this API key')
+
+    # API Key credentials
+    key = models.CharField(max_length=64, unique=True, help_text='API Key (auto-generated)')
+    secret = models.CharField(max_length=128, help_text='API Secret (hashed)')
+
+    # Permissions and scope
+    permissions = models.JSONField(default=list, help_text='List of permitted API endpoints/actions')
+    ip_whitelist = models.TextField(blank=True, null=True, help_text='Comma-separated list of allowed IP addresses')
+    rate_limit = models.IntegerField(default=1000, help_text='Maximum requests per hour')
+
+    # Status and tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='api_keys_created')
+    last_used_at = models.DateTimeField(null=True, blank=True, help_text='Last time this key was used')
+    usage_count = models.IntegerField(default=0, help_text='Total number of API calls made')
+
+    # Expiration
+    expires_at = models.DateTimeField(null=True, blank=True, help_text='Expiration date (optional)')
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'api_keys'
+        verbose_name = 'API Key'
+        verbose_name_plural = 'API Keys'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['key'], name='idx_api_key'),
+            models.Index(fields=['status'], name='idx_api_key_status'),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.key[:8]}...)"
+
+    def is_active(self):
+        """Check if API key is active and not expired"""
+        if self.status != 'active':
+            return False
+        if self.expires_at and timezone.now() > self.expires_at:
+            return False
+        return True
+
+    def is_expired(self):
+        """Check if API key has expired"""
+        if self.expires_at and timezone.now() > self.expires_at:
+            return True
+        return False
+
+    def revoke(self):
+        """Revoke this API key"""
+        self.status = 'revoked'
+        self.save()
+
+    def record_usage(self):
+        """Record API key usage"""
+        self.usage_count += 1
+        self.last_used_at = timezone.now()
+        self.save()
+
+    @classmethod
+    def generate_key(cls):
+        """Generate a random API key"""
+        import secrets
+        return secrets.token_urlsafe(32)
+
+    @classmethod
+    def hash_secret(cls, secret):
+        """Hash API secret for storage"""
+        from django.contrib.auth.hashers import make_password
+        return make_password(secret)
+
+    @classmethod
+    def verify_secret(cls, secret, hashed_secret):
+        """Verify API secret against stored hash"""
+        from django.contrib.auth.hashers import check_password
+        return check_password(secret, hashed_secret)

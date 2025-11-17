@@ -1,0 +1,41 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Delete API Key - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'system_admin_dashboard' %}">System Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'api_key_list' %}">API Keys</a> &rsaquo;
+    Delete
+</div>
+
+<div class="module" style="max-width: 600px; margin: 40px auto;">
+    <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 64px; margin-bottom: 20px;">🗑️</div>
+        <h1 style="color: #dc3545;">Delete API Key?</h1>
+    </div>
+
+    <div style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0; color: #721c24;"><strong>Warning:</strong> This action cannot be undone. The API key and all associated data will be permanently deleted.</p>
+    </div>
+
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 4px; margin: 20px 0;">
+        <strong>API Key:</strong> {{ api_key.name }}<br>
+        <strong>Key:</strong> <code>{{ api_key.key }}</code><br>
+        <strong>Status:</strong> {{ api_key.get_status_display }}<br>
+        <strong>Total Usage:</strong> {{ api_key.usage_count }} API calls<br>
+        <strong>Created:</strong> {{ api_key.created_at|date:"F d, Y" }}
+    </div>
+
+    <form method="post" style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
+        {% csrf_token %}
+        <button type="submit" style="padding: 12px 30px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold;">
+            Yes, Delete Permanently
+        </button>
+        <a href="{% url 'api_key_detail' api_key.api_key_id %}" style="padding: 12px 30px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
+            Cancel
+        </a>
+    </form>
+</div>
+{% endblock %}

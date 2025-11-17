@@ -1,0 +1,41 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Revoke API Key - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'system_admin_dashboard' %}">System Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'api_key_list' %}">API Keys</a> &rsaquo;
+    Revoke
+</div>
+
+<div class="module" style="max-width: 600px; margin: 40px auto;">
+    <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 64px; margin-bottom: 20px;">🚫</div>
+        <h1 style="color: #dc3545;">Revoke API Key?</h1>
+    </div>
+
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0;"><strong>Warning:</strong> This will immediately revoke the API key. Any applications using this key will stop working.</p>
+    </div>
+
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 4px; margin: 20px 0;">
+        <strong>API Key:</strong> {{ api_key.name }}<br>
+        <strong>Key:</strong> <code>{{ api_key.key }}</code><br>
+        <strong>Usage:</strong> {{ api_key.usage_count }} API calls
+    </div>
+
+    <p>Revoked keys cannot be reactivated. You will need to create a new API key if needed.</p>
+
+    <form method="post" style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
+        {% csrf_token %}
+        <button type="submit" style="padding: 12px 30px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold;">
+            Yes, Revoke This Key
+        </button>
+        <a href="{% url 'api_key_detail' api_key.api_key_id %}" style="padding: 12px 30px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
+            Cancel
+        </a>
+    </form>
+</div>
+{% endblock %}
