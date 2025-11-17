@@ -1,0 +1,204 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}{{ api_key.name }} - API Key Details{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'system_admin_dashboard' %}">System Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'api_key_list' %}">API Keys</a> &rsaquo;
+    {{ api_key.name }}
+</div>
+
+<div class="module">
+    <h1>🔑 {{ api_key.name }}</h1>
+
+    {% if new_secret %}
+    <!-- Secret Display (Only shown once) -->
+    <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 20px; margin: 20px 0; border-radius: 4px;">
+        <h2 style="margin-top: 0; color: #155724;">✓ API Key Created Successfully!</h2>
+        <p style="color: #155724; margin-bottom: 15px;">
+            <strong>⚠ IMPORTANT:</strong> Copy these credentials now. The secret will not be shown again!
+        </p>
+
+        <div style="background: white; padding: 15px; border-radius: 4px; margin: 10px 0;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">API Key:</label>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="text" id="api_key_display" value="{{ api_key.key }}" readonly style="flex: 1; padding: 10px; font-family: monospace; background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px;">
+                <button onclick="copyToClipboard('api_key_display')" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    📋 Copy
+                </button>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 15px; border-radius: 4px; margin: 10px 0;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">API Secret:</label>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="text" id="api_secret_display" value="{{ new_secret }}" readonly style="flex: 1; padding: 10px; font-family: monospace; background: #fff3cd; border: 2px solid #ffc107; border-radius: 4px; color: #856404;">
+                <button onclick="copyToClipboard('api_secret_display')" style="padding: 10px 20px; background: #ffc107; color: #856404; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                    📋 Copy Secret
+                </button>
+            </div>
+        </div>
+
+        <script>
+        function copyToClipboard(elementId) {
+            var input = document.getElementById(elementId);
+            input.select();
+            input.setSelectionRange(0, 99999); // For mobile devices
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
+        }
+        </script>
+    </div>
+    {% endif %}
+
+    <!-- Status Alert -->
+    {% if is_expired %}
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <strong>⚠ This API key has expired!</strong>
+        <p style="margin-top: 10px;">Expired on: {{ api_key.expires_at|date:"F d, Y" }}</p>
+    </div>
+    {% elif api_key.status == 'revoked' %}
+    <div style="background: #f8d7da; border-left: 4px solid #f44336; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <strong>✖ This API key has been revoked and cannot be used.</strong>
+    </div>
+    {% elif api_key.status == 'inactive' %}
+    <div style="background: #f8d7da; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <strong>⊗ This API key is inactive and cannot be used until activated.</strong>
+    </div>
+    {% endif %}
+
+    <!-- Key Details -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+        <div class="module">
+            <h2>Basic Information</h2>
+            <div style="padding: 15px;">
+                <div style="margin-bottom: 15px;">
+                    <strong>Name:</strong><br>
+                    {{ api_key.name }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Description:</strong><br>
+                    {{ api_key.description|default:"No description provided" }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>API Key:</strong><br>
+                    <code style="background: #f8f9fa; padding: 5px 10px; border-radius: 3px; font-size: 12px;">{{ api_key.key }}</code>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Status:</strong><br>
+                    {% if api_key.status == 'active' and not is_expired %}
+                        <span style="color: #28a745; font-weight: bold;">✓ Active</span>
+                    {% elif is_expired %}
+                        <span style="color: #ffc107; font-weight: bold;">⚠ Expired</span>
+                    {% elif api_key.status == 'inactive' %}
+                        <span style="color: #ff9800; font-weight: bold;">⊗ Inactive</span>
+                    {% else %}
+                        <span style="color: #f44336; font-weight: bold;">✖ Revoked</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="module">
+            <h2>Security Settings</h2>
+            <div style="padding: 15px;">
+                <div style="margin-bottom: 15px;">
+                    <strong>Rate Limit:</strong><br>
+                    {{ api_key.rate_limit }} requests/hour
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>IP Whitelist:</strong><br>
+                    {% if api_key.ip_whitelist %}
+                        {{ api_key.ip_whitelist }}
+                    {% else %}
+                        <span style="color: #999;">No restrictions (all IPs allowed)</span>
+                    {% endif %}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Expires:</strong><br>
+                    {% if api_key.expires_at %}
+                        {{ api_key.expires_at|date:"F d, Y" }}
+                        {% if is_expired %}
+                            <span style="color: #f44336; font-weight: bold;">(Expired)</span>
+                        {% endif %}
+                    {% else %}
+                        <span style="color: #999;">Never</span>
+                    {% endif %}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Permissions:</strong><br>
+                    {% if api_key.permissions %}
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+                            {% for perm in api_key.permissions %}
+                            <span style="padding: 4px 8px; background: #e7f3ff; color: #2196F3; border-radius: 3px; font-size: 12px;">{{ perm }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <span style="color: #999;">No permissions assigned</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage Statistics -->
+    <div class="module" style="margin-top: 20px;">
+        <h2>Usage Statistics</h2>
+        <div style="padding: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 4px;">
+                <div style="font-size: 32px; font-weight: bold; color: #667eea;">{{ api_key.usage_count }}</div>
+                <div style="font-size: 13px; color: #666;">Total API Calls</div>
+            </div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 4px;">
+                <div style="font-size: 14px; font-weight: bold; color: #666;">
+                    {% if api_key.last_used_at %}
+                        {{ api_key.last_used_at|date:"M d, Y H:i" }}
+                    {% else %}
+                        Never
+                    {% endif %}
+                </div>
+                <div style="font-size: 13px; color: #666;">Last Used</div>
+            </div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 4px;">
+                <div style="font-size: 14px; font-weight: bold; color: #666;">
+                    {{ api_key.created_at|date:"M d, Y" }}
+                </div>
+                <div style="font-size: 13px; color: #666;">Created</div>
+            </div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 4px;">
+                <div style="font-size: 14px; font-weight: bold; color: #666;">
+                    {% if api_key.created_by %}
+                        {{ api_key.created_by.get_full_name|default:api_key.created_by.username }}
+                    {% else %}
+                        Unknown
+                    {% endif %}
+                </div>
+                <div style="font-size: 13px; color: #666;">Created By</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'api_key_edit' api_key.api_key_id %}" style="padding: 10px 20px; background: #ffc107; color: #333; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            ✏️ Edit
+        </a>
+        <a href="{% url 'api_key_regenerate_secret' api_key.api_key_id %}" style="padding: 10px 20px; background: #17a2b8; color: white; text-decoration: none; border-radius: 4px;">
+            🔄 Regenerate Secret
+        </a>
+        {% if api_key.status != 'revoked' %}
+        <a href="{% url 'api_key_revoke' api_key.api_key_id %}" style="padding: 10px 20px; background: #dc3545; color: white; text-decoration: none; border-radius: 4px;">
+            🚫 Revoke
+        </a>
+        {% endif %}
+        <a href="{% url 'api_key_delete' api_key.api_key_id %}" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">
+            🗑️ Delete
+        </a>
+        <a href="{% url 'api_key_list' %}" style="padding: 10px 20px; background: white; color: #333; text-decoration: none; border-radius: 4px; border: 1px solid #ddd;">
+            ← Back to List
+        </a>
+    </div>
+</div>
+{% endblock %}

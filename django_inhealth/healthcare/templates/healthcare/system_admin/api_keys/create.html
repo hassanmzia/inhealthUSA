@@ -1,0 +1,122 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Create API Key - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'system_admin_dashboard' %}">System Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'api_key_list' %}">API Keys</a> &rsaquo;
+    Create New
+</div>
+
+<div class="module">
+    <h1>➕ Create New API Key</h1>
+
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <strong>⚠ Important Security Notice:</strong><br>
+        The API secret will only be displayed once after creation. Make sure to copy and store it securely.
+        You will not be able to see it again!
+    </div>
+
+    <form method="post" style="max-width: 800px;">
+        {% csrf_token %}
+
+        <!-- Basic Information -->
+        <div style="margin-bottom: 20px;">
+            <h2 style="border-bottom: 2px solid #667eea; padding-bottom: 10px;">Basic Information</h2>
+
+            <div style="margin: 15px 0;">
+                <label for="name" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Name: <span style="color: red;">*</span>
+                </label>
+                <input type="text" id="name" name="name" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <small style="color: #666;">A descriptive name for this API key (e.g., "Mobile App Production", "Data Analytics Service")</small>
+            </div>
+
+            <div style="margin: 15px 0;">
+                <label for="description" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Description:
+                </label>
+                <textarea id="description" name="description" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                <small style="color: #666;">Optional description of the purpose and usage of this key</small>
+            </div>
+        </div>
+
+        <!-- Permissions -->
+        <div style="margin-bottom: 20px;">
+            <h2 style="border-bottom: 2px solid #667eea; padding-bottom: 10px;">Permissions</h2>
+            <p style="color: #666; margin-bottom: 15px;">Select which API endpoints this key can access:</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                    <input type="checkbox" name="perm_vitals" value="1" checked style="margin-right: 10px;">
+                    <span>📊 Vital Signs</span>
+                </label>
+                <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                    <input type="checkbox" name="perm_patients" value="1" checked style="margin-right: 10px;">
+                    <span>👥 Patients</span>
+                </label>
+                <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                    <input type="checkbox" name="perm_devices" value="1" checked style="margin-right: 10px;">
+                    <span>📱 IoT Devices</span>
+                </label>
+                <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                    <input type="checkbox" name="perm_encounters" value="1" style="margin-right: 10px;">
+                    <span>🏥 Encounters</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div style="margin-bottom: 20px;">
+            <h2 style="border-bottom: 2px solid #667eea; padding-bottom: 10px;">Security Settings</h2>
+
+            <div style="margin: 15px 0;">
+                <label for="rate_limit" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Rate Limit (requests per hour):
+                </label>
+                <input type="number" id="rate_limit" name="rate_limit" value="1000" min="1" max="10000" style="width: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <small style="color: #666; display: block; margin-top: 5px;">Maximum number of API requests allowed per hour</small>
+            </div>
+
+            <div style="margin: 15px 0;">
+                <label for="ip_whitelist" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    IP Whitelist (optional):
+                </label>
+                <input type="text" id="ip_whitelist" name="ip_whitelist" placeholder="192.168.1.100, 10.0.0.50" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <small style="color: #666;">Comma-separated list of IP addresses allowed to use this key (leave empty to allow all)</small>
+            </div>
+
+            <div style="margin: 15px 0;">
+                <label for="expires_at" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Expiration Date (optional):
+                </label>
+                <input type="date" id="expires_at" name="expires_at" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <small style="color: #666;">Leave empty for no expiration</small>
+            </div>
+
+            <div style="margin: 15px 0;">
+                <label for="status" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Initial Status:
+                </label>
+                <select id="status" name="status" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <small style="color: #666;">Inactive keys cannot be used until activated</small>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px;">
+            <button type="submit" style="padding: 12px 30px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                ✓ Create API Key
+            </button>
+            <a href="{% url 'api_key_list' %}" style="padding: 12px 30px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

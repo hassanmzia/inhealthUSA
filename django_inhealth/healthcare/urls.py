@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import iot_file_management_views
+from . import api_key_views
 
 urlpatterns = [
     # Enterprise Authentication URLs
@@ -274,6 +275,17 @@ urlpatterns = [
     path('management/iot-files/delete/<str:location>/<str:filename>/', iot_file_management_views.delete_file, name='iot_delete_file'),
     path('management/iot-files/download/<str:location>/<str:filename>/', iot_file_management_views.download_file, name='iot_download_file'),
     path('management/iot-files/stats/', iot_file_management_views.get_folder_stats, name='iot_folder_stats'),
+
+    # ============================================================================
+    # API KEY MANAGEMENT URLS (System Admin - REST API key management)
+    # ============================================================================
+    path('management/api-keys/', api_key_views.api_key_list, name='api_key_list'),
+    path('management/api-keys/create/', api_key_views.api_key_create, name='api_key_create'),
+    path('management/api-keys/<int:key_id>/', api_key_views.api_key_detail, name='api_key_detail'),
+    path('management/api-keys/<int:key_id>/edit/', api_key_views.api_key_edit, name='api_key_edit'),
+    path('management/api-keys/<int:key_id>/revoke/', api_key_views.api_key_revoke, name='api_key_revoke'),
+    path('management/api-keys/<int:key_id>/delete/', api_key_views.api_key_delete, name='api_key_delete'),
+    path('management/api-keys/<int:key_id>/regenerate/', api_key_views.api_key_regenerate_secret, name='api_key_regenerate_secret'),
 
     # ============================================================================
     # VITAL SIGN ALERT RESPONSE URLS (No authentication required)

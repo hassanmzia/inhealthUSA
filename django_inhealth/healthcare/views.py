@@ -3493,6 +3493,16 @@ def system_admin_dashboard(request):
         stats['iot_inbox_files'] = 0
         stats['iot_archive_files'] = 0
 
+    # Get API key statistics
+    try:
+        stats['total_api_keys'] = APIKey.objects.count()
+        stats['active_api_keys'] = APIKey.objects.filter(status='active').count()
+        stats['revoked_api_keys'] = APIKey.objects.filter(status='revoked').count()
+    except:
+        stats['total_api_keys'] = 0
+        stats['active_api_keys'] = 0
+        stats['revoked_api_keys'] = 0
+
     # Recent Activity - All Hospitals
     recent_hospitals = Hospital.objects.filter(is_active=True).order_by('-created_at')[:5]
 
