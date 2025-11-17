@@ -90,6 +90,8 @@ Content-Type: application/json
 }
 ```
 
+**Important**: The `device_id` field should contain the device's **unique string identifier** (the `device_unique_id` field from the Device model), not the numeric database ID. For example: "DEV001", "WATCH-12345", etc.
+
 **Response** (Success):
 ```json
 {

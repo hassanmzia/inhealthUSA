@@ -178,7 +178,7 @@ class IoTDataProcessor:
         """
         # Get or validate device
         try:
-            device = Device.objects.get(device_id=data['device_id'])
+            device = Device.objects.get(device_unique_id=data['device_id'])
         except Device.DoesNotExist:
             logger.error(f"Device not found: {data['device_id']}")
             raise ValidationError(f"Device {data['device_id']} not found in system")

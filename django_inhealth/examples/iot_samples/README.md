@@ -484,7 +484,7 @@ if __name__ == '__main__':
 
 ### Required Fields
 
-- **device_id** (string): Must match a device registered in the system (case-sensitive)
+- **device_id** (string): Must match a device's `device_unique_id` field in the system (case-sensitive). This is the string identifier like 'DEV001', NOT the numeric database ID.
 - **timestamp** (string): ISO 8601 format - `YYYY-MM-DDTHH:MM:SSZ` (UTC timezone)
 - **At least one vital sign measurement**: heart_rate, blood_pressure, temperature, etc.
 
@@ -608,9 +608,12 @@ done
 }
 ```
 **Solution**:
-- Verify `device_id` matches exactly (case-sensitive)
-- Check device exists: `python manage.py shell -c "from healthcare.models import Device; print(Device.objects.values_list('device_id', flat=True))"`
-- Create device in Django admin panel if needed
+- Verify `device_id` in JSON matches the device's `device_unique_id` field (case-sensitive)
+- The `device_id` in JSON should be a STRING (like 'DEV001'), not a number
+- Check existing devices: `python manage.py shell -c "from healthcare.models import Device; print(list(Device.objects.values_list('device_unique_id', flat=True)))"`
+- Create device in Django admin panel if needed with a unique `device_unique_id`
+
+**Common mistake**: Using numeric database ID instead of string unique identifier
 
 #### "Device not assigned to patient" Error
 ```json
