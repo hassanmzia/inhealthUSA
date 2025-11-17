@@ -1,0 +1,11 @@
+{
+    "device_id": "DEV001",
+    "timestamp": "2025-11-17T18:22:00Z",
+    "heart_rate": 125,
+    "blood_pressure_systolic": 165,
+    "blood_pressure_diastolic": 105,
+    "temperature": 101.2,
+    "temperature_unit": "F",
+    "oxygen_saturation": 92.0,
+    "notes": "Automated alert - critical values detected"
+}

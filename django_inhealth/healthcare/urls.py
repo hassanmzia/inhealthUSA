@@ -257,6 +257,13 @@ urlpatterns = [
     path('treatment-plans/<int:plan_id>/', views.treatment_plan_detail, name='treatment_plan_detail'),
 
     # ============================================================================
+    # IOT DEVICE API URLS (RESTful endpoints for IoT devices)
+    # ============================================================================
+    path('api/iot/vitals/', views.iot_submit_vitals, name='iot_submit_vitals'),
+    path('api/iot/vitals/batch/', views.iot_submit_vitals_batch, name='iot_submit_vitals_batch'),
+    path('api/iot/status/', views.iot_device_status, name='iot_device_status'),
+
+    # ============================================================================
     # VITAL SIGN ALERT RESPONSE URLS (No authentication required)
     # ============================================================================
     path('vital-alert/respond/<str:token>/', views.vital_alert_respond, name='vital_alert_respond'),
