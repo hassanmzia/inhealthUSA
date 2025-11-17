@@ -12,6 +12,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InsuranceController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\TreatmentPlanController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -79,6 +80,15 @@ Route::post('appointments/{encounter}/prescriptions', [PrescriptionController::c
     ->name('prescriptions.store.appointment');
 Route::post('prescriptions/{prescription}/discontinue', [PrescriptionController::class, 'discontinue'])
     ->name('prescriptions.discontinue');
+
+// Treatment Plans
+Route::resource('treatment-plans', TreatmentPlanController::class)->parameters([
+    'treatment-plans' => 'treatmentPlan:plan_id'
+]);
+Route::get('appointments/{encounter}/treatment-plans/create', [TreatmentPlanController::class, 'create'])
+    ->name('treatment-plans.create.appointment');
+Route::post('appointments/{encounter}/treatment-plans', [TreatmentPlanController::class, 'store'])
+    ->name('treatment-plans.store.appointment');
 
 // Billing Routes
 Route::get('patients/{patient}/billing', [BillingController::class, 'index'])

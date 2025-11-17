@@ -6,6 +6,7 @@ use App\Models\Patient;
 use App\Models\Encounter;
 use App\Models\Provider;
 use App\Models\Department;
+use App\Models\TreatmentPlan;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,8 @@ class DashboardController extends Controller
             'active_encounters' => Encounter::active()->count(),
             'total_providers' => Provider::active()->count(),
             'todays_appointments' => Encounter::whereDate('encounter_date', today())->count(),
+            'total_treatment_plans' => TreatmentPlan::count(),
+            'recent_treatment_plans' => TreatmentPlan::whereDate('created_at', '>=', now()->subDays(7))->count(),
         ];
 
         // Recent encounters
@@ -56,12 +59,19 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Recent treatment plans
+        $recentTreatmentPlans = TreatmentPlan::with(['encounter.patient', 'creator'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
         return view('dashboard', compact(
             'stats',
             'recentEncounters',
             'encountersByStatus',
             'encountersByDepartment',
-            'criticalAllergies'
+            'criticalAllergies',
+            'recentTreatmentPlans'
         ));
     }
 }
