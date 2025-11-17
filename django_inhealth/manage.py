@@ -6,6 +6,18 @@ import sys
 
 def main():
     """Run administrative tasks."""
+    # Load environment variables from .env file if it exists
+    try:
+        from dotenv import load_dotenv
+        # Get the directory where manage.py is located
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        dotenv_path = os.path.join(base_dir, '.env')
+        if os.path.exists(dotenv_path):
+            load_dotenv(dotenv_path)
+    except ImportError:
+        # python-dotenv not installed, skip loading .env file
+        pass
+
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'inhealth.settings')
     try:
         from django.core.management import execute_from_command_line
