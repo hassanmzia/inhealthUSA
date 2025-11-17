@@ -41,17 +41,25 @@ class AdminMFAMiddleware(MiddlewareMixin):
         # Check if user has MFA enabled
         try:
             profile = request.user.profile
-            if not profile.mfa_enabled:
-                # Redirect to MFA setup
-                messages.warning(
-                    request,
-                    'Multi-Factor Authentication is required for admin access. '
-                    'Please set up MFA to continue.'
-                )
-                return redirect('mfa_setup')
         except:
-            # User doesn't have a profile
-            pass
+            # User doesn't have a profile - redirect to MFA setup
+            messages.warning(
+                request,
+                'Multi-Factor Authentication is required for admin access. '
+                'Please set up MFA to continue.'
+            )
+            request.session['mfa_redirect_url'] = request.path
+            return redirect('mfa_setup')
+
+        if not profile.mfa_enabled:
+            # Redirect to MFA setup
+            messages.warning(
+                request,
+                'Multi-Factor Authentication is required for admin access. '
+                'Please set up MFA to continue.'
+            )
+            request.session['mfa_redirect_url'] = request.path
+            return redirect('mfa_setup')
 
         # Check if MFA has been verified in this session
         if not request.session.get('mfa_verified', False):
