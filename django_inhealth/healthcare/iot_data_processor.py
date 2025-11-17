@@ -30,8 +30,8 @@ class IoTDataProcessor:
         """
         from django.conf import settings
 
-        self.inbox_dir = inbox_dir or getattr(settings, 'IOT_INBOX_DIR', '/tmp/iot_data_inbox')
-        self.archive_dir = archive_dir or getattr(settings, 'IOT_ARCHIVE_DIR', '/tmp/iot_data_archive')
+        self.inbox_dir = inbox_dir or getattr(settings, 'IOT_INBOX_DIR', '/var/iot_data/inbox')
+        self.archive_dir = archive_dir or getattr(settings, 'IOT_ARCHIVE_DIR', '/var/iot_data/archive')
 
         # Create directories if they don't exist
         os.makedirs(self.inbox_dir, exist_ok=True)
