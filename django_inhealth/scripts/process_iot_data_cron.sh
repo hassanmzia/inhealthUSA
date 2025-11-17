@@ -24,9 +24,10 @@ fi
 # export DJANGO_SETTINGS_MODULE="inhealth.settings"
 # export EMAIL_HOST="smtp.gmail.com"
 # export EMAIL_PORT="587"
-# export EMAIL_HOST_USER="your-email@gmail.com"
+# export EMAIL_HOST_USER="info@eminencetechsolutions.com"
 # export EMAIL_HOST_PASSWORD="your-app-password"
 # export EMAIL_USE_TLS="True"
+# export DEFAULT_FROM_EMAIL="info@eminencetechsolutions.com"
 
 # Activate virtual environment if it exists
 if [ -f "$PROJECT_DIR/venv/bin/activate" ]; then

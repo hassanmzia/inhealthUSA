@@ -1,5 +1,27 @@
 # IoT Cron Job Email Troubleshooting Guide
 
+## Quick Fix Summary
+
+**The most common cause is FROM address mismatch. Follow these steps:**
+
+1. ✅ Update your `.env` file to use matching email addresses:
+   ```bash
+   EMAIL_HOST_USER=info@eminencetechsolutions.com
+   DEFAULT_FROM_EMAIL=info@eminencetechsolutions.com  # MUST MATCH!
+   ```
+
+2. ✅ Use the wrapper script in your crontab:
+   ```bash
+   * * * * * /home/zia/ihealth/inhealthUSA/django_inhealth/scripts/process_iot_data_cron.sh >> /var/log/iot_processing.log 2>&1
+   ```
+
+3. ✅ Test manually before relying on cron:
+   ```bash
+   /home/zia/ihealth/inhealthUSA/django_inhealth/scripts/process_iot_data_cron.sh
+   ```
+
+---
+
 ## Problem
 
 The cron job that processes IoT device data can't send critical alert emails, but manual vital sign entry can send emails successfully.
@@ -10,15 +32,23 @@ Failed to send email to hassanmzia@gmail.com: (530, b'5.7.0 Authentication Requi
 5.7.0  https://support.google.com/accounts/troubleshooter/2402620. af79cd13be357-8b2dce77d27sm444328885a.13 - gsmtp', 'noreply@inhealthehr.com'
 ```
 
+**Notice**: The error shows `'noreply@inhealthehr.com'` as the FROM address, which doesn't match your authenticated email account. This is the primary cause of the authentication error.
+
 ## Root Cause
 
-Cron jobs run in a minimal environment without access to:
-- Environment variables (like email credentials)
-- Virtual environment activation
-- Proper PATH settings
-- Django settings configuration
+**Two main issues cause this problem:**
+
+1. **FROM Address Mismatch**: Gmail SMTP requires the `DEFAULT_FROM_EMAIL` to match the authenticated `EMAIL_HOST_USER`. Using `noreply@inhealthehr.com` when authenticating as `info@eminencetechsolutions.com` causes authentication failure.
+
+2. **Missing Environment**: Cron jobs run in a minimal environment without access to:
+   - Environment variables (like email credentials)
+   - Virtual environment activation
+   - Proper PATH settings
+   - Django settings configuration
 
 When you run commands manually, your shell has access to all these settings, but cron doesn't.
+
+**Critical Fix**: Change `DEFAULT_FROM_EMAIL` from `noreply@inhealthehr.com` to `info@eminencetechsolutions.com` to match your authenticated Gmail account.
 
 ## Solution Options
 
@@ -47,10 +77,10 @@ fi
 # export DJANGO_SETTINGS_MODULE="inhealth.settings"
 # export EMAIL_HOST="smtp.gmail.com"
 # export EMAIL_PORT="587"
-# export EMAIL_HOST_USER="your-email@gmail.com"
+# export EMAIL_HOST_USER="info@eminencetechsolutions.com"
 # export EMAIL_HOST_PASSWORD="your-app-password"  # Use Gmail App Password
 # export EMAIL_USE_TLS="True"
-# export DEFAULT_FROM_EMAIL="noreply@inhealthehr.com"
+# export DEFAULT_FROM_EMAIL="info@eminencetechsolutions.com"  # MUST match EMAIL_HOST_USER
 
 # Activate virtual environment
 if [ -f "$PROJECT_DIR/venv/bin/activate" ]; then
@@ -89,10 +119,10 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 DJANGO_SETTINGS_MODULE=inhealth.settings
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
-EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_USER=info@eminencetechsolutions.com
 EMAIL_HOST_PASSWORD=your-app-password
 EMAIL_USE_TLS=True
-DEFAULT_FROM_EMAIL=noreply@inhealthehr.com
+DEFAULT_FROM_EMAIL=info@eminencetechsolutions.com
 
 # Then your cron job:
 * * * * * cd /home/zia/ihealth/inhealthUSA/django_inhealth && /home/zia/ihealth/inhealthUSA/django_inhealth/venv/bin/python manage.py process_iot_data >> /var/log/iot_processing.log 2>&1
@@ -108,10 +138,10 @@ Create `/home/zia/ihealth/inhealthUSA/django_inhealth/.env`:
 DJANGO_SETTINGS_MODULE=inhealth.settings
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
-EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_USER=info@eminencetechsolutions.com
 EMAIL_HOST_PASSWORD=your-gmail-app-password
 EMAIL_USE_TLS=True
-DEFAULT_FROM_EMAIL=noreply@inhealthehr.com
+DEFAULT_FROM_EMAIL=info@eminencetechsolutions.com
 ```
 
 **Step 2: Secure the .env file**
@@ -143,10 +173,12 @@ If you're using Gmail, you need an **App Password** (not your regular Gmail pass
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your-email@gmail.com'
+EMAIL_HOST_USER = 'info@eminencetechsolutions.com'
 EMAIL_HOST_PASSWORD = 'your-16-char-app-password'
-DEFAULT_FROM_EMAIL = 'noreply@inhealthehr.com'
+DEFAULT_FROM_EMAIL = 'info@eminencetechsolutions.com'  # MUST match EMAIL_HOST_USER
 ```
+
+**IMPORTANT**: The `DEFAULT_FROM_EMAIL` **must match** the `EMAIL_HOST_USER` when using Gmail SMTP. Gmail will reject emails if you try to send from a different address than the authenticated account. This is a common cause of the "530 5.7.0 Authentication Required" error.
 
 ## Testing
 
@@ -182,7 +214,7 @@ try:
     send_mail(
         'Test Email from Cron',
         'If you receive this, email configuration is working!',
-        'noreply@inhealthehr.com',
+        'info@eminencetechsolutions.com',
         ['hassanmzia@gmail.com'],
         fail_silently=False,
     )
