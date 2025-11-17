@@ -3260,6 +3260,13 @@ def provider_dashboard(request):
         ).count(),
         'unread_messages': request.user.received_messages.filter(is_read=False).count(),
         'unread_notifications': Notification.objects.filter(user=request.user, is_read=False).count(),
+        'treatment_plans_total': AIProposedTreatmentPlan.objects.filter(
+            encounter__provider=provider
+        ).count(),
+        'treatment_plans_recent': AIProposedTreatmentPlan.objects.filter(
+            encounter__provider=provider,
+            created_at__gte=timezone.now() - timezone.timedelta(days=7)
+        ).count(),
     }
 
     # Today's appointments
@@ -4978,3 +4985,62 @@ def vital_alert_respond(request, token, action=None):
             'error_title': 'Processing Error',
             'error_message': 'There was an error processing your response. Please try again or contact support.'
         })
+
+
+# ============================================================================
+# TREATMENT PLAN VIEWS
+# ============================================================================
+
+@login_required
+@require_role('doctor')
+def treatment_plan_list(request):
+    """List all AI-proposed treatment plans for the doctor"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    # Get all AI-proposed treatment plans for this doctor's patients
+    treatment_plans = AIProposedTreatmentPlan.objects.filter(
+        encounter__provider=provider
+    ).select_related('encounter__patient', 'encounter__provider').order_by('-created_at')
+
+    # Pagination
+    from django.core.paginator import Paginator
+    paginator = Paginator(treatment_plans, 20)  # Show 20 per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'treatment_plans': page_obj,
+        'total_count': treatment_plans.count(),
+    }
+
+    return render(request, 'healthcare/treatment_plans/list.html', context)
+
+
+@login_required
+@require_role('doctor')
+def treatment_plan_detail(request, plan_id):
+    """View details of a specific AI-proposed treatment plan"""
+    try:
+        provider = request.user.provider_profile
+    except:
+        messages.error(request, 'No provider profile found for your account.')
+        return redirect('index')
+
+    # Get the treatment plan, ensure it belongs to this doctor's patient
+    treatment_plan = get_object_or_404(
+        AIProposedTreatmentPlan.objects.select_related('encounter__patient', 'encounter__provider'),
+        proposal_id=plan_id,
+        encounter__provider=provider
+    )
+
+    context = {
+        'treatment_plan': treatment_plan,
+        'patient': treatment_plan.encounter.patient,
+        'encounter': treatment_plan.encounter,
+    }
+
+    return render(request, 'healthcare/treatment_plans/detail.html', context)
