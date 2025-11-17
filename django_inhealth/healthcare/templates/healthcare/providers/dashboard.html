@@ -54,6 +54,13 @@
             <p style="font-size: 32px; font-weight: bold; margin: 0;">{{ stats.unread_notifications }}</p>
             <a href="{% url 'doctor_notifications' %}" style="font-size: 12px;">View Alerts</a>
         </div>
+
+        <div class="stat-card" style="background: #f3e7ff; padding: 20px; border-radius: 5px; border-left: 4px solid #9c27b0; cursor: pointer;" onclick="window.location='{% url 'treatment_plan_list' %}'">
+            <h3 style="margin: 0 0 10px 0; color: #9c27b0;">AI Treatment Plans</h3>
+            <p style="font-size: 32px; font-weight: bold; margin: 0;">{{ stats.treatment_plans_total }}</p>
+            <p style="font-size: 12px; margin-top: 5px; color: #666;">{{ stats.treatment_plans_recent }} this week</p>
+            <a href="{% url 'treatment_plan_list' %}" style="font-size: 12px;">View All Plans</a>
+        </div>
     </div>
 
     <!-- Messaging and Alerts Section -->
@@ -102,6 +109,9 @@
             </a>
             <a href="{% url 'doctor_view_all_vitals' %}" class="button" style="display: block; text-align: center; padding: 15px; background: #9c27b0; color: white; text-decoration: none; border-radius: 5px;">
                 View All Patient Vitals
+            </a>
+            <a href="{% url 'treatment_plan_list' %}" class="button" style="display: block; text-align: center; padding: 15px; background: #9c27b0; color: white; text-decoration: none; border-radius: 5px;">
+                Proposed Treatment Plans
             </a>
             <a href="{% url 'prescription_list' %}" class="button" style="display: block; text-align: center; padding: 15px; background: #00897B; color: white; text-decoration: none; border-radius: 5px;">
                 View Prescriptions

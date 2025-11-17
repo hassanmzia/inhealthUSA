@@ -251,6 +251,12 @@ urlpatterns = [
     path('nurse/vitals/<int:vital_signs_id>/edit/', views.nurse_vital_edit, name='nurse_vital_edit'),
 
     # ============================================================================
+    # TREATMENT PLAN URLS
+    # ============================================================================
+    path('treatment-plans/', views.treatment_plan_list, name='treatment_plan_list'),
+    path('treatment-plans/<int:plan_id>/', views.treatment_plan_detail, name='treatment_plan_detail'),
+
+    # ============================================================================
     # VITAL SIGN ALERT RESPONSE URLS (No authentication required)
     # ============================================================================
     path('vital-alert/respond/<str:token>/', views.vital_alert_respond, name='vital_alert_respond'),

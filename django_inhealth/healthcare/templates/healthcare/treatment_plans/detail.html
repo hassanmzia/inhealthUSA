@@ -1,0 +1,142 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Treatment Plan Details - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'provider_dashboard' %}">Provider Dashboard</a> &rsaquo;
+    <a href="{% url 'treatment_plan_list' %}">Treatment Plans</a> &rsaquo;
+    Plan Details
+</div>
+
+<div class="module">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+        <div>
+            <h1>AI Proposed Treatment Plan</h1>
+            <p style="color: #666; margin-top: 10px;">
+                Generated: {{ treatment_plan.created_at|date:"F j, Y \a\t g:i A" }}
+            </p>
+        </div>
+        <div style="text-align: right;">
+            <div style="background: #f3e7ff; padding: 10px 15px; border-radius: 5px; border-left: 4px solid #9c27b0;">
+                <strong style="color: #9c27b0;">AI Model:</strong> {{ treatment_plan.ai_model_used|default:"Llama 3" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient and Encounter Information -->
+    <div style="background: #f9f9f9; padding: 20px; border-radius: 5px; margin-bottom: 30px;">
+        <h2 style="margin-top: 0;">Patient & Encounter Information</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+            <div>
+                <strong>Patient:</strong><br>
+                <a href="{% url 'patient_detail' patient.patient_id %}" style="font-size: 16px; color: #9c27b0;">{{ patient.full_name }}</a>
+            </div>
+            <div>
+                <strong>Date of Birth:</strong><br>
+                {{ patient.date_of_birth|date:"M d, Y" }}
+            </div>
+            <div>
+                <strong>Encounter Date:</strong><br>
+                {{ encounter.encounter_date|date:"M d, Y H:i" }}
+            </div>
+            <div>
+                <strong>Encounter Type:</strong><br>
+                {{ encounter.encounter_type }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Plan Description -->
+    <div class="module" style="background: white; margin-bottom: 20px;">
+        <h2 style="color: #9c27b0; border-bottom: 2px solid #9c27b0; padding-bottom: 10px;">📋 Plan Description</h2>
+        <div style="margin-top: 15px; white-space: pre-line; line-height: 1.6;">
+            {{ treatment_plan.plan_description|default:"No plan description available" }}
+        </div>
+    </div>
+
+    <!-- Diagnostic Workup -->
+    {% if treatment_plan.diagnostic_workup %}
+    <div class="module" style="background: white; margin-bottom: 20px;">
+        <h2 style="color: #9c27b0; border-bottom: 2px solid #9c27b0; padding-bottom: 10px;">🔬 Diagnostic Workup</h2>
+        <div style="margin-top: 15px; white-space: pre-line; line-height: 1.6;">
+            {{ treatment_plan.diagnostic_workup }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Treatment Details -->
+    {% if treatment_plan.treatment_details %}
+    <div class="module" style="background: white; margin-bottom: 20px;">
+        <h2 style="color: #9c27b0; border-bottom: 2px solid #9c27b0; padding-bottom: 10px;">💊 Treatment Details</h2>
+        <div style="margin-top: 15px; white-space: pre-line; line-height: 1.6;">
+            {{ treatment_plan.treatment_details }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Patient Education -->
+    {% if treatment_plan.patient_education %}
+    <div class="module" style="background: white; margin-bottom: 20px;">
+        <h2 style="color: #9c27b0; border-bottom: 2px solid #9c27b0; padding-bottom: 10px;">📚 Patient Education</h2>
+        <div style="margin-top: 15px; white-space: pre-line; line-height: 1.6;">
+            {{ treatment_plan.patient_education }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Follow-up Instructions -->
+    {% if treatment_plan.follow_up_instructions %}
+    <div class="module" style="background: white; margin-bottom: 20px;">
+        <h2 style="color: #9c27b0; border-bottom: 2px solid #9c27b0; padding-bottom: 10px;">📅 Follow-up Instructions</h2>
+        <div style="margin-top: 15px; white-space: pre-line; line-height: 1.6;">
+            {{ treatment_plan.follow_up_instructions }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Prevention Measures -->
+    {% if treatment_plan.prevention_measures %}
+    <div class="module" style="background: white; margin-bottom: 20px;">
+        <h2 style="color: #9c27b0; border-bottom: 2px solid #9c27b0; padding-bottom: 10px;">🛡️ Prevention Measures</h2>
+        <div style="margin-top: 15px; white-space: pre-line; line-height: 1.6;">
+            {{ treatment_plan.prevention_measures }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ClinGPT Suggestions -->
+    {% if treatment_plan.clingpt_suggestions %}
+    <div class="module" style="background: #f3e7ff; margin-bottom: 20px; border: 2px solid #9c27b0;">
+        <h2 style="color: #9c27b0; border-bottom: 2px solid #9c27b0; padding-bottom: 10px;">🤖 AI Clinical Suggestions</h2>
+        <div style="margin-top: 15px; white-space: pre-line; line-height: 1.6;">
+            {{ treatment_plan.clingpt_suggestions }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap;">
+        <a href="{% url 'treatment_plan_list' %}" class="button" style="background: #666; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; border-radius: 5px;">
+            &larr; Back to List
+        </a>
+        <a href="{% url 'patient_detail' patient.patient_id %}" class="button" style="background: #00897B; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; border-radius: 5px;">
+            View Patient Record
+        </a>
+        <a href="{% url 'appointment_detail' encounter.encounter_id %}" class="button" style="background: #00897B; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; border-radius: 5px;">
+            View Encounter
+        </a>
+    </div>
+
+    <!-- Disclaimer -->
+    <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 5px; margin-top: 30px;">
+        <strong style="color: #856404;">⚠️ Important Notice:</strong>
+        <p style="color: #856404; margin: 10px 0 0 0;">
+            This treatment plan was generated by AI and is for informational purposes only.
+            It should be reviewed and modified by a licensed healthcare provider before implementation.
+            Always use clinical judgment and consider the individual patient's circumstances.
+        </p>
+    </div>
+</div>
+{% endblock %}
