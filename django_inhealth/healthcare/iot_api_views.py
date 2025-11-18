@@ -110,7 +110,7 @@ def submit_vitals(request):
             Content-Type: application/json
         Body:
             {
-                "device_id": "DEV001",
+                "device_id": "DEV001",  // Device unique ID (string) or device_id (integer)
                 "timestamp": "2025-11-17T10:30:00Z",
                 "heart_rate": 75,
                 "blood_pressure_systolic": 120,
@@ -165,8 +165,10 @@ def submit_vitals(request):
             }, status=400)
 
         # Validate device_id matches authenticated device
-        if data.get('device_id') != device.device_id:
-            error_msg = "device_id in payload does not match authenticated device"
+        # Accept both device_unique_id (string) and device_id (integer)
+        payload_device_id = data.get('device_id')
+        if payload_device_id != device.device_unique_id and payload_device_id != device.device_id:
+            error_msg = f"device_id in payload ('{payload_device_id}') does not match authenticated device (expected: '{device.device_unique_id}' or {device.device_id})"
             log_api_activity(device, api_key, 'error', request, 403, error_message=error_msg)
             return JsonResponse({
                 'success': False,
