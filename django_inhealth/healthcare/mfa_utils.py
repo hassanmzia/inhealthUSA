@@ -100,15 +100,33 @@ def verify_backup_code(user_profile, code):
     if not code or not user_profile.mfa_backup_codes:
         return False
 
+    # Parse backup codes from JSON string
+    import json
+    backup_codes = []
+    if isinstance(user_profile.mfa_backup_codes, str):
+        try:
+            backup_codes = json.loads(user_profile.mfa_backup_codes)
+        except:
+            return False
+    elif isinstance(user_profile.mfa_backup_codes, list):
+        backup_codes = user_profile.mfa_backup_codes
+    else:
+        return False
+
+    if not backup_codes:
+        return False
+
     # Normalize code (remove spaces, hyphens, convert to uppercase)
     normalized_code = code.replace('-', '').replace(' ', '').upper()
 
     # Check if code exists in backup codes
-    for i, backup_code in enumerate(user_profile.mfa_backup_codes):
+    for i, backup_code in enumerate(backup_codes):
         normalized_backup = backup_code.replace('-', '').replace(' ', '').upper()
         if normalized_backup == normalized_code:
             # Remove used backup code
-            user_profile.mfa_backup_codes.pop(i)
+            backup_codes.pop(i)
+            # Store back as JSON string
+            user_profile.mfa_backup_codes = json.dumps(backup_codes) if backup_codes else None
             user_profile.save()
             return True
 
