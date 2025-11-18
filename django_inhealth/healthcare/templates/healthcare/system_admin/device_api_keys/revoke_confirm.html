@@ -1,0 +1,47 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Revoke Device API Key - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'system_admin_dashboard' %}">System Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'device_api_key_list' %}">Device API Keys</a> &rsaquo;
+    Revoke Key
+</div>
+
+<div class="module" style="max-width: 600px; margin: 40px auto;">
+    <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 64px; margin-bottom: 20px;">🚫</div>
+        <h1 style="color: #dc3545;">Revoke Device API Key?</h1>
+    </div>
+
+    <div style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0;"><strong>Warning:</strong> This will immediately deactivate the API key. The device will no longer be able to submit data using this key.</p>
+    </div>
+
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 4px; margin: 20px 0;">
+        <strong>Key Name:</strong> {{ api_key.key_name }}<br>
+        <strong>Device:</strong> {{ api_key.device.device_name }}<br>
+        <strong>Device ID:</strong> <code>{{ api_key.device.device_unique_id }}</code><br>
+        <strong>Key Prefix:</strong> <code>{{ api_key.key_prefix }}...</code>
+    </div>
+
+    <ul style="color: #666; margin: 20px 0; padding-left: 20px;">
+        <li>The API key will be immediately deactivated</li>
+        <li>Any devices using this key will receive authentication errors</li>
+        <li>You can reactivate the key later from the edit page</li>
+        <li>No data will be deleted</li>
+    </ul>
+
+    <form method="post" style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
+        {% csrf_token %}
+        <button type="submit" style="padding: 12px 30px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold;">
+            Yes, Revoke Key
+        </button>
+        <a href="{% url 'device_api_key_detail' api_key.id %}" style="padding: 12px 30px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
+            Cancel
+        </a>
+    </form>
+</div>
+{% endblock %}

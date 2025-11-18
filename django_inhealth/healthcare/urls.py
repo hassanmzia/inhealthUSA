@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from . import iot_file_management_views
 from . import api_key_views
+from . import device_api_key_views
 
 urlpatterns = [
     # Enterprise Authentication URLs
@@ -286,6 +287,17 @@ urlpatterns = [
     path('management/api-keys/<int:key_id>/revoke/', api_key_views.api_key_revoke, name='api_key_revoke'),
     path('management/api-keys/<int:key_id>/delete/', api_key_views.api_key_delete, name='api_key_delete'),
     path('management/api-keys/<int:key_id>/regenerate/', api_key_views.api_key_regenerate_secret, name='api_key_regenerate_secret'),
+
+    # ============================================================================
+    # DEVICE API KEY MANAGEMENT URLS (System Admin - IoT Device API key management)
+    # ============================================================================
+    path('management/device-api-keys/', device_api_key_views.device_api_key_list, name='device_api_key_list'),
+    path('management/device-api-keys/create/', device_api_key_views.device_api_key_create, name='device_api_key_create'),
+    path('management/device-api-keys/<int:key_id>/', device_api_key_views.device_api_key_detail, name='device_api_key_detail'),
+    path('management/device-api-keys/<int:key_id>/edit/', device_api_key_views.device_api_key_edit, name='device_api_key_edit'),
+    path('management/device-api-keys/<int:key_id>/revoke/', device_api_key_views.device_api_key_revoke, name='device_api_key_revoke'),
+    path('management/device-api-keys/<int:key_id>/delete/', device_api_key_views.device_api_key_delete, name='device_api_key_delete'),
+    path('management/device-api-keys/<int:key_id>/regenerate/', device_api_key_views.device_api_key_regenerate, name='device_api_key_regenerate'),
 
     # ============================================================================
     # VITAL SIGN ALERT RESPONSE URLS (No authentication required)

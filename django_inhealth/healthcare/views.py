@@ -13,6 +13,7 @@ from .models import (
     FamilyHistory, LabTest, Message, Notification, InsuranceInformation,
     Billing, BillingItem, Payment, Device, UserProfile, AIProposedTreatmentPlan
 )
+from .models_iot import DeviceAPIKey
 from .forms import (
     UserRegistrationForm, ProfilePictureForm, PasswordResetRequestForm,
     PasswordResetConfirmForm, UsernameRecoveryForm, UserPasswordChangeForm
@@ -3502,6 +3503,23 @@ def system_admin_dashboard(request):
         stats['total_api_keys'] = 0
         stats['active_api_keys'] = 0
         stats['revoked_api_keys'] = 0
+
+    # Get Device API key statistics
+    try:
+        stats['total_device_api_keys'] = DeviceAPIKey.objects.count()
+        stats['active_device_api_keys'] = DeviceAPIKey.objects.filter(is_active=True).filter(
+            Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
+        ).count()
+        stats['inactive_device_api_keys'] = DeviceAPIKey.objects.filter(is_active=False).count()
+        stats['expired_device_api_keys'] = DeviceAPIKey.objects.filter(
+            expires_at__lte=timezone.now(),
+            is_active=True
+        ).count()
+    except:
+        stats['total_device_api_keys'] = 0
+        stats['active_device_api_keys'] = 0
+        stats['inactive_device_api_keys'] = 0
+        stats['expired_device_api_keys'] = 0
 
     # Recent Activity - All Hospitals
     recent_hospitals = Hospital.objects.filter(is_active=True).order_by('-created_at')[:5]
