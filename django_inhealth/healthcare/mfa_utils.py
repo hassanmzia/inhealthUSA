@@ -97,18 +97,18 @@ def verify_backup_code(user_profile, code):
     Returns:
         Boolean indicating if code is valid
     """
-    if not code or not user_profile.backup_codes:
+    if not code or not user_profile.mfa_backup_codes:
         return False
 
     # Normalize code (remove spaces, hyphens, convert to uppercase)
     normalized_code = code.replace('-', '').replace(' ', '').upper()
 
     # Check if code exists in backup codes
-    for i, backup_code in enumerate(user_profile.backup_codes):
+    for i, backup_code in enumerate(user_profile.mfa_backup_codes):
         normalized_backup = backup_code.replace('-', '').replace(' ', '').upper()
         if normalized_backup == normalized_code:
             # Remove used backup code
-            user_profile.backup_codes.pop(i)
+            user_profile.mfa_backup_codes.pop(i)
             user_profile.save()
             return True
 
