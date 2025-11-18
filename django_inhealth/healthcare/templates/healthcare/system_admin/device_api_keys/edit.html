@@ -1,0 +1,123 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Edit {{ api_key.key_name }} - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'system_admin_dashboard' %}">System Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'device_api_key_list' %}">Device API Keys</a> &rsaquo;
+    <a href="{% url 'device_api_key_detail' api_key.id %}">{{ api_key.key_name }}</a> &rsaquo;
+    Edit
+</div>
+
+<div class="module">
+    <h1>✏️ Edit Device API Key</h1>
+
+    <div style="background: #e7f3ff; border-left: 4px solid #2196F3; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <strong>Device:</strong> {{ api_key.device.device_name }} ({{ api_key.device.device_unique_id }})<br>
+        <strong>Key Prefix:</strong> <code>{{ api_key.key_prefix }}...</code>
+    </div>
+
+    <form method="post" style="max-width: 800px;">
+        {% csrf_token %}
+
+        <!-- Basic Information -->
+        <div style="margin-bottom: 20px;">
+            <h2 style="border-bottom: 2px solid #667eea; padding-bottom: 10px;">Key Information</h2>
+
+            <div style="margin: 15px 0;">
+                <label for="key_name" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Key Name: <span style="color: red;">*</span>
+                </label>
+                <input type="text" id="key_name" name="key_name" value="{{ api_key.key_name }}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+
+            <div style="margin: 15px 0;">
+                <label for="notes" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Notes:
+                </label>
+                <textarea id="notes" name="notes" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">{{ api_key.notes }}</textarea>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div style="margin-bottom: 20px;">
+            <h2 style="border-bottom: 2px solid #667eea; padding-bottom: 10px;">Status</h2>
+
+            <div style="margin: 15px 0;">
+                <label style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                    <input type="checkbox" name="is_active" value="1" {% if api_key.is_active %}checked{% endif %} style="margin-right: 10px;">
+                    <div>
+                        <strong>Active</strong>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                            When unchecked, this key will be disabled and cannot be used for API calls
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Permissions -->
+        <div style="margin-bottom: 20px;">
+            <h2 style="border-bottom: 2px solid #667eea; padding-bottom: 10px;">Permissions</h2>
+
+            <div style="display: grid; gap: 10px;">
+                <label style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                    <input type="checkbox" name="can_write_vitals" value="1" {% if api_key.can_write_vitals %}checked{% endif %} style="margin-right: 10px;">
+                    <div>
+                        <strong>📊 Write Vital Signs</strong>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                            Allow this device to submit vital signs data
+                        </div>
+                    </div>
+                </label>
+                <label style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                    <input type="checkbox" name="can_read_patient" value="1" {% if api_key.can_read_patient %}checked{% endif %} style="margin-right: 10px;">
+                    <div>
+                        <strong>👤 Read Patient Information</strong>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                            Allow this device to read patient information
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Expiration -->
+        <div style="margin-bottom: 20px;">
+            <h2 style="border-bottom: 2px solid #667eea; padding-bottom: 10px;">Expiration</h2>
+
+            <div style="margin: 15px 0;">
+                <label for="expires_in_days" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Set New Expiration (days from now):
+                </label>
+                <input type="number" id="expires_in_days" name="expires_in_days" min="1" max="3650" value="{{ days_until_expiration }}" style="width: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Leave empty for no expiration">
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    {% if api_key.expires_at %}
+                        Current expiration: {{ api_key.expires_at|date:"F d, Y H:i" }}
+                        {% if days_until_expiration == 0 %}
+                            <span style="color: #f44336; font-weight: bold;">(Expired)</span>
+                        {% else %}
+                            ({{ days_until_expiration }} days remaining)
+                        {% endif %}
+                    {% else %}
+                        Currently set to never expire
+                    {% endif %}
+                    <br>Leave empty to remove expiration
+                </small>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px;">
+            <button type="submit" style="padding: 12px 30px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                ✓ Save Changes
+            </button>
+            <a href="{% url 'device_api_key_detail' api_key.id %}" style="padding: 12px 30px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

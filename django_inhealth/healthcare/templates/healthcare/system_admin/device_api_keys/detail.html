@@ -1,0 +1,225 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}{{ api_key.key_name }} - Device API Key Details{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'system_admin_dashboard' %}">System Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'device_api_key_list' %}">Device API Keys</a> &rsaquo;
+    {{ api_key.key_name }}
+</div>
+
+<div class="module">
+    <h1>📱 {{ api_key.key_name }}</h1>
+
+    {% if new_key %}
+    <!-- API Key Display (Only shown once) -->
+    <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 20px; margin: 20px 0; border-radius: 4px;">
+        <h2 style="margin-top: 0; color: #155724;">✓ Device API Key Created Successfully!</h2>
+        <p style="color: #155724; margin-bottom: 15px;">
+            <strong>⚠ IMPORTANT:</strong> Copy this API key now. It will not be shown again!
+        </p>
+
+        <div style="background: white; padding: 15px; border-radius: 4px; margin: 10px 0;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Device API Key:</label>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="text" id="api_key_display" value="{{ new_key }}" readonly style="flex: 1; padding: 10px; font-family: monospace; background: #fff3cd; border: 2px solid #ffc107; border-radius: 4px; color: #856404; font-size: 14px;">
+                <button onclick="copyToClipboard('api_key_display')" style="padding: 10px 20px; background: #ffc107; color: #856404; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                    📋 Copy Key
+                </button>
+            </div>
+        </div>
+
+        <div style="background: #fff3cd; padding: 10px; border-radius: 4px; margin-top: 10px;">
+            <strong>Usage Example:</strong>
+            <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 5px; overflow-x: auto;"><code>curl -X POST https://your-server.com/api/iot/vitals/ \
+  -H "Authorization: Bearer {{ new_key }}" \
+  -H "Content-Type: application/json" \
+  -d '{"device_id": "{{ api_key.device.device_unique_id }}", ...}'</code></pre>
+        </div>
+
+        <script>
+        function copyToClipboard(elementId) {
+            var input = document.getElementById(elementId);
+            input.select();
+            input.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            alert('API key copied to clipboard!');
+        }
+        </script>
+    </div>
+    {% endif %}
+
+    <!-- Status Alert -->
+    {% if is_expired %}
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <strong>⚠ This device API key has expired!</strong>
+        <p style="margin-top: 10px;">Expired on: {{ api_key.expires_at|date:"F d, Y" }}</p>
+    </div>
+    {% elif not is_active %}
+    <div style="background: #f8d7da; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <strong>⊗ This device API key is inactive and cannot be used.</strong>
+    </div>
+    {% endif %}
+
+    <!-- Key Details -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+        <div class="module">
+            <h2>Device Information</h2>
+            <div style="padding: 15px;">
+                <div style="margin-bottom: 15px;">
+                    <strong>Device Name:</strong><br>
+                    {{ api_key.device.device_name }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Device ID:</strong><br>
+                    <code style="background: #f8f9fa; padding: 5px 10px; border-radius: 3px; font-size: 12px;">{{ api_key.device.device_unique_id }}</code>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Patient:</strong><br>
+                    {% if api_key.device.patient %}
+                        {{ api_key.device.patient.get_full_name }}<br>
+                        <small style="color: #666;">MRN: {{ api_key.device.patient.mrn }}</small>
+                    {% else %}
+                        <span style="color: #999;">No patient assigned</span>
+                    {% endif %}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Device Type:</strong><br>
+                    {{ api_key.device.device_type|default:"Unknown" }}
+                </div>
+            </div>
+        </div>
+
+        <div class="module">
+            <h2>Key Information</h2>
+            <div style="padding: 15px;">
+                <div style="margin-bottom: 15px;">
+                    <strong>Key Name:</strong><br>
+                    {{ api_key.key_name }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Key Prefix:</strong><br>
+                    <code style="background: #f8f9fa; padding: 5px 10px; border-radius: 3px; font-size: 12px; color: #667eea;">{{ api_key.key_prefix }}...</code>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Status:</strong><br>
+                    {% if is_active %}
+                        <span style="color: #28a745; font-weight: bold;">✓ Active</span>
+                    {% elif is_expired %}
+                        <span style="color: #ffc107; font-weight: bold;">⚠ Expired</span>
+                    {% else %}
+                        <span style="color: #f44336; font-weight: bold;">⊗ Inactive</span>
+                    {% endif %}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Expires:</strong><br>
+                    {% if api_key.expires_at %}
+                        {{ api_key.expires_at|date:"F d, Y H:i" }}
+                        {% if is_expired %}
+                            <span style="color: #f44336; font-weight: bold;">(Expired)</span>
+                        {% endif %}
+                    {% else %}
+                        <span style="color: #999;">Never</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permissions -->
+    <div class="module" style="margin-top: 20px;">
+        <h2>Permissions</h2>
+        <div style="padding: 15px; display: flex; gap: 15px; flex-wrap: wrap;">
+            {% if api_key.can_write_vitals %}
+            <div style="padding: 15px; background: #e7f3ff; border-radius: 4px; flex: 1; min-width: 250px;">
+                <div style="font-size: 24px; margin-bottom: 10px;">📊</div>
+                <strong>Write Vital Signs</strong>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                    Can submit vital signs data
+                </div>
+            </div>
+            {% endif %}
+            {% if api_key.can_read_patient %}
+            <div style="padding: 15px; background: #e7ffe7; border-radius: 4px; flex: 1; min-width: 250px;">
+                <div style="font-size: 24px; margin-bottom: 10px;">👤</div>
+                <strong>Read Patient Info</strong>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                    Can read patient information
+                </div>
+            </div>
+            {% endif %}
+            {% if not api_key.can_write_vitals and not api_key.can_read_patient %}
+            <div style="padding: 15px; color: #999;">
+                No permissions assigned to this key
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Usage Statistics -->
+    <div class="module" style="margin-top: 20px;">
+        <h2>Usage & Audit Trail</h2>
+        <div style="padding: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 4px;">
+                <div style="font-size: 32px; font-weight: bold; color: #667eea;">{{ api_key.usage_count }}</div>
+                <div style="font-size: 13px; color: #666;">Total API Calls</div>
+            </div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 4px;">
+                <div style="font-size: 14px; font-weight: bold; color: #666;">
+                    {% if api_key.last_used_at %}
+                        {{ api_key.last_used_at|date:"M d, Y H:i" }}
+                    {% else %}
+                        Never
+                    {% endif %}
+                </div>
+                <div style="font-size: 13px; color: #666;">Last Used</div>
+            </div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 4px;">
+                <div style="font-size: 14px; font-weight: bold; color: #666;">
+                    {{ api_key.created_at|date:"M d, Y H:i" }}
+                </div>
+                <div style="font-size: 13px; color: #666;">Created</div>
+            </div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 4px;">
+                <div style="font-size: 14px; font-weight: bold; color: #666;">
+                    {{ api_key.last_rotated_at|date:"M d, Y"|default:"Never" }}
+                </div>
+                <div style="font-size: 13px; color: #666;">Last Rotated</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes -->
+    {% if api_key.notes %}
+    <div class="module" style="margin-top: 20px;">
+        <h2>Notes</h2>
+        <div style="padding: 15px; background: #f8f9fa; border-radius: 4px;">
+            {{ api_key.notes }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'device_api_key_edit' api_key.id %}" style="padding: 10px 20px; background: #ffc107; color: #333; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            ✏️ Edit
+        </a>
+        <a href="{% url 'device_api_key_regenerate' api_key.id %}" style="padding: 10px 20px; background: #17a2b8; color: white; text-decoration: none; border-radius: 4px;">
+            🔄 Regenerate Key
+        </a>
+        {% if api_key.is_active %}
+        <a href="{% url 'device_api_key_revoke' api_key.id %}" style="padding: 10px 20px; background: #dc3545; color: white; text-decoration: none; border-radius: 4px;">
+            🚫 Revoke
+        </a>
+        {% endif %}
+        <a href="{% url 'device_api_key_delete' api_key.id %}" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">
+            🗑️ Delete
+        </a>
+        <a href="{% url 'device_api_key_list' %}" style="padding: 10px 20px; background: white; color: #333; text-decoration: none; border-radius: 4px; border: 1px solid #ddd;">
+            ← Back to List
+        </a>
+    </div>
+</div>
+{% endblock %}

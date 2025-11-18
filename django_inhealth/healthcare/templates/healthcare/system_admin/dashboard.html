@@ -59,6 +59,12 @@
                 <span style="display: inline-block; background: #28a745; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 8px;">{{ stats.active_api_keys }} active</span>
                 {% endif %}
             </a>
+            <a href="{% url 'device_api_key_list' %}" class="button" style="background: #17a2b8; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 13px; position: relative;">
+                📱 Device API Keys
+                {% if stats.active_device_api_keys > 0 %}
+                <span style="display: inline-block; background: #28a745; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 8px;">{{ stats.active_device_api_keys }} active</span>
+                {% endif %}
+            </a>
         </div>
     </div>
 

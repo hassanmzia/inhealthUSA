@@ -1,0 +1,53 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Delete Device API Key - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'system_admin_dashboard' %}">System Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'device_api_key_list' %}">Device API Keys</a> &rsaquo;
+    Delete Key
+</div>
+
+<div class="module" style="max-width: 600px; margin: 40px auto;">
+    <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 64px; margin-bottom: 20px;">🗑️</div>
+        <h1 style="color: #dc3545;">Delete Device API Key?</h1>
+    </div>
+
+    <div style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0;"><strong>⚠ WARNING:</strong> This action cannot be undone! The API key will be permanently deleted from the system.</p>
+    </div>
+
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 4px; margin: 20px 0;">
+        <strong>Key Name:</strong> {{ api_key.key_name }}<br>
+        <strong>Device:</strong> {{ api_key.device.device_name }}<br>
+        <strong>Device ID:</strong> <code>{{ api_key.device.device_unique_id }}</code><br>
+        <strong>Key Prefix:</strong> <code>{{ api_key.key_prefix }}...</code><br>
+        <strong>Created:</strong> {{ api_key.created_at|date:"F d, Y" }}<br>
+        <strong>Total Usage:</strong> {{ api_key.usage_count }} API calls
+    </div>
+
+    <ul style="color: #666; margin: 20px 0; padding-left: 20px;">
+        <li>The API key record will be permanently deleted</li>
+        <li>Any devices using this key will immediately stop working</li>
+        <li>Historical usage data will be lost</li>
+        <li>This action <strong>cannot be undone</strong></li>
+    </ul>
+
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0;"><strong>Tip:</strong> If you just want to temporarily disable the key, consider using "Revoke" instead of deleting it.</p>
+    </div>
+
+    <form method="post" style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
+        {% csrf_token %}
+        <button type="submit" style="padding: 12px 30px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold;">
+            Yes, Permanently Delete
+        </button>
+        <a href="{% url 'device_api_key_detail' api_key.id %}" style="padding: 12px 30px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
+            Cancel
+        </a>
+    </form>
+</div>
+{% endblock %}

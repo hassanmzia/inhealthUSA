@@ -1,0 +1,121 @@
+{% extends 'healthcare/base.html' %}
+
+{% block title %}Create Device API Key - InHealth EHR{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{% url 'index' %}">Home</a> &rsaquo;
+    <a href="{% url 'system_admin_dashboard' %}">System Admin Dashboard</a> &rsaquo;
+    <a href="{% url 'device_api_key_list' %}">Device API Keys</a> &rsaquo;
+    Create New
+</div>
+
+<div class="module">
+    <h1>➕ Create New Device API Key</h1>
+
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <strong>⚠ Important Security Notice:</strong><br>
+        The API key will only be displayed once after creation. Make sure to copy and store it securely.
+        You will not be able to see it again!
+    </div>
+
+    <form method="post" style="max-width: 800px;">
+        {% csrf_token %}
+
+        <!-- Device Selection -->
+        <div style="margin-bottom: 20px;">
+            <h2 style="border-bottom: 2px solid #667eea; padding-bottom: 10px;">Device Selection</h2>
+
+            <div style="margin: 15px 0;">
+                <label for="device_id" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Select IoT Device: <span style="color: red;">*</span>
+                </label>
+                <select id="device_id" name="device_id" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- Select a Device --</option>
+                    {% for device in devices %}
+                    <option value="{{ device.device_id }}">
+                        {{ device.device_name }} ({{ device.device_unique_id }})
+                        {% if device.patient %} - {{ device.patient.get_full_name }}{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small style="color: #666;">Select the IoT device that will use this API key to submit data</small>
+            </div>
+        </div>
+
+        <!-- Basic Information -->
+        <div style="margin-bottom: 20px;">
+            <h2 style="border-bottom: 2px solid #667eea; padding-bottom: 10px;">Key Information</h2>
+
+            <div style="margin: 15px 0;">
+                <label for="key_name" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Key Name: <span style="color: red;">*</span>
+                </label>
+                <input type="text" id="key_name" name="key_name" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" placeholder="e.g., Production Key, Testing Key">
+                <small style="color: #666;">A descriptive name to identify this API key</small>
+            </div>
+
+            <div style="margin: 15px 0;">
+                <label for="notes" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Notes (Optional):
+                </label>
+                <textarea id="notes" name="notes" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Purpose of this key, deployment location, etc."></textarea>
+                <small style="color: #666;">Additional information about this key (optional)</small>
+            </div>
+        </div>
+
+        <!-- Permissions -->
+        <div style="margin-bottom: 20px;">
+            <h2 style="border-bottom: 2px solid #667eea; padding-bottom: 10px;">Permissions</h2>
+            <p style="color: #666; margin-bottom: 15px;">Select what this API key is allowed to do:</p>
+
+            <div style="display: grid; gap: 10px;">
+                <label style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                    <input type="checkbox" name="can_write_vitals" value="1" checked style="margin-right: 10px;">
+                    <div>
+                        <strong>📊 Write Vital Signs</strong>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                            Allow this device to submit vital signs data (heart rate, blood pressure, etc.)
+                        </div>
+                    </div>
+                </label>
+                <label style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                    <input type="checkbox" name="can_read_patient" value="1" style="margin-right: 10px;">
+                    <div>
+                        <strong>👤 Read Patient Information</strong>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                            Allow this device to read patient demographic and basic health information
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div style="margin-bottom: 20px;">
+            <h2 style="border-bottom: 2px solid #667eea; padding-bottom: 10px;">Security Settings</h2>
+
+            <div style="margin: 15px 0;">
+                <label for="expires_in_days" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                    Expiration (days):
+                </label>
+                <input type="number" id="expires_in_days" name="expires_in_days" min="1" max="3650" style="width: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" placeholder="e.g., 365">
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    Number of days until this key expires (leave empty for no expiration)<br>
+                    Recommended: 365 days for production, 30 days for testing
+                </small>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px;">
+            <button type="submit" style="padding: 12px 30px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                ✓ Create Device API Key
+            </button>
+            <a href="{% url 'device_api_key_list' %}" style="padding: 12px 30px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
