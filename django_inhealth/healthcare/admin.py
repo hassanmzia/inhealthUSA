@@ -5,7 +5,7 @@ from .models import (
     Hospital, UserProfile, Patient, Department, Provider, Nurse, OfficeAdministrator, Encounter, VitalSign,
     Diagnosis, Prescription, Allergy, MedicalHistory, SocialHistory, FamilyHistory,
     Message, LabTest, Notification, InsuranceInformation, Billing, BillingItem, Payment, Device,
-    NotificationPreferences, VitalSignAlertResponse, AIProposedTreatmentPlan, DoctorTreatmentPlan
+    NotificationPreferences, VitalSignAlertResponse, AIProposedTreatmentPlan, DoctorTreatmentPlan, AuthenticationConfig
 )
 
 
@@ -483,3 +483,142 @@ class DoctorTreatmentPlanAdmin(admin.ModelAdmin):
         self.message_user(request, f'{count} treatment plan(s) marked as completed.')
 
     mark_as_completed.short_description = "Mark selected plans as completed"
+
+
+@admin.register(AuthenticationConfig)
+class AuthenticationConfigAdmin(admin.ModelAdmin):
+    list_display = ['name', 'auth_method', 'is_enabled', 'is_primary', 'priority', 'auto_create_users', 'require_mfa', 'updated_at']
+    list_filter = ['auth_method', 'is_enabled', 'is_primary', 'auto_create_users', 'require_mfa', 'test_mode']
+    search_fields = ['name', 'description', 'notes']
+    ordering = ['-priority', 'name']
+    readonly_fields = ['created_at', 'updated_at', 'created_by', 'last_modified_by']
+    
+    fieldsets = (
+        ('Basic Configuration', {
+            'fields': ('name', 'auth_method', 'is_enabled', 'is_primary', 'priority', 'description'),
+            'description': 'Configure the basic authentication method settings'
+        }),
+        ('LDAP / Active Directory Settings', {
+            'fields': (
+                'ldap_server', 'ldap_port', 'ldap_use_ssl',
+                'ldap_bind_dn', 'ldap_bind_password',
+                'ldap_search_base', 'ldap_user_filter'
+            ),
+            'classes': ('collapse',),
+            'description': 'Configuration for LDAP/Active Directory authentication'
+        }),
+        ('OAuth 2.0 Settings', {
+            'fields': (
+                'oauth_client_id', 'oauth_client_secret',
+                'oauth_authorization_url', 'oauth_token_url',
+                'oauth_userinfo_url', 'oauth_scope'
+            ),
+            'classes': ('collapse',),
+            'description': 'Configuration for OAuth 2.0 authentication'
+        }),
+        ('OpenID Connect Settings', {
+            'fields': (
+                'openid_issuer', 'openid_client_id',
+                'openid_client_secret', 'openid_redirect_uri'
+            ),
+            'classes': ('collapse',),
+            'description': 'Configuration for OpenID Connect authentication'
+        }),
+        ('Azure Active Directory Settings', {
+            'fields': (
+                'azure_tenant_id', 'azure_client_id',
+                'azure_client_secret', 'azure_authority'
+            ),
+            'classes': ('collapse',),
+            'description': 'Configuration for Azure AD authentication'
+        }),
+        ('CAC (Common Access Card) Settings', {
+            'fields': (
+                'cac_certificate_path', 'cac_ca_bundle_path', 'cac_require_pin'
+            ),
+            'classes': ('collapse',),
+            'description': 'Configuration for CAC authentication'
+        }),
+        ('SAML 2.0 Settings', {
+            'fields': (
+                'saml_entity_id', 'saml_idp_url', 'saml_idp_metadata_url',
+                'saml_sp_cert', 'saml_sp_key', 'saml_attribute_mapping'
+            ),
+            'classes': ('collapse',),
+            'description': 'Configuration for SAML 2.0 authentication'
+        }),
+        ('Single Sign-On (SSO) Settings', {
+            'fields': (
+                'sso_provider_name', 'sso_login_url',
+                'sso_logout_url', 'sso_callback_url'
+            ),
+            'classes': ('collapse',),
+            'description': 'Configuration for generic SSO authentication'
+        }),
+        ('User Provisioning', {
+            'fields': ('auto_create_users', 'auto_update_users', 'default_user_role'),
+            'description': 'Configure how users are created and updated from the authentication provider'
+        }),
+        ('Advanced Settings', {
+            'fields': ('session_timeout_minutes', 'require_mfa', 'allow_password_change'),
+            'description': 'Advanced security and session settings'
+        }),
+        ('Additional Configuration (JSON)', {
+            'fields': ('configuration',),
+            'classes': ('collapse',),
+            'description': 'Additional method-specific configuration in JSON format'
+        }),
+        ('Testing & Debugging', {
+            'fields': ('test_mode', 'debug_logging'),
+            'classes': ('collapse',),
+            'description': 'Enable testing and debug modes'
+        }),
+        ('Internal Notes', {
+            'fields': ('notes',),
+            'classes': ('collapse',),
+            'description': 'Internal notes for system administrators'
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at', 'created_by', 'last_modified_by'),
+            'classes': ('collapse',),
+        }),
+    )
+    
+    actions = ['enable_auth_method', 'disable_auth_method', 'set_as_primary']
+    
+    def enable_auth_method(self, request, queryset):
+        """Enable selected authentication methods"""
+        count = queryset.update(is_enabled=True)
+        self.message_user(request, f'{count} authentication method(s) enabled.')
+    enable_auth_method.short_description = "Enable selected authentication methods"
+    
+    def disable_auth_method(self, request, queryset):
+        """Disable selected authentication methods"""
+        count = queryset.update(is_enabled=False)
+        self.message_user(request, f'{count} authentication method(s) disabled.')
+    disable_auth_method.short_description = "Disable selected authentication methods"
+    
+    def set_as_primary(self, request, queryset):
+        """Set first selected method as primary"""
+        if queryset.count() != 1:
+            self.message_user(request, 'Please select exactly one authentication method to set as primary.', level='error')
+            return
+        
+        # Unset all other primary methods
+        AuthenticationConfig.objects.filter(is_primary=True).update(is_primary=False)
+        
+        # Set selected as primary
+        auth_config = queryset.first()
+        auth_config.is_primary = True
+        auth_config.is_enabled = True
+        auth_config.save()
+        
+        self.message_user(request, f'{auth_config.name} is now the primary authentication method.')
+    set_as_primary.short_description = "Set as primary authentication method"
+    
+    def save_model(self, request, obj, form, change):
+        """Save model and track who created/modified it"""
+        if not change:  # New object
+            obj.created_by = request.user
+        obj.last_modified_by = request.user
+        super().save_model(request, obj, form, change)
