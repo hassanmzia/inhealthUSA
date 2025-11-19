@@ -43,30 +43,40 @@ def add_timestamps_safely(apps, schema_editor):
     ]
 
     for table in tables:
-        # Check and add created_at if it doesn't exist
+        # First check if the table exists, then check and add created_at if it doesn't exist
         schema_editor.execute(f"""
             DO $$
             BEGIN
-                IF NOT EXISTS (
-                    SELECT 1 FROM information_schema.columns
-                    WHERE table_name='{table}' AND column_name='created_at'
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.tables
+                    WHERE table_name='{table}'
                 ) THEN
-                    ALTER TABLE {table}
-                    ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name='{table}' AND column_name='created_at'
+                    ) THEN
+                        ALTER TABLE {table}
+                        ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+                    END IF;
                 END IF;
             END $$;
         """)
 
-        # Check and add updated_at if it doesn't exist
+        # Check if table exists, then check and add updated_at if it doesn't exist
         schema_editor.execute(f"""
             DO $$
             BEGIN
-                IF NOT EXISTS (
-                    SELECT 1 FROM information_schema.columns
-                    WHERE table_name='{table}' AND column_name='updated_at'
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.tables
+                    WHERE table_name='{table}'
                 ) THEN
-                    ALTER TABLE {table}
-                    ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name='{table}' AND column_name='updated_at'
+                    ) THEN
+                        ALTER TABLE {table}
+                        ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+                    END IF;
                 END IF;
             END $$;
         """)
