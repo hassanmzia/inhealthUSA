@@ -44,3 +44,6 @@ django-recaptcha==4.0.0
 
 # Authentication
 django-allauth==0.57.0
+mozilla-django-oidc==4.0.0
+python3-saml==1.16.0
+python-ldap==3.4.4
