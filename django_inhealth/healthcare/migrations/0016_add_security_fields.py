@@ -1,5 +1,71 @@
-# Generated manually for security and authentication fields
-from django.db import migrations, models
+# Generated migration to add all missing security and authentication fields to UserProfile
+
+from django.db import migrations
+
+
+def add_missing_userprofile_fields(apps, schema_editor):
+    """Add all missing fields to user_profiles table if they don't exist"""
+
+    # Define all fields that should exist
+    fields_to_add = [
+        # Security fields
+        ('failed_login_attempts', 'INTEGER DEFAULT 0'),
+        ('account_locked_until', 'TIMESTAMP WITH TIME ZONE NULL'),
+        ('password_reset_token', 'VARCHAR(255) NULL'),
+        ('password_reset_token_expires', 'TIMESTAMP WITH TIME ZONE NULL'),
+        ('last_password_change', 'TIMESTAMP WITH TIME ZONE NULL'),
+
+        # Email verification fields
+        ('email_verification_token', 'VARCHAR(255) NULL'),
+        ('email_verified', 'BOOLEAN DEFAULT FALSE'),
+        ('email_verified_at', 'TIMESTAMP WITH TIME ZONE NULL'),
+
+        # Enterprise authentication fields
+        ('auth_provider', 'VARCHAR(50) NULL'),
+        ('external_id', 'VARCHAR(255) NULL'),
+
+        # MFA fields
+        ('mfa_enabled', 'BOOLEAN DEFAULT FALSE'),
+        ('mfa_secret', 'VARCHAR(32) NULL'),
+        ('mfa_backup_codes', 'TEXT NULL'),
+
+        # Timestamp fields
+        ('created_at', 'TIMESTAMP WITH TIME ZONE DEFAULT NOW()'),
+        ('updated_at', 'TIMESTAMP WITH TIME ZONE DEFAULT NOW()'),
+    ]
+
+    for field_name, field_def in fields_to_add:
+        schema_editor.execute(f"""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='user_profiles' AND column_name='{field_name}'
+                ) THEN
+                    ALTER TABLE user_profiles ADD COLUMN {field_name} {field_def};
+                END IF;
+            END $$;
+        """)
+
+
+def remove_security_fields(apps, schema_editor):
+    """Remove security fields"""
+    schema_editor.execute("""
+        ALTER TABLE user_profiles
+        DROP COLUMN IF EXISTS failed_login_attempts,
+        DROP COLUMN IF EXISTS account_locked_until,
+        DROP COLUMN IF EXISTS password_reset_token,
+        DROP COLUMN IF EXISTS password_reset_token_expires,
+        DROP COLUMN IF EXISTS last_password_change,
+        DROP COLUMN IF EXISTS email_verification_token,
+        DROP COLUMN IF EXISTS email_verified,
+        DROP COLUMN IF EXISTS email_verified_at,
+        DROP COLUMN IF EXISTS auth_provider,
+        DROP COLUMN IF EXISTS external_id,
+        DROP COLUMN IF EXISTS mfa_enabled,
+        DROP COLUMN IF EXISTS mfa_secret,
+        DROP COLUMN IF EXISTS mfa_backup_codes;
+    """)
 
 
 class Migration(migrations.Migration):
@@ -9,63 +75,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Add security fields to UserProfile
-        migrations.AddField(
-            model_name='userprofile',
-            name='failed_login_attempts',
-            field=models.IntegerField(default=0),
-        ),
-        migrations.AddField(
-            model_name='userprofile',
-            name='account_locked_until',
-            field=models.DateTimeField(null=True, blank=True),
-        ),
-        migrations.AddField(
-            model_name='userprofile',
-            name='password_reset_token',
-            field=models.CharField(max_length=255, blank=True, null=True),
-        ),
-        migrations.AddField(
-            model_name='userprofile',
-            name='password_reset_token_expires',
-            field=models.DateTimeField(null=True, blank=True),
-        ),
-        migrations.AddField(
-            model_name='userprofile',
-            name='last_password_change',
-            field=models.DateTimeField(null=True, blank=True),
-        ),
-        # Add email verification fields to UserProfile
-        migrations.AddField(
-            model_name='userprofile',
-            name='email_verification_token',
-            field=models.CharField(max_length=255, blank=True, null=True),
-        ),
-        migrations.AddField(
-            model_name='userprofile',
-            name='email_verified',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='userprofile',
-            name='email_verified_at',
-            field=models.DateTimeField(null=True, blank=True),
-        ),
-        # Add enterprise authentication fields to UserProfile
-        migrations.AddField(
-            model_name='userprofile',
-            name='auth_provider',
-            field=models.CharField(max_length=50, blank=True, null=True, help_text='cac, okta, cognito, azure_ad, etc.'),
-        ),
-        migrations.AddField(
-            model_name='userprofile',
-            name='external_id',
-            field=models.CharField(max_length=255, blank=True, null=True, help_text='External authentication provider ID'),
-        ),
-        # Rename backup_codes to mfa_backup_codes if it exists
-        migrations.RenameField(
-            model_name='userprofile',
-            old_name='backup_codes',
-            new_name='mfa_backup_codes',
-        ),
+        migrations.RunPython(add_missing_userprofile_fields, remove_security_fields),
     ]
