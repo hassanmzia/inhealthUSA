@@ -12,7 +12,7 @@ def add_timestamps_safely(apps, schema_editor):
     """
     db_alias = schema_editor.connection.alias
 
-    # List of tables that need timestamp fields
+    # List of tables that need timestamp fields (using actual db_table names from models)
     tables = [
         'hospitals',
         'departments',
@@ -25,12 +25,21 @@ def add_timestamps_safely(apps, schema_editor):
         'prescriptions',
         'allergies',
         'lab_tests',
-        'medical_histories',
-        'social_histories',
+        'medical_history',  # singular, not plural
+        'social_history',  # singular, not plural
+        'family_history',
         'insurance_information',
         'messages',
         'notifications',
         'user_profiles',
+        'billings',
+        'billing_items',
+        'payments',
+        'devices',
+        'notification_preferences',
+        'vital_sign_alert_responses',
+        'api_keys',
+        'authentication_config',
     ]
 
     for table in tables:
@@ -79,12 +88,21 @@ def remove_timestamps(apps, schema_editor):
         'prescriptions',
         'allergies',
         'lab_tests',
-        'medical_histories',
-        'social_histories',
+        'medical_history',
+        'social_history',
+        'family_history',
         'insurance_information',
         'messages',
         'notifications',
         'user_profiles',
+        'billings',
+        'billing_items',
+        'payments',
+        'devices',
+        'notification_preferences',
+        'vital_sign_alert_responses',
+        'api_keys',
+        'authentication_config',
     ]
 
     for table in tables:
