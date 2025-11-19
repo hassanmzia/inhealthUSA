@@ -18,8 +18,8 @@ class Hospital(models.Model):
     phone = models.CharField(max_length=20)
     email = models.EmailField(blank=True)
     website = models.URLField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -41,8 +41,8 @@ class Department(models.Model):
     phone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
     head_of_department = models.CharField(max_length=255, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -93,8 +93,8 @@ class UserProfile(models.Model):
     mfa_secret = models.CharField(max_length=32, blank=True, null=True, help_text='TOTP secret key')
     mfa_backup_codes = models.TextField(blank=True, null=True, help_text='Comma-separated backup codes')
 
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'user_profiles'
@@ -151,8 +151,8 @@ class Patient(models.Model):
     primary_doctor = models.ForeignKey('Provider', on_delete=models.SET_NULL, null=True, blank=True, related_name='primary_patients')
     insurance_provider = models.CharField(max_length=255, blank=True)
     insurance_policy_number = models.CharField(max_length=100, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -208,8 +208,8 @@ class Provider(models.Model):
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='providers')
     email = models.EmailField()
     phone = models.CharField(max_length=20)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -257,8 +257,8 @@ class Nurse(models.Model):
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='nurses')
     email = models.EmailField()
     phone = models.CharField(max_length=20)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -291,8 +291,8 @@ class OfficeAdministrator(models.Model):
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='office_administrators')
     email = models.EmailField()
     phone = models.CharField(max_length=20)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -341,8 +341,8 @@ class Encounter(models.Model):
     treatment = models.TextField(blank=True)
     notes = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Scheduled')
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'encounters'
@@ -438,8 +438,8 @@ class Diagnosis(models.Model):
     diagnosed_by = models.ForeignKey(Provider, on_delete=models.SET_NULL, null=True, related_name='diagnoses')
     diagnosed_at = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'diagnoses'
@@ -474,8 +474,8 @@ class Prescription(models.Model):
     instructions = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
     notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'prescriptions'
@@ -512,8 +512,8 @@ class Allergy(models.Model):
     onset_date = models.DateField(null=True, blank=True)
     notes = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'allergies'
@@ -540,8 +540,8 @@ class MedicalHistory(models.Model):
     resolution_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     treatment_notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'medical_history'
@@ -588,8 +588,8 @@ class SocialHistory(models.Model):
     diet = models.TextField(blank=True)
     recorded_date = models.DateField(auto_now_add=True)
     notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'social_history'
@@ -627,8 +627,8 @@ class FamilyHistory(models.Model):
     cause_of_death = models.CharField(max_length=255, blank=True)
     recorded_date = models.DateField(auto_now_add=True)
     notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'family_history'
@@ -649,7 +649,7 @@ class Message(models.Model):
     body = models.TextField()
     is_read = models.BooleanField(default=False)
     parent_message = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
     read_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
@@ -687,8 +687,8 @@ class LabTest(models.Model):
     abnormal_flag = models.BooleanField(default=False)
     interpretation = models.TextField(blank=True)
     notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'lab_tests'
@@ -718,7 +718,7 @@ class Notification(models.Model):
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
     is_read = models.BooleanField(default=False)
     link = models.CharField(max_length=255, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
     read_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
@@ -745,8 +745,8 @@ class InsuranceInformation(models.Model):
     is_primary = models.BooleanField(default=True)
     copay_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     deductible_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'insurance_information'
@@ -779,8 +779,8 @@ class Billing(models.Model):
     amount_due = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'billings'
@@ -801,8 +801,8 @@ class BillingItem(models.Model):
     quantity = models.IntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'billing_items'
@@ -845,8 +845,8 @@ class Payment(models.Model):
     transaction_id = models.CharField(max_length=255, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Completed')
     notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'payments'
@@ -889,8 +889,8 @@ class Device(models.Model):
     last_sync = models.DateTimeField(null=True, blank=True)
     battery_level = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
     notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'devices'
@@ -937,8 +937,8 @@ class NotificationPreferences(models.Model):
     digest_mode = models.BooleanField(default=False, help_text='Send summary of alerts instead of individual messages')
     digest_frequency_hours = models.IntegerField(default=24, help_text='How often to send digest (in hours)')
 
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'notification_preferences'
@@ -1001,8 +1001,8 @@ class VitalSignAlertResponse(models.Model):
     # Vital signs that triggered the alert
     critical_vitals_json = models.JSONField(default=dict, help_text='JSON data of vital signs that triggered this alert')
 
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'vital_sign_alert_responses'
@@ -1087,8 +1087,8 @@ class AIProposedTreatmentPlan(models.Model):
     doctor_notes = models.TextField(blank=True, help_text='Doctor\'s notes and modifications')
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'ai_proposed_treatment_plans'
@@ -1178,8 +1178,8 @@ class DoctorTreatmentPlan(models.Model):
     # Additional notes
     additional_notes = models.TextField(blank=True, help_text='Additional notes for internal use')
 
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'doctor_treatment_plans'
@@ -1249,8 +1249,8 @@ class APIKey(models.Model):
     expires_at = models.DateTimeField(null=True, blank=True, help_text='Expiration date (optional)')
 
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'api_keys'
@@ -1395,8 +1395,8 @@ class AuthenticationConfig(models.Model):
     notes = models.TextField(blank=True, help_text='Internal notes for administrators')
 
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True, default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='auth_configs_created')
     last_modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='auth_configs_modified')
 
