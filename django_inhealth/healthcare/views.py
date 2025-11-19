@@ -4476,7 +4476,7 @@ def mfa_setup(request):
 
                 # Generate backup codes
                 backup_codes = generate_backup_codes(10)
-                user_profile.backup_codes = backup_codes
+                user_profile.mfa_backup_codes = json.dumps(backup_codes)
                 user_profile.save()
 
                 # Clear temporary secret
@@ -4524,7 +4524,7 @@ def mfa_disable(request):
         if user:
             user_profile.mfa_enabled = False
             user_profile.mfa_secret = None
-            user_profile.backup_codes = []
+            user_profile.mfa_backup_codes = None
             user_profile.save()
 
             messages.success(request, 'Two-Factor Authentication has been disabled.')
@@ -4566,7 +4566,7 @@ def mfa_verify(request):
                     messages.success(request, f'Welcome back, {user.username}!')
 
                     # Warn about remaining backup codes
-                    remaining = len(user_profile.backup_codes)
+                    remaining = len(user_profile.mfa_backup_codes)
                     if remaining <= 3:
                         messages.warning(request, f'You have {remaining} backup codes remaining. Consider generating new codes.')
 
@@ -4617,7 +4617,7 @@ def mfa_backup_codes(request):
 
             if user:
                 backup_codes = generate_backup_codes(10)
-                user_profile.backup_codes = backup_codes
+                user_profile.mfa_backup_codes = json.dumps(backup_codes)
                 user_profile.save()
 
                 messages.success(request, 'New backup codes have been generated. Please save them in a secure location.')
@@ -4630,8 +4630,20 @@ def mfa_backup_codes(request):
             else:
                 messages.error(request, 'Incorrect password.')
 
+    # Parse backup codes count
+    backup_codes_count = 0
+    if user_profile.mfa_backup_codes:
+        if isinstance(user_profile.mfa_backup_codes, str):
+            try:
+                codes = json.loads(user_profile.mfa_backup_codes)
+                backup_codes_count = len(codes) if codes else 0
+            except:
+                backup_codes_count = 0
+        elif isinstance(user_profile.mfa_backup_codes, list):
+            backup_codes_count = len(user_profile.mfa_backup_codes)
+
     context = {
-        'backup_codes_count': len(user_profile.backup_codes),
+        'backup_codes_count': backup_codes_count,
     }
     return render(request, 'healthcare/mfa/backup_codes.html', context)
 
@@ -5171,7 +5183,8 @@ def mfa_setup(request):
         if totp.verify(verification_code, valid_window=1):
             # Code is valid, enable MFA
             profile.mfa_secret = secret_key
-            profile.backup_codes = json.loads(backup_codes_json)
+            # Store backup codes as JSON string (field is TEXT, not JSONField)
+            profile.mfa_backup_codes = backup_codes_json
             profile.mfa_enabled = True
             profile.save()
 
@@ -5256,13 +5269,28 @@ def mfa_verify(request):
     if request.method == 'POST':
         verification_code = request.POST.get('verification_code', '').strip()
 
+        # Parse backup codes - handle None, string (JSON), or list
+        backup_codes = []
+        if profile.mfa_backup_codes:
+            if isinstance(profile.mfa_backup_codes, str):
+                try:
+                    backup_codes = json.loads(profile.mfa_backup_codes)
+                except:
+                    backup_codes = []
+            elif isinstance(profile.mfa_backup_codes, list):
+                backup_codes = profile.mfa_backup_codes
+            else:
+                backup_codes = []
+
         # Check if it's a backup code
-        if verification_code.upper() in [code.upper() for code in profile.backup_codes]:
+        if backup_codes and verification_code.upper() in [code.upper() for code in backup_codes]:
             # Valid backup code - remove it from the list
-            profile.backup_codes = [
-                code for code in profile.backup_codes
+            backup_codes = [
+                code for code in backup_codes
                 if code.upper() != verification_code.upper()
             ]
+            # Store as JSON string
+            profile.mfa_backup_codes = json.dumps(backup_codes) if backup_codes else None
             profile.save()
 
             # Set MFA as verified in session
@@ -5271,7 +5299,7 @@ def mfa_verify(request):
 
             messages.success(
                 request,
-                f'Backup code accepted. You have {len(profile.backup_codes)} backup codes remaining.'
+                f'Backup code accepted. You have {len(backup_codes)} backup codes remaining.'
             )
 
             # Redirect to intended URL
@@ -5296,8 +5324,20 @@ def mfa_verify(request):
                 'Invalid verification code. Please try again or use a backup code.'
             )
 
+    # Parse backup codes for display count
+    backup_codes_count = 0
+    if profile.mfa_backup_codes:
+        if isinstance(profile.mfa_backup_codes, str):
+            try:
+                codes = json.loads(profile.mfa_backup_codes)
+                backup_codes_count = len(codes) if codes else 0
+            except:
+                backup_codes_count = 0
+        elif isinstance(profile.mfa_backup_codes, list):
+            backup_codes_count = len(profile.mfa_backup_codes)
+
     context = {
-        'backup_codes_count': len(profile.backup_codes) if profile.backup_codes else 0,
+        'backup_codes_count': backup_codes_count,
     }
 
     return render(request, 'healthcare/mfa_verify.html', context)
@@ -5330,7 +5370,7 @@ def mfa_disable(request):
             # Password is correct, disable MFA
             profile.mfa_enabled = False
             profile.mfa_secret = None
-            profile.backup_codes = []
+            profile.mfa_backup_codes = None
             profile.save()
 
             # Clear MFA verification from session
