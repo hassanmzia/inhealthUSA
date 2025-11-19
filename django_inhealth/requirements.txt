@@ -41,3 +41,6 @@ qrcode==7.4.2
 
 # reCAPTCHA and Email Verification
 django-recaptcha==4.0.0
+
+# Authentication
+django-allauth==0.57.0
